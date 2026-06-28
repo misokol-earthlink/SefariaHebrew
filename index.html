@@ -279,6 +279,7 @@
     <button id="fetchBtn">Get Hebrew</button>
     <button id="refreshJsonBtn" class="secondary-btn">Refresh JSON</button>
     <button id="copyJsonBtn" class="secondary-btn">Copy JSON</button>
+    <button id="downloadDocBtn" class="secondary-btn">Download Document</button>
   </div>
 
   <div class="generated-ref">
@@ -302,7 +303,7 @@
 
   <div class="section-title">Lyrics JSON</div>
   <pre id="jsonOutput">{}</pre>
-
+  <div id="downloadDocument" style="display:none;"></div>
   <script>
     let currentLyricsJson = {
       title: "",
@@ -351,7 +352,7 @@
     const titleInput = document.getElementById("titleInput");
     const lowerTropeBtn = document.getElementById("lowerTropeBtn");
     const upperTropeBtn = document.getElementById("upperTropeBtn");
-
+    document.getElementById("downloadDocBtn").addEventListener("click", downloadHebrewDocument);
     document.getElementById("fetchBtn").addEventListener("click", fetchSelectedTorahText);
     document.getElementById("manualFetchBtn").addEventListener("click", fetchManualRef);
     document.getElementById("refreshJsonBtn").addEventListener("click", rebuildJsonFromEditor);
@@ -1006,6 +1007,7 @@ function flattenSefariaText(rawText) {
 
         lineEditor.appendChild(panel);
       });
+     buildDownloadDocument(lines);
     }
 
     function rebuildJsonFromEditor() {
@@ -1131,6 +1133,115 @@ function flattenSefariaText(rawText) {
         status.textContent = "Copy failed. You can manually copy from the JSON box.";
       }
     }
+
+function buildDownloadDocument(lines) {
+  const docDiv = document.getElementById("downloadDocument");
+  docDiv.innerHTML = "";
+
+  const title = document.createElement("div");
+  title.textContent = titleInput.value.trim() || buildSelectedRef();
+  title.style.fontFamily = "Arial, sans-serif";
+  title.style.fontSize = "24px";
+  title.style.fontWeight = "bold";
+  title.style.textAlign = "center";
+  title.style.marginBottom = "24px";
+
+  docDiv.appendChild(title);
+
+  const table = document.createElement("table");
+  table.style.width = "100%";
+  table.style.borderCollapse = "collapse";
+  table.style.direction = "rtl";
+  table.style.tableLayout = "fixed";
+
+  lines.forEach(function(lineData) {
+    const tr = document.createElement("tr");
+
+    const verseTd = document.createElement("td");
+    verseTd.textContent =
+      String(lineData.sourceVerseNumber).padStart(2, "0") + ":";
+  verseTd.style.width = "70px";
+verseTd.style.direction = "ltr";
+verseTd.style.unicodeBidi = "isolate";
+verseTd.style.textAlign = "right";
+verseTd.style.fontFamily = "Arial, sans-serif";
+verseTd.style.fontSize = "24px";
+verseTd.style.fontWeight = "bold";
+verseTd.style.color = "black";
+verseTd.style.verticalAlign = "middle";
+verseTd.style.paddingTop = "0px";
+verseTd.style.paddingBottom = "6px";
+verseTd.style.paddingLeft = "24px";
+
+/* Optical alignment adjustment */
+verseTd.style.position = "relative";
+verseTd.style.top = "5px";
+
+    const hebrewTd = document.createElement("td");
+    hebrewTd.textContent = lineData.displayHebrew;
+    hebrewTd.style.verticalAlign = "top";
+    hebrewTd.style.direction = "rtl";
+    hebrewTd.style.textAlign = "right";
+    hebrewTd.style.fontFamily = '"Times New Roman", Times, serif';
+    hebrewTd.style.fontSize = "30px";
+    hebrewTd.style.lineHeight = "1.8";
+    hebrewTd.style.color = "royalblue";
+    hebrewTd.style.paddingBottom = "12px";
+
+    tr.appendChild(verseTd);
+    tr.appendChild(hebrewTd);
+
+    table.appendChild(tr);
+  });
+
+  docDiv.appendChild(table);
+}
+
+function downloadHebrewDocument() {
+  const docDiv = document.getElementById("downloadDocument");
+
+  if (!docDiv || !docDiv.innerHTML.trim()) {
+    alert("No Hebrew document is available. Click Get Hebrew first.");
+    return;
+  }
+
+  const title = titleInput.value.trim() || buildSelectedRef();
+  const safeName = title.replace(/[\\/:*?"<>|]/g, "_");
+
+  const html =
+`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${escapeHtml(title)}</title>
+</head>
+<body>
+${docDiv.innerHTML}
+</body>
+</html>`;
+
+ const blob = new Blob([html], { type: "application/msword;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = safeName + ".doc";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
   </script>
 </body>
 </html>
