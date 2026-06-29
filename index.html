@@ -507,7 +507,7 @@ function getDualTropeBounds(parsed) {
   }
 
   if (parsed.book === "Deuteronomy" && parsed.chapter === 5) {
-    return { dualStart: 6, dualEnd: 18 };
+   return { dualStart: 6, dualEnd: 18 };
   }
 
   return null;
@@ -687,10 +687,16 @@ function buildSefariaUrl(ref) {
 
   if (parsed && isSpecialLowerDualTropeRequest(parsed)) {
     const chapterRef = parsed.book + " " + parsed.chapter;
+
     const specialBaseUrl =
       "https://www.sefaria.org.il/api/v3/texts/" +
       encodeURIComponent(chapterRef);
 
+/*
+const specialBaseUrl =
+      "https://www.sefaria.org/api/v3/texts/" +
+      encodeURIComponent(chapterRef);
+*/
     const specialParams = new URLSearchParams();
     specialParams.set("version", "hebrew|Wikisource_--_Lower_Accents");
     specialParams.set("return_format", "text_only");
@@ -722,10 +728,12 @@ function restrictSpecialLowerDualTropeResponseToRequestedRange(data, parsed, req
       : (sourceVersion && sourceVersion.text !== undefined ? sourceVersion.text : []);
 
   const textArray = flattenSefariaText(rawText);
+console.log("textArray length =", textArray.length);
+console.log(textArray);
 
-  const firstIndex = parsed.startVerse - bounds.dualStart;
-  const lastIndex = parsed.endVerse - bounds.dualStart;
-  const selectedText = textArray.slice(firstIndex, lastIndex + 1);
+const firstIndex = parsed.startVerse - bounds.dualStart + 1;
+const lastIndex = parsed.endVerse - bounds.dualStart + 1;
+const selectedText = textArray.slice(firstIndex, lastIndex + 1);
 
   if (data && data.text !== undefined) {
     data.text = selectedText;
@@ -965,7 +973,12 @@ function flattenSefariaText(rawText) {
 
         const title = document.createElement("div");
         title.className = "line-title";
-        title.textContent = "Line " + lineData.line;
+        title.textContent =
+  "Line " +
+  lineData.line +
+  " (Verse " +
+  lineData.sourceVerseNumber +
+  ")";
 
         const sourceHebrew = document.createElement("div");
         sourceHebrew.className = "source-hebrew";
