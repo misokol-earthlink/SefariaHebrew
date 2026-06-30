@@ -298,8 +298,9 @@
 
   <div id="status" class="status"></div>
 
-  <div class="section-title">Hebrew Lines and Editable Transliteration</div>
-  <div id="lineEditor"></div>
+<div class="section-title">Hebrew Lines and Editable Transliteration</div>
+<div id="sourceAttribution" class="small-note"></div>
+<div id="lineEditor"></div>
 
   <div class="section-title">Lyrics JSON</div>
   <pre id="jsonOutput">{}</pre>
@@ -649,7 +650,7 @@ function getCurrentSelectorParsedRef() {
 
     lastFetchedRef = ref;
     lastSefariaData = data;
-
+    updateSourceAttribution(data, ref);
     console.log("Final Sefaria URL:", url);
     console.log("Sefaria response:", data);
 
@@ -1160,7 +1161,15 @@ function buildDownloadDocument(lines) {
   title.style.marginBottom = "24px";
 
   docDiv.appendChild(title);
+const attribution = document.createElement("div");
+attribution.textContent = document.getElementById("sourceAttribution").textContent;
+attribution.style.fontFamily = "Arial, sans-serif";
+attribution.style.fontSize = "13px";
+attribution.style.textAlign = "center";
+attribution.style.marginBottom = "22px";
+attribution.style.color = "#555";
 
+docDiv.appendChild(attribution);
   const table = document.createElement("table");
   table.style.width = "100%";
   table.style.borderCollapse = "collapse";
@@ -1254,7 +1263,46 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
+function getSourceAttributionText(data, requestedRef) {
+  const version = findHebrewVersion(data);
 
+  const refText = requestedRef || (data && data.ref) || buildSelectedRef();
+
+  let versionTitle = "";
+  let versionSource = "";
+
+  if (version) {
+    versionTitle = version.versionTitle || "";
+    versionSource = version.versionSource || "";
+  } else {
+    versionTitle = data.versionTitle || "";
+    versionSource = data.versionSource || "";
+  }
+
+  let sourceName = versionTitle || "Default Hebrew text";
+
+  if (versionSource.includes("he.wikisource.org")) {
+    sourceName = sourceName
+      .replace("Wikisource -- ", "")
+      .replace("Wikisource_--_", "")
+      .replace(/_/g, " ");
+
+  return "Source: Hebrew Wikisource, " +
+  sourceName +
+  ", retrieved via the Sefaria API";
+  }
+
+ return "Source: " +
+  sourceName +
+  ", retrieved via the Sefaria API";
+}
+
+function updateSourceAttribution(data, requestedRef) {
+  const attributionDiv = document.getElementById("sourceAttribution");
+  if (!attributionDiv) return;
+
+  attributionDiv.textContent = getSourceAttributionText(data, requestedRef);
+}
   </script>
 </body>
 </html>
