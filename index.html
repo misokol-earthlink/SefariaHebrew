@@ -122,6 +122,24 @@
       background: #600000;
     }
 
+.dual-btn {
+  background: #5bc0de;
+  color: white;
+}
+
+.dual-btn:hover {
+  background: #31b0d5;
+}
+
+.dual-btn.active {
+  background: royalblue;
+}
+
+.dual-btn.active:hover {
+  background: navy;
+}
+
+
     .generated-ref {
       margin: 8px 0 12px 0;
       font-size: 16px;
@@ -265,10 +283,12 @@
 
     <div class="control-group">
       <label>Trope Type</label>
-      <div class="trope-choice-group">
-        <button id="lowerTropeBtn" type="button" class="trope-choice-btn active">Lower / Tahton</button>
-        <button id="upperTropeBtn" type="button" class="trope-choice-btn">Upper / Elyon</button>
-      </div>
+
+   <div class="trope-choice-group">
+  <button id="lowerTropeBtn" type="button"  class="trope-choice-btn active">  Lower / Tahton  </button>
+  <button id="upperTropeBtn"   type="button" class="trope-choice-btn">    Upper / Elyon  </button>
+  <button id="dualTropeBtn"    type="button"   class="trope-choice-btn dual-btn">   Dual  </button>
+</div>
     </div>
 
     <div class="control-group">
@@ -353,6 +373,7 @@
     const titleInput = document.getElementById("titleInput");
     const lowerTropeBtn = document.getElementById("lowerTropeBtn");
     const upperTropeBtn = document.getElementById("upperTropeBtn");
+    const dualTropeBtn = document.getElementById("dualTropeBtn");
     document.getElementById("downloadDocBtn").addEventListener("click", downloadHebrewDocument);
     document.getElementById("fetchBtn").addEventListener("click", fetchSelectedTorahText);
     document.getElementById("manualFetchBtn").addEventListener("click", fetchManualRef);
@@ -373,6 +394,13 @@
       document.getElementById("status").textContent =
         "Trope type set to Upper / Elyon.";
     });
+
+dualTropeBtn.addEventListener("click", function () {
+  setTropeSelection("dual");
+  document.getElementById("status").textContent =
+    "Trope type set to Dual.";
+});
+
 
     bookSelect.addEventListener("change", function () {
       populateChapterSelect();
@@ -538,20 +566,23 @@ function isMixedTropeDomain(parsed) {
   return !entirelyInsideDual && !entirelyOutsideDual;
 }
 
-function isSpecialLowerDualTropeRequest(parsed) {
-  return (
-    selectedTropeType === "lower" &&
-    isEntirelyInsideDualTropeDomain(parsed)
-  );
+function isSpecialDualTropeRequest(parsed) {
+  return isEntirelyInsideDualTropeDomain(parsed);
 }
 
 function setTropeSelection(tropeType) {
-  selectedTropeType = tropeType === "upper" ? "upper" : "lower";
+  if (tropeType === "upper") {
+    selectedTropeType = "upper";
+  } else if (tropeType === "dual") {
+    selectedTropeType = "dual";
+  } else {
+    selectedTropeType = "lower";
+  }
 
   lowerTropeBtn.classList.toggle("active", selectedTropeType === "lower");
   upperTropeBtn.classList.toggle("active", selectedTropeType === "upper");
+  dualTropeBtn.classList.toggle("active", selectedTropeType === "dual");
 }
-
 function resetTropeSelectionToLower() {
   setTropeSelection("lower");
 }
@@ -644,7 +675,7 @@ function getCurrentSelectorParsedRef() {
 
     const data = await response.json();
 
-    if (parsedRef && isSpecialLowerDualTropeRequest(parsedRef)) {
+    if (parsedRef && isSpecialDualTropeRequest(parsedRef)) {
       restrictSpecialLowerDualTropeResponseToRequestedRange(data, parsedRef, ref);
     }
 
@@ -666,57 +697,109 @@ function getCurrentSelectorParsedRef() {
     renderEditorLines(lines);
     rebuildJsonFromEditor();
 
-    status.textContent =
-      "Loaded " +
-      ref +
-      " as " +
-      lines.length +
-      " line(s). " +
-      (selectedTropeType === "upper"
-        ? "Using Upper / Elyon."
-        : (parsedRef && isSpecialLowerDualTropeRequest(parsedRef)
-            ? "Using special Lower / Tahton Decalogue source."
-            : "Using standard source."));
-
+status.textContent =
+  "Loaded " +
+  ref +
+  " as " +
+  lines.length +
+  " line(s). " +
+  getTropeStatusText(parsedRef);
   } catch (err) {
     console.error(err);
     status.textContent = "Load failed: " + err.message;
   }
 }
-function buildSefariaUrl(ref) {
-  const parsed = parseSimpleTorahRef(ref);
-
-  if (parsed && isSpecialLowerDualTropeRequest(parsed)) {
-    const chapterRef = parsed.book + " " + parsed.chapter;
-
-    const specialBaseUrl =
-      "https://www.sefaria.org.il/api/v3/texts/" +
-      encodeURIComponent(chapterRef);
 
 /*
 const specialBaseUrl =
       "https://www.sefaria.org/api/v3/texts/" +
       encodeURIComponent(chapterRef);
 */
-    const specialParams = new URLSearchParams();
-    specialParams.set("version", "hebrew|Wikisource_--_Lower_Accents");
-    specialParams.set("return_format", "text_only");
+function getTropeStatusText(parsedRef) {
+  if (parsedRef && isSpecialDualTropeRequest(parsedRef)) {
+    if (selectedTropeType === "upper") {
+      return "Using special Upper / Elyon Decalogue source.";
+    }
 
-    return specialBaseUrl + "?" + specialParams.toString();
+    if (selectedTropeType === "dual") {
+      return "Using standard Dual Decalogue source.";
+    }
+
+    return "Using special Lower / Tahton Decalogue source.";
   }
 
+  return "Using standard source.";
+}
+function buildSefariaUrl(ref) {
+  const parsed = parseSimpleTorahRef(ref);
+
+  /*
+    Special handling only for the Exodus 20 dual-trope section.
+    All three choices (Upper / Lower / Dual) now fetch the chapter
+    and post-process the requested verse range.
+  */
+  if (parsed && isEntirelyInsideDualTropeDomain(parsed)) {
+
+    const chapterRef = parsed.book + " " + parsed.chapter;
+
+    const baseUrl =
+      "https://www.sefaria.org/api/v3/texts/" +
+      encodeURIComponent(chapterRef);
+
+    const params = new URLSearchParams();
+    params.set("return_format", "text_only");
+
+    if (selectedTropeType === "upper") {
+
+      params.set(
+        "version",
+        "hebrew|Wikisource -- Upper Accents"
+      );
+
+    } else if (selectedTropeType === "lower") {
+
+      params.set(
+        "version",
+        "hebrew|Wikisource_--_Lower_Accents"
+      );
+
+      /*
+        Later we may change the version string to the
+        canonical "Wikisource -- Lower Accents"
+        after Sefaria confirms the preferred form.
+      */
+
+    }
+    /*
+      Dual uses the standard Sefaria source,
+      so no version parameter is added.
+    */
+
+    return baseUrl + "?" + params.toString();
+  }
+
+  /*
+    All non-Decalogue requests continue exactly
+    as before.
+  */
   const encodedRef = encodeURIComponent(ref);
-  const baseUrl = "https://www.sefaria.org/api/v3/texts/" + encodedRef;
+  const baseUrl =
+    "https://www.sefaria.org/api/v3/texts/" +
+    encodedRef;
 
   const params = new URLSearchParams();
   params.set("return_format", "text_only");
 
   if (selectedTropeType === "upper") {
-    params.set("version", "hebrew|Wikisource -- Upper Accents");
+    params.set(
+      "version",
+      "hebrew|Wikisource -- Upper Accents"
+    );
   }
 
   return baseUrl + "?" + params.toString();
-}  
+}
+
 function restrictSpecialLowerDualTropeResponseToRequestedRange(data, parsed, requestedRef) {
   const bounds = getDualTropeBounds(parsed);
   if (!bounds) return;
@@ -1162,8 +1245,10 @@ function buildDownloadDocument(lines) {
 
   docDiv.appendChild(title);
 const attribution = document.createElement("div");
-attribution.textContent = document.getElementById("sourceAttribution").textContent;
-attribution.style.fontFamily = "Arial, sans-serif";
+attribution.textContent =
+  lastSefariaData
+    ? getSourceAttributionText(lastSefariaData, lastFetchedRef)
+    : document.getElementById("sourceAttribution").textContent;attribution.style.fontFamily = "Arial, sans-serif";
 attribution.style.fontSize = "13px";
 attribution.style.textAlign = "center";
 attribution.style.marginBottom = "22px";
@@ -1267,7 +1352,9 @@ function getSourceAttributionText(data, requestedRef) {
   const version = findHebrewVersion(data);
 
   const refText = requestedRef || (data && data.ref) || buildSelectedRef();
-
+if (selectedTropeType === "dual") {
+  return "Source: Standard Sefaria Hebrew text with dual accents, retrieved via the Sefaria API";
+}
   let versionTitle = "";
   let versionSource = "";
 
