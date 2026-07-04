@@ -814,9 +814,13 @@ function restrictSpecialLowerDualTropeResponseToRequestedRange(data, parsed, req
   const textArray = flattenSefariaText(rawText);
 console.log("textArray length =", textArray.length);
 console.log(textArray);
-
+/*
 const firstIndex = parsed.startVerse - bounds.dualStart + 1;
 const lastIndex = parsed.endVerse - bounds.dualStart + 1;
+const selectedText = textArray.slice(firstIndex, lastIndex + 1);
+*/
+const firstIndex = parsed.startVerse - 1;
+const lastIndex = parsed.endVerse - 1;
 const selectedText = textArray.slice(firstIndex, lastIndex + 1);
 
   if (data && data.text !== undefined) {
