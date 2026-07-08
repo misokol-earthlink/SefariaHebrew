@@ -675,6 +675,18 @@ function getCurrentSelectorParsedRef() {
 
     const data = await response.json();
 
+const textMessage =
+  "No Hebrew text was returned by Sefaria for this request. " +
+  "This usually means the selected version is not available for the requested reference.";
+
+if (responseHasNoText(data)) {
+  alert(textMessage);
+  status.textContent = textMessage;
+  lineEditor.innerHTML = "";
+  jsonOutput.textContent = "{}";
+  return;
+}
+
     if (parsedRef && isSpecialDualTropeRequest(parsedRef)) {
       restrictSpecialLowerDualTropeResponseToRequestedRange(data, parsedRef, ref);
     }
@@ -1394,6 +1406,22 @@ function updateSourceAttribution(data, requestedRef) {
 
   attributionDiv.textContent = getSourceAttributionText(data, requestedRef);
 }
+function responseHasNoText(data) {
+  const sourceVersion = findHebrewVersion(data);
+
+  const rawText =
+    data && data.text !== undefined
+      ? data.text
+      : (sourceVersion && sourceVersion.text !== undefined ? sourceVersion.text : null);
+
+  if (rawText === null || rawText === undefined) return true;
+
+  const textArray = flattenSefariaText(rawText);
+  return textArray.length === 0 || textArray.every(function (item) {
+    return !String(item).trim();
+  });
+}
+
   </script>
 </body>
 </html>
