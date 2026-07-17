@@ -675,6 +675,22 @@ function getCurrentSelectorParsedRef() {
 
     const data = await response.json();
 
+if (
+  parsedRef &&
+  isSpecialDualTropeRequest(parsedRef) &&
+  (selectedTropeType === "upper" || selectedTropeType === "lower")
+) {
+  const sourceVersion = findHebrewVersion(data);
+
+  if (data.text !== undefined) {
+    data.text = flattenSefariaText(data.text)
+      .map(replaceColonWithSofPasuq);
+  } else if (sourceVersion && sourceVersion.text !== undefined) {
+    sourceVersion.text = flattenSefariaText(sourceVersion.text)
+      .map(replaceColonWithSofPasuq);
+  }
+}
+
 const textMessage =
   "No Hebrew text was returned by Sefaria for this request. " +
   "This usually means the selected version is not available for the requested reference.";
@@ -856,7 +872,9 @@ function normalizeSefariaToEditorLines(requestedRef, data) {
   }
 
   const textArray = flattenSefariaText(rawText);
+
   const cleanTextArray = textArray.map(cleanSefariaHebrewText);
+  console.log(cleanTextArray);
   const startVerse = getStartVerseNumber(data.ref || requestedRef);
 
   return cleanTextArray.map(function (cleanHebrew, index) {
@@ -1012,7 +1030,7 @@ function flattenSefariaText(rawText) {
 
     let token = part;
 
-    token = token.replace(/\u05C3+$/g, "");
+   // token = token.replace(/\u05C3+$/g, "");
     token = trimNonHebrewEdges(token);
 
     if (!token) return;
@@ -1421,7 +1439,9 @@ function responseHasNoText(data) {
     return !String(item).trim();
   });
 }
-
+function replaceColonWithSofPasuq(text) {
+  return text.replace(/:/g, "\u05C3");
+}
   </script>
 </body>
 </html>
