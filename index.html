@@ -1506,6 +1506,21 @@ function responseHasNoText(data) {
 function replaceColonWithSofPasuq(text) {
   return text.replace(/:/g, "\u05C3");
 }
+window.addEventListener("load", () => {
+    const splash = document.getElementById("splash-screen");
+    const mainDOM = document.getElementById("main-app-dom");
+
+    setTimeout(() => {
+        splash.style.opacity = "0";
+        mainDOM.classList.add("visible");
+
+        setTimeout(() => {
+            splash.remove();
+        }, 2000);
+
+    }, 5000);
+});
+
   </script>
 </div>
 <div id="splash-screen">
