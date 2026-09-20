@@ -592,6 +592,25 @@ function parseSimpleTorahRef(ref) {
   };
 }
 
+function getPocketTorahBookCode(bookName) {
+  const bookCodes = {
+    Genesis: "GE", Exodus: "EX", Leviticus: "LE",
+    Numbers: "NU", Deuteronomy: "DE"
+  };
+  return bookCodes[bookName] || "";
+}
+
+function buildPocketTorahLineName(bookName, chapter, verse) {
+  const bookCode = getPocketTorahBookCode(bookName);
+  if (!bookCode) {
+    return String(chapter).padStart(2, "0") + ":" +
+           String(verse).padStart(2, "0");
+  }
+  return bookCode + ":" +
+         String(chapter).padStart(2, "0") + ":" +
+         String(verse).padStart(2, "0");
+}
+
 function getDualTropeBounds(parsed) {
   if (!parsed) return null;
 
@@ -940,13 +959,22 @@ function normalizeSefariaToEditorLines(requestedRef, data) {
   const cleanTextArray = textArray.map(cleanSefariaHebrewText);
   console.log(cleanTextArray);
   const startVerse = getStartVerseNumber(data.ref || requestedRef);
+  const parsedRef = parseSimpleTorahRef(requestedRef);
+  const sourceBook = parsedRef ? parsedRef.book : "";
+  const sourceChapter = parsedRef ? parsedRef.chapter : null;
 
   return cleanTextArray.map(function (cleanHebrew, index) {
     const tokens = extractHebrewWordTokens(cleanHebrew);
+    const sourceVerseNumber =
+      startVerse === null ? index + 1 : startVerse + index;
 
     return {
       line: index + 1,
-      sourceVerseNumber: startVerse === null ? index + 1 : startVerse + index,
+      lineName:
+        sourceChapter === null
+          ? String(sourceVerseNumber).padStart(2, "0")
+          : buildPocketTorahLineName(sourceBook, sourceChapter, sourceVerseNumber),
+      sourceVerseNumber: sourceVerseNumber,
       displayHebrew: cleanHebrew,
       words: tokens.map(function (hebrewWord) {
         return {
@@ -1152,12 +1180,13 @@ function flattenSefariaText(rawText) {
         const panel = document.createElement("div");
         panel.className = "line-panel";
         panel.dataset.line = String(lineData.line);
+        panel.dataset.lineName = lineData.lineName || "";
 
         const title = document.createElement("div");
         title.className = "line-title";
         title.textContent =
   "Line " +
-  lineData.line +
+  lineData.lineName +
   " (Verse " +
   lineData.sourceVerseNumber +
   ")";
@@ -1211,7 +1240,7 @@ function flattenSefariaText(rawText) {
         const wordRows = Array.from(panel.querySelectorAll(".word-grid"));
 
         return {
-          line: panelIndex + 1,
+          lineName: panel.dataset.lineName,
           words: wordRows.map(function (row) {
             const hebrew = row.querySelector(".word-hebrew").textContent;
             const translit = row.querySelector(".word-translit").value;
