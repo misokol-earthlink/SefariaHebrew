@@ -774,6 +774,143 @@
   let modalCalculationSerial = 0;
   let preparedModalReading = null;
 
+  // Sefaria modal audio playback state.  Playback consumes the already
+  // calculated aliyah-relative audioPath/startTime/endTime segments.
+  let modalAudio = null;
+  let modalPlaybackSegments = [];
+  let modalPlaybackIndex = -1;
+  let modalPlaybackToken = 0;
+  let modalTimeUpdateHandler = null;
+
+  function setAudioTogglePlaying(isPlaying) {
+    const button = document.getElementById("ptAudioToggle");
+    const icon = document.getElementById("ptAudioToggleIcon");
+    if (button) {
+      button.setAttribute("aria-pressed", isPlaying ? "true" : "false");
+      button.setAttribute(
+        "aria-label",
+        isPlaying ? "Stop Pocket Torah audio" : "Play Pocket Torah audio"
+      );
+    }
+    if (icon) {
+      icon.innerHTML = isPlaying ? "&#9632;" : "&#9654;";
+    }
+  }
+
+  function stopModalAudio() {
+    modalPlaybackToken += 1;
+
+    if (modalAudio) {
+      if (modalTimeUpdateHandler) {
+        modalAudio.removeEventListener("timeupdate", modalTimeUpdateHandler);
+      }
+      modalAudio.pause();
+      modalAudio.removeAttribute("src");
+      modalAudio.load();
+    }
+
+    modalAudio = null;
+    modalTimeUpdateHandler = null;
+    modalPlaybackSegments = [];
+    modalPlaybackIndex = -1;
+    setAudioTogglePlaying(false);
+  }
+
+  function playModalSegment(index, token) {
+    if (token !== modalPlaybackToken) return;
+
+    if (index >= modalPlaybackSegments.length) {
+      stopModalAudio();
+      return;
+    }
+
+    const segment = modalPlaybackSegments[index];
+    modalPlaybackIndex = index;
+
+    const audio = new Audio();
+    modalAudio = audio;
+    audio.preload = "auto";
+    audio.src = segment.audioPath;
+
+    const startTime = Number(segment.startTime) || 0;
+    const endTime = Number(segment.endTime);
+
+    function advance() {
+      if (token !== modalPlaybackToken) return;
+      if (modalTimeUpdateHandler) {
+        audio.removeEventListener("timeupdate", modalTimeUpdateHandler);
+      }
+      audio.pause();
+      playModalSegment(index + 1, token);
+    }
+
+    audio.addEventListener("loadedmetadata", function() {
+      if (token !== modalPlaybackToken) return;
+
+      try {
+        audio.currentTime = Math.max(0, startTime);
+      } catch (error) {
+        console.error("Pocket Torah audio seek failed:", error);
+        stopModalAudio();
+        return;
+      }
+
+      modalTimeUpdateHandler = function() {
+        if (
+          token === modalPlaybackToken &&
+          Number.isFinite(endTime) &&
+          audio.currentTime >= endTime
+        ) {
+          advance();
+        }
+      };
+      audio.addEventListener("timeupdate", modalTimeUpdateHandler);
+
+      audio.play().catch(function(error) {
+        console.error("Pocket Torah audio playback failed:", error);
+        stopModalAudio();
+      });
+    }, { once: true });
+
+    audio.addEventListener("ended", function() {
+      if (token === modalPlaybackToken) {
+        advance();
+      }
+    }, { once: true });
+
+    audio.addEventListener("error", function() {
+      console.error(
+        "Could not play Pocket Torah audio segment:",
+        segment.audioPath
+      );
+      stopModalAudio();
+    }, { once: true });
+  }
+
+  function toggleModalAudioPlayback() {
+    if (modalAudio && !modalAudio.paused) {
+      stopModalAudio();
+      return;
+    }
+
+    if (
+      !preparedModalReading ||
+      !Array.isArray(preparedModalReading.playbackSegments) ||
+      preparedModalReading.playbackSegments.length === 0
+    ) {
+      console.warn(
+        "Pocket Torah audio is not ready. Select a Parsha and wait for its timing calculation."
+      );
+      return;
+    }
+
+    stopModalAudio();
+    modalPlaybackSegments = preparedModalReading.playbackSegments.slice();
+    const token = ++modalPlaybackToken;
+    setAudioTogglePlaying(true);
+    playModalSegment(0, token);
+  }
+
   function setModalText(id, value) {
     const element = document.getElementById(id);
     if (!element) return;
@@ -827,6 +964,7 @@
     if (!parshaSelect) return;
 
     const parshaName = parshaSelect.value;
+    stopModalAudio();
     preparedModalReading = null;
     clearModalReference();
 
@@ -894,6 +1032,12 @@
         input.addEventListener("change", recalculateSefariaModal);
       });
 
+      const audioToggle = document.getElementById("ptAudioToggle");
+      if (audioToggle) {
+        audioToggle.addEventListener("click", toggleModalAudioPlayback);
+      }
+      setAudioTogglePlaying(false);
+
       console.log(
         "Pocket Torah web parsha list loaded:",
         parshaNames.length,
@@ -942,6 +1086,8 @@
     prepareReadingTiming: prepareReadingTiming,
     initializeSefariaPocketTorahModal: initializeSefariaPocketTorahModal,
     recalculateSefariaModal: recalculateSefariaModal,
-    getPreparedModalReading: getPreparedModalReading
+    getPreparedModalReading: getPreparedModalReading,
+    toggleModalAudioPlayback: toggleModalAudioPlayback,
+    stopModalAudio: stopModalAudio
   });
 })(globalThis);

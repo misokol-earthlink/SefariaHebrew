@@ -541,8 +541,8 @@
   <div class="section-title">Lyrics JSON</div>
   <pre id="jsonOutput">{}</pre>
   <div id="downloadDocument" style="display:none;"></div>
-  <script src="PT.js?v=20260922E"></script>
-  <script src="Sefaria.js?v=20260922E"></script>
+  <script src="PT.js?v=20260922F"></script>
+  <script src="Sefaria.js?v=20260922F"></script>
 </div>
   <!--
     Pocket Torah Options modal.
@@ -605,10 +605,12 @@
       </div>
 
       <div class="pt-action-row">
-        <span class="pt-action-placeholder" aria-disabled="true">
-          <span class="pt-action-icon">&#9654;</span>
+        <button type="button" id="ptAudioToggle" class="pt-action-placeholder"
+                aria-label="Play Pocket Torah audio" aria-pressed="false"
+                style="border:0; background:none; padding:0; font:inherit; cursor:pointer;">
+          <span id="ptAudioToggleIcon" class="pt-action-icon">&#9654;</span>
           <span>Click to play/stop Audio</span>
-        </span>
+        </button>
 
         <span class="pt-action-placeholder" aria-disabled="true">
           <span class="pt-action-icon">&#128196;</span>
