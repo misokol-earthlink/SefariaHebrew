@@ -311,6 +311,157 @@
     opacity: 1;
     pointer-events: auto;
 }
+
+    /* =========================================
+       Pocket Torah Options modal — UI shell only
+       ========================================= */
+
+    .pocket-torah-link {
+      display: inline-block;
+      margin-left: 150px;
+      color: #0645ad;
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: normal;
+    }
+
+    .pocket-torah-link:hover,
+    .pocket-torah-link:focus {
+      color: #0b57d0;
+    }
+
+    .pt-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      background: rgba(0, 0, 0, 0.48);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .pt-modal:target {
+      display: flex;
+    }
+
+    .pt-modal-panel {
+      width: min(760px, 94vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #888;
+      border-radius: 10px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+      padding: 22px 26px 24px;
+      position: relative;
+    }
+
+    .pt-modal-title {
+      margin: 0 0 20px 0;
+      font-size: 24px;
+    }
+
+    .pt-modal-close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 28px;
+      line-height: 1;
+      color: #555;
+      text-decoration: none;
+    }
+
+    .pt-modal-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 28px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .pt-modal-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .pt-modal-field label,
+    .pt-reading-label {
+      font-weight: bold;
+      color: #333;
+    }
+
+    #ptParshaSelect {
+      min-width: 220px;
+      padding: 7px 9px;
+      font-size: 15px;
+    }
+
+    .pt-reading-options {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding-bottom: 5px;
+    }
+
+    .pt-reading-options label {
+      white-space: nowrap;
+      font-weight: normal;
+    }
+
+    .pt-reference-box {
+      border-top: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
+      padding: 16px 0;
+      margin: 8px 0 18px;
+    }
+
+    .pt-reference-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(90px, 1fr));
+      gap: 12px;
+    }
+
+    .pt-reference-value {
+      min-height: 22px;
+      padding: 7px 8px;
+      border: 1px solid #bbb;
+      border-radius: 4px;
+      background: #f7f7f7;
+      color: #777;
+    }
+
+    .pt-action-row {
+      display: flex;
+      gap: 34px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .pt-action-placeholder {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #777;
+    }
+
+    .pt-action-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    @media (max-width: 720px) {
+      .pocket-torah-link {
+        margin-left: 30px;
+      }
+
+      .pt-reference-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -368,6 +519,7 @@
 
   <div class="generated-ref">
     Sefaria ref to fetch: <span id="generatedRefDisplay"></span>
+    <a class="pocket-torah-link" href="#pocketTorahModal">Use Pocket Torah</a>
   </div>
 
   <div class="controls">
@@ -392,6 +544,80 @@
   <script src="PT.js?v=20260922A"></script>
   <script src="Sefaria.js?v=20260922A"></script>
 </div>
+  <!--
+    Pocket Torah Options modal.
+    This is currently a UI shell only:
+      - Parsha list will later be populated from aliyah.json.
+      - Reading selection will later drive PT.js.
+      - Reference fields will later display calculated PT values.
+      - Audio and Hebrew-text actions are placeholders only.
+  -->
+  <div id="pocketTorahModal" class="pt-modal" role="dialog"
+       aria-modal="true" aria-labelledby="pocketTorahModalTitle">
+    <div class="pt-modal-panel">
+      <a class="pt-modal-close" href="#" aria-label="Close Pocket Torah Options">&times;</a>
+
+      <h2 id="pocketTorahModalTitle" class="pt-modal-title">Pocket Torah Options</h2>
+
+      <div class="pt-modal-row">
+        <div class="pt-modal-field">
+          <label for="ptParshaSelect">Select Parsha</label>
+          <select id="ptParshaSelect">
+            <option value="" selected>Select Parsha</option>
+          </select>
+        </div>
+
+        <div class="pt-modal-field">
+          <span class="pt-reading-label">Reading</span>
+          <div class="pt-reading-options">
+            <label><input type="radio" name="ptReading" value="full" checked> Full K'riyah</label>
+            <label><input type="radio" name="ptReading" value="triennial1"> Triennial-1</label>
+            <label><input type="radio" name="ptReading" value="triennial2"> Triennial-2</label>
+            <label><input type="radio" name="ptReading" value="triennial3"> Triennial-3</label>
+            <label><input type="radio" name="ptReading" value="maftir" disabled> Maftir</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-reference-box">
+        <div class="pt-reference-grid">
+          <div class="pt-modal-field">
+            <label>Book</label>
+            <div id="ptBookDisplay" class="pt-reference-value">&nbsp;</div>
+          </div>
+          <div class="pt-modal-field">
+            <label>Starting Chapter</label>
+            <div id="ptStartChapterDisplay" class="pt-reference-value">&nbsp;</div>
+          </div>
+          <div class="pt-modal-field">
+            <label>Starting Verse</label>
+            <div id="ptStartVerseDisplay" class="pt-reference-value">&nbsp;</div>
+          </div>
+          <div class="pt-modal-field">
+            <label>Ending Chapter</label>
+            <div id="ptEndChapterDisplay" class="pt-reference-value">&nbsp;</div>
+          </div>
+          <div class="pt-modal-field">
+            <label>Ending Verse</label>
+            <div id="ptEndVerseDisplay" class="pt-reference-value">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-action-row">
+        <span class="pt-action-placeholder" aria-disabled="true">
+          <span class="pt-action-icon">&#9654;</span>
+          <span>Click to play/stop Audio</span>
+        </span>
+
+        <span class="pt-action-placeholder" aria-disabled="true">
+          <span class="pt-action-icon">&#128196;</span>
+          <span>Get Parsha Hebrew Text</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
 <div id="splash-screen">
 
     <h2 class="splash-title">
