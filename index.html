@@ -452,25 +452,6 @@
       line-height: 1;
     }
 
-
-    .pt-processing-status {
-      margin: 0 0 16px;
-      font-size: 14px;
-      color: #555;
-    }
-
-    #ptProcessingStatus[data-state="calculating"] {
-      color: #8a5a00;
-    }
-
-    #ptProcessingStatus[data-state="calculated"] {
-      color: #176b2c;
-    }
-
-    #ptProcessingStatus[data-state="error"] {
-      color: #a00000;
-    }
-
     @media (max-width: 720px) {
       .pocket-torah-link {
         margin-left: 30px;
@@ -560,8 +541,8 @@
   <div class="section-title">Lyrics JSON</div>
   <pre id="jsonOutput">{}</pre>
   <div id="downloadDocument" style="display:none;"></div>
-  <script src="PT.js?v=20260922C"></script>
-  <script src="Sefaria.js?v=20260922C"></script>
+  <script src="PT.js?v=20260922E"></script>
+  <script src="Sefaria.js?v=20260922E"></script>
 </div>
   <!--
     Pocket Torah Options modal.
@@ -621,12 +602,6 @@
             <div id="ptEndVerseDisplay" class="pt-reference-value">&nbsp;</div>
           </div>
         </div>
-      </div>
-
-
-      <div class="pt-processing-status">
-        Processing status:
-        <strong id="ptProcessingStatus">Not calculated</strong>
       </div>
 
       <div class="pt-action-row">

@@ -12,7 +12,7 @@
 (function(global) {
   "use strict";
 
-  const DEFAULT_BASE_PATH = "PocketTorah";
+  const DEFAULT_BASE_PATH = "https://raw.githubusercontent.com/rneiss/PocketTorah/master";
 
   let basePath = DEFAULT_BASE_PATH;
   let resourcesLoaded = false;
@@ -50,26 +50,23 @@
 
     if (!aliyahResponse.ok) {
       throw new Error(
-        "Could not load PocketTorah/data/aliyah.json. Status: " +
+        "Could not load Pocket Torah web aliyah.json. Status: " +
         aliyahResponse.status
       );
     }
 
     aliyahData = await aliyahResponse.json();
 
-    const resourceMapResponse = await fetch(
-      buildLocalPath("data/PocketTorahResourceMap.json") + "?v=" + Date.now(),
-      { cache: "no-store" }
-    );
+    /*
+      Sefaria uses PocketTorah directly from the web.  These are the known
+      upstream filename exceptions that the local TropePlayer compatibility
+      map handled.
+    */
+    resourceNames = {
+      "Yitro": { labels: "yitro", audio: "Yitro" },
+      "Ki Teitzei": { labels: "Ki Teitzei", audio: "KiTeitzei" }
+    };
 
-    if (!resourceMapResponse.ok) {
-      throw new Error(
-        "Could not load PocketTorah/data/PocketTorahResourceMap.json. Status: " +
-        resourceMapResponse.status
-      );
-    }
-
-    resourceNames = await resourceMapResponse.json();
     resourcesLoaded = true;
 
     console.log("Pocket Torah aliyah data loaded.");
@@ -496,6 +493,433 @@
     }) || null;
   }
 
+
+  function getParshaNames() {
+    if (
+      !aliyahData ||
+      !aliyahData.parshiot ||
+      !Array.isArray(aliyahData.parshiot.parsha)
+    ) {
+      return [];
+    }
+
+    return aliyahData.parshiot.parsha
+      .map(function(item) { return item && item._id; })
+      .filter(Boolean);
+  }
+
+  function parseChapterVerse(value) {
+    const parts = String(value || "").split(":");
+    const chapter = Number(parts[0]);
+    const verse = Number(parts[1]);
+
+    if (!Number.isFinite(chapter) || !Number.isFinite(verse)) {
+      return null;
+    }
+
+    return { chapter: chapter, verse: verse };
+  }
+
+  function compareChapterVerse(a, b) {
+    if (a.chapter !== b.chapter) {
+      return a.chapter - b.chapter;
+    }
+    return a.verse - b.verse;
+  }
+
+  function laterReference(a, b) {
+    return compareChapterVerse(a, b) >= 0 ? a : b;
+  }
+
+  function earlierReference(a, b) {
+    return compareChapterVerse(a, b) <= 0 ? a : b;
+  }
+
+  function getParshaBookName(parsha) {
+    const match = String((parsha && parsha._verse) || "")
+      .match(/^(Genesis|Exodus|Leviticus|Numbers|Deuteronomy)\b/);
+
+    return match ? match[1] : null;
+  }
+
+  function getBookCodeFromName(bookName) {
+    const bookMap = {
+      Genesis: "GE",
+      Exodus: "EX",
+      Leviticus: "LE",
+      Numbers: "NU",
+      Deuteronomy: "DE"
+    };
+
+    return bookMap[bookName] || null;
+  }
+
+  function resolveTriennialYear(parsha, yearNumber) {
+    const years =
+      parsha &&
+      parsha.triennial &&
+      Array.isArray(parsha.triennial.year)
+        ? parsha.triennial.year
+        : [];
+
+    const requested = years[yearNumber - 1] || null;
+
+    if (!requested) {
+      return null;
+    }
+
+    if (Array.isArray(requested.aliyah)) {
+      return requested;
+    }
+
+    if (requested._sameas) {
+      return years.find(function(year) {
+        return year && year._variation === requested._sameas &&
+               Array.isArray(year.aliyah);
+      }) || null;
+    }
+
+    return null;
+  }
+
+  function getReadingAliyot(parsha, readingType) {
+    if (!parsha) {
+      return null;
+    }
+
+    if (readingType === "full") {
+      return parsha.fullkriyah &&
+             Array.isArray(parsha.fullkriyah.aliyah)
+        ? parsha.fullkriyah.aliyah
+        : null;
+    }
+
+    const match = String(readingType || "").match(/^triennial([123])$/);
+    if (match) {
+      const year = resolveTriennialYear(parsha, Number(match[1]));
+      return year && Array.isArray(year.aliyah) ? year.aliyah : null;
+    }
+
+    return null;
+  }
+
+  function getReadingSelection(parshaName, readingType) {
+    const parsha = getParsha(parshaName);
+    if (!parsha) {
+      return null;
+    }
+
+    const aliyot = getReadingAliyot(parsha, readingType);
+    if (!aliyot || !aliyot.length) {
+      return null;
+    }
+
+    const numberedAliyot = aliyot.filter(function(aliyah) {
+      return aliyah && String(aliyah._num).toUpperCase() !== "M";
+    });
+
+    if (!numberedAliyot.length) {
+      return null;
+    }
+
+    const start = parseChapterVerse(numberedAliyot[0]._begin);
+    const end = parseChapterVerse(numberedAliyot[numberedAliyot.length - 1]._end);
+    const bookName = getParshaBookName(parsha);
+
+    if (!start || !end || !bookName) {
+      return null;
+    }
+
+    return {
+      parshaName: parshaName,
+      readingType: readingType,
+      book: bookName,
+      bookCode: getBookCodeFromName(bookName),
+      startChapter: start.chapter,
+      startVerse: start.verse,
+      endChapter: end.chapter,
+      endVerse: end.verse
+    };
+  }
+
+  async function prepareReadingTiming(parshaName, readingType, durationLoader) {
+    await ensureResourcesLoaded();
+
+    const selection = getReadingSelection(parshaName, readingType);
+    const parsha = getParsha(parshaName);
+
+    if (!selection || !parsha) {
+      throw new Error("Pocket Torah reading selection could not be resolved.");
+    }
+
+    const fullAliyot =
+      parsha.fullkriyah && Array.isArray(parsha.fullkriyah.aliyah)
+        ? parsha.fullkriyah.aliyah.filter(function(aliyah) {
+            return aliyah && String(aliyah._num).toUpperCase() !== "M";
+          })
+        : [];
+
+    if (!fullAliyot.length) {
+      throw new Error("Pocket Torah full K'riyah aliyot are unavailable.");
+    }
+
+    await loadBook(selection.book);
+
+    const selectionStart = {
+      chapter: selection.startChapter,
+      verse: selection.startVerse
+    };
+    const selectionEnd = {
+      chapter: selection.endChapter,
+      verse: selection.endVerse
+    };
+
+    const segments = [];
+
+    for (const aliyah of fullAliyot) {
+      const aliyahStart = parseChapterVerse(aliyah._begin);
+      const aliyahEnd = parseChapterVerse(aliyah._end);
+
+      if (!aliyahStart || !aliyahEnd) {
+        continue;
+      }
+
+      if (
+        compareChapterVerse(aliyahEnd, selectionStart) < 0 ||
+        compareChapterVerse(aliyahStart, selectionEnd) > 0
+      ) {
+        continue;
+      }
+
+      const segmentStart = laterReference(aliyahStart, selectionStart);
+      const segmentEnd = earlierReference(aliyahEnd, selectionEnd);
+      const aliyahNumber = Number(aliyah._num);
+
+      await loadLabels(parshaName, aliyahNumber);
+      await loadAudioDuration(parshaName, aliyahNumber, durationLoader);
+
+      const resourceName = resolveResourceName(parshaName);
+      const labelKey = resourceName.labels + "-" + aliyahNumber;
+      const audioKey = resourceName.audio + "-" + aliyahNumber;
+      const labels = labelData[labelKey];
+
+      if (!labels) {
+        throw new Error("Pocket Torah labels are unavailable for aliyah " + aliyahNumber + ".");
+      }
+
+      const startIndex = countWordsBeforeVerse(
+        selection.book,
+        aliyahStart.chapter,
+        aliyahStart.verse,
+        segmentStart.chapter,
+        segmentStart.verse
+      );
+
+      const wordsBeforeEndVerse = countWordsBeforeVerse(
+        selection.book,
+        aliyahStart.chapter,
+        aliyahStart.verse,
+        segmentEnd.chapter,
+        segmentEnd.verse
+      );
+
+      const endVerseData = getVerse(
+        selection.book,
+        segmentEnd.chapter,
+        segmentEnd.verse
+      );
+
+      if (
+        startIndex === null ||
+        wordsBeforeEndVerse === null ||
+        !endVerseData
+      ) {
+        throw new Error("Pocket Torah word timing could not be calculated.");
+      }
+
+      const endIndex = wordsBeforeEndVerse + endVerseData.w.length;
+      const startTime = labels[startIndex];
+      const endTime =
+        labels[endIndex] ??
+        audioDurationData[audioKey];
+
+      if (!Number.isFinite(startTime) || !Number.isFinite(endTime)) {
+        throw new Error("Pocket Torah audio timing could not be resolved.");
+      }
+
+      segments.push({
+        aliyah: aliyahNumber,
+        audioPath: getAudioPath(parshaName, aliyahNumber),
+        startChapter: segmentStart.chapter,
+        startVerse: segmentStart.verse,
+        endChapter: segmentEnd.chapter,
+        endVerse: segmentEnd.verse,
+        startTime: startTime,
+        endTime: endTime
+      });
+    }
+
+    return {
+      selection: selection,
+      playbackSegments: segments
+    };
+  }
+
+  /*
+   * Sefaria Pocket Torah modal adapter.
+   *
+   * Pocket Torah selection/range/timing logic stays in PT.js.  Sefaria.js
+   * does not calculate or interpret Pocket Torah readings.
+   */
+  let modalCalculationSerial = 0;
+  let preparedModalReading = null;
+
+  function setModalText(id, value) {
+    const element = document.getElementById(id);
+    if (!element) return;
+    element.textContent =
+      value === null || value === undefined || value === ""
+        ? "\u00a0"
+        : String(value);
+  }
+
+  function clearModalReference() {
+    setModalText("ptBookDisplay", "");
+    setModalText("ptStartChapterDisplay", "");
+    setModalText("ptStartVerseDisplay", "");
+    setModalText("ptEndChapterDisplay", "");
+    setModalText("ptEndVerseDisplay", "");
+  }
+
+  function displayModalReference(selection) {
+    setModalText("ptBookDisplay", selection.book);
+    setModalText("ptStartChapterDisplay", selection.startChapter);
+    setModalText("ptStartVerseDisplay", selection.startVerse);
+    setModalText("ptEndChapterDisplay", selection.endChapter);
+    setModalText("ptEndVerseDisplay", selection.endVerse);
+  }
+
+  function getModalReadingType() {
+    const selected = document.querySelector('input[name="ptReading"]:checked');
+    return selected ? selected.value : "full";
+  }
+
+  function browserDurationLoader(audioPath) {
+    return new Promise(function(resolve, reject) {
+      const audio = new Audio();
+      audio.preload = "metadata";
+      audio.src = audioPath;
+
+      audio.onloadedmetadata = function() {
+        resolve(audio.duration);
+      };
+
+      audio.onerror = function() {
+        reject(
+          new Error("Could not load Pocket Torah audio metadata: " + audioPath)
+        );
+      };
+    });
+  }
+
+  async function recalculateSefariaModal() {
+    const parshaSelect = document.getElementById("ptParshaSelect");
+    if (!parshaSelect) return;
+
+    const parshaName = parshaSelect.value;
+    preparedModalReading = null;
+    clearModalReference();
+
+    if (!parshaName) return;
+
+    const serial = ++modalCalculationSerial;
+
+    try {
+      /*
+       * Show the reading range immediately.  This gives visible evidence that
+       * aliyah.json was loaded and interpreted before slower timing resources
+       * are fetched.
+       */
+      const selection = getReadingSelection(parshaName, getModalReadingType());
+      if (!selection) {
+        throw new Error("Pocket Torah reading range could not be resolved.");
+      }
+      displayModalReference(selection);
+
+      const prepared = await prepareReadingTiming(
+        parshaName,
+        getModalReadingType(),
+        browserDurationLoader
+      );
+
+      if (serial !== modalCalculationSerial) return;
+
+      preparedModalReading = prepared;
+      console.log("Pocket Torah reading calculated:", prepared);
+    } catch (error) {
+      if (serial !== modalCalculationSerial) return;
+
+      /*
+       * Keep a successfully resolved Book/Chapter/Verse range visible even
+       * if a downstream label/audio timing resource fails.  The console then
+       * identifies the specific resource that still needs attention.
+       */
+      console.error("Pocket Torah timing calculation failed:", error);
+    }
+  }
+
+  async function initializeSefariaPocketTorahModal() {
+    const parshaSelect = document.getElementById("ptParshaSelect");
+    if (!parshaSelect) return;
+
+    try {
+      await ensureResourcesLoaded();
+
+      const parshaNames = getParshaNames();
+
+      while (parshaSelect.options.length > 1) {
+        parshaSelect.remove(1);
+      }
+
+      parshaNames.forEach(function(parshaName) {
+        const option = document.createElement("option");
+        option.value = parshaName;
+        option.textContent = parshaName;
+        parshaSelect.appendChild(option);
+      });
+
+      parshaSelect.addEventListener("change", recalculateSefariaModal);
+
+      document.querySelectorAll('input[name="ptReading"]').forEach(function(input) {
+        input.addEventListener("change", recalculateSefariaModal);
+      });
+
+      console.log(
+        "Pocket Torah web parsha list loaded:",
+        parshaNames.length,
+        "parshiot"
+      );
+    } catch (error) {
+      clearModalReference();
+      console.error("Pocket Torah web parsha list could not be loaded:", error);
+    }
+  }
+
+  function getPreparedModalReading() {
+    return preparedModalReading;
+  }
+
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener(
+        "DOMContentLoaded",
+        initializeSefariaPocketTorahModal
+      );
+    } else {
+      initializeSefariaPocketTorahModal();
+    }
+  }
+
   global.PocketTorah = Object.freeze({
     setBasePath: setBasePath,
     getBasePath: getBasePath,
@@ -512,6 +936,12 @@
     parseCanonicalLineName: parseCanonicalLineName,
     preparePlaybackData: preparePlaybackData,
     getAliyahData: getAliyahData,
-    getParsha: getParsha
+    getParsha: getParsha,
+    getParshaNames: getParshaNames,
+    getReadingSelection: getReadingSelection,
+    prepareReadingTiming: prepareReadingTiming,
+    initializeSefariaPocketTorahModal: initializeSefariaPocketTorahModal,
+    recalculateSefariaModal: recalculateSefariaModal,
+    getPreparedModalReading: getPreparedModalReading
   });
 })(globalThis);
