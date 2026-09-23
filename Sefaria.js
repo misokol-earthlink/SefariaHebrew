@@ -993,9 +993,7 @@ function flattenSefariaText(rawText) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = fileName.toLowerCase().endsWith(".json")
-        ? fileName
-        : fileName + ".json";
+     link.download = fileName.replace(/\.json$/i, "") + "_Lyrics.json";
       document.body.appendChild(link);
       link.click();
       link.remove();
