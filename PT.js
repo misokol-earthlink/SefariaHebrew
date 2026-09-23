@@ -1095,13 +1095,10 @@
     });
 
     if (loaded) {
-      // Close the :target modal so the retrieved Hebrew/editor is visible.
+      // Close the :target modal immediately so the retrieved Hebrew/editor
+      // and the main-page Save JSON control are visible.
       if (window.location.hash === "#pocketTorahModal") {
-        history.replaceState(
-          null,
-          document.title,
-          window.location.pathname + window.location.search
-        );
+        window.location.hash = "";
       }
     }
   }

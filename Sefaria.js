@@ -1151,9 +1151,7 @@ function flattenSefariaText(rawText) {
           allLines.length +
           " line(s). JSON title: " +
           request.jsonTitle +
-          (ptSaveContext.splitChapter
-            ? ". Save JSON will create A and B chapter files."
-            : ".");
+          ". Save JSON will create one complete Lyrics JSON file.";
 
         return true;
       } catch (err) {
