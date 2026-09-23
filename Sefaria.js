@@ -1014,42 +1014,15 @@ function flattenSefariaText(rawText) {
         return;
       }
 
-      if (ptSaveContext && ptSaveContext.splitChapter) {
-        const firstLines = currentLyricsJson.lines.filter(function(line) {
-          return getLineChapter(line.lineName) === ptSaveContext.startChapter;
-        });
-        const secondLines = currentLyricsJson.lines.filter(function(line) {
-          return getLineChapter(line.lineName) === ptSaveContext.endChapter;
-        });
-
-        if (!firstLines.length || !secondLines.length) {
-          status.textContent =
-            "The two Pocket Torah chapter parts could not be separated for saving.";
-          return;
-        }
-
-        downloadJsonObject(
-          { title: currentLyricsJson.title, lines: firstLines },
-          ptSaveContext.fileBase + "-A.json"
-        );
-        downloadJsonObject(
-          { title: currentLyricsJson.title, lines: secondLines },
-          ptSaveContext.fileBase + "-B.json"
-        );
-
-        status.textContent =
-          "Saved Pocket Torah JSON parts " +
-          ptSaveContext.fileBase + "-A.json and " +
-          ptSaveContext.fileBase + "-B.json.";
-        return;
-      }
-
+      // The editor already contains the normalized, combined Lyrics structure.
+      // Even when PT retrieval required two Sefaria chapter calls, save the
+      // complete currentLyricsJson as one output file.
       const fileBase = ptSaveContext
         ? ptSaveContext.fileBase
         : sanitizeDownloadBaseName(currentLyricsJson.title);
 
       downloadJsonObject(currentLyricsJson, fileBase + ".json");
-      status.textContent = "Saved " + fileBase + ".json.";
+      status.textContent = "Saved " + fileBase + "_Lyrics.json.";
     }
 
     function getChapterVerseCount(bookName, chapter) {
