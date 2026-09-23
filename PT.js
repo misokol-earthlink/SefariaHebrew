@@ -12,9 +12,14 @@
 (function(global) {
   "use strict";
 
-  const DEFAULT_BASE_PATH = "https://raw.githubusercontent.com/rneiss/PocketTorah/master";
+  const WEB_BASE_PATH = "https://raw.githubusercontent.com/rneiss/PocketTorah/master";
+  const LOCAL_BASE_PATH = "PocketTorah";
+  const SOURCE_CONFIG_PATH = "source.json";
 
-  let basePath = DEFAULT_BASE_PATH;
+  let availableSources = [];
+  let activeSource = null;
+  let sourceConfigLoaded = false;
+  let basePath = WEB_BASE_PATH;
   let resourcesLoaded = false;
   let aliyahData = null;
   let resourceNames = {};
@@ -22,11 +27,23 @@
   const labelData = {};
   const audioDurationData = {};
 
+  function clearObject(object) {
+    Object.keys(object).forEach(function(key) { delete object[key]; });
+  }
+
+  function resetResourceCaches() {
+    resourcesLoaded = false;
+    aliyahData = null;
+    resourceNames = {};
+    clearObject(torahData);
+    clearObject(labelData);
+    clearObject(audioDurationData);
+  }
+
   function setBasePath(newBasePath) {
     if (typeof newBasePath !== "string" || !newBasePath.trim()) {
       throw new Error("Pocket Torah base path must be a non-empty string.");
     }
-
     basePath = newBasePath.replace(/\/$/, "");
   }
 
@@ -34,14 +51,87 @@
     return basePath;
   }
 
+  function getAvailableSources() {
+    return availableSources.slice();
+  }
+
+  function getActiveSource() {
+    return activeSource;
+  }
+
+  function applyActiveSource(source) {
+    const normalized = String(source || "").toUpperCase();
+    if (!availableSources.includes(normalized)) {
+      throw new Error("Pocket Torah source is not allowed: " + normalized);
+    }
+
+    activeSource = normalized;
+    basePath = normalized === "LOCAL" ? LOCAL_BASE_PATH : WEB_BASE_PATH;
+    resetResourceCaches();
+    console.log("Pocket Torah active source:", activeSource);
+  }
+
+  async function ensureSourceConfigLoaded() {
+    if (sourceConfigLoaded) return;
+
+    const response = await fetch(SOURCE_CONFIG_PATH + "?v=" + Date.now(), {
+      cache: "no-store"
+    });
+    if (!response.ok) {
+      throw new Error("Could not load Pocket Torah source.json. Status: " + response.status);
+    }
+
+    const config = await response.json();
+    const rawSources = Array.isArray(config.sources) ? config.sources : [];
+    availableSources = rawSources
+      .map(function(source) { return String(source).toUpperCase(); })
+      .filter(function(source, index, array) {
+        return (source === "LOCAL" || source === "WEB") && array.indexOf(source) === index;
+      });
+
+    if (!availableSources.length) {
+      throw new Error("Pocket Torah source.json contains no valid sources.");
+    }
+
+    sourceConfigLoaded = true;
+
+    // When LOCAL is permitted, try it first.  A real resource failure may
+    // switch the session one-way to WEB.  WEB-only configurations never run
+    // LOCAL fallback logic.
+    applyActiveSource(availableSources.includes("LOCAL") ? "LOCAL" : "WEB");
+    console.log("Pocket Torah allowed sources:", availableSources);
+  }
+
+  async function setActiveSource(source) {
+    await ensureSourceConfigLoaded();
+    applyActiveSource(source);
+  }
+
   function buildLocalPath(relativePath) {
     return basePath + "/" + relativePath.replace(/^\//, "");
   }
 
-  async function ensureResourcesLoaded() {
-    if (resourcesLoaded) {
-      return;
+  async function runWithSourceFallback(operation) {
+    await ensureSourceConfigLoaded();
+
+    try {
+      return await operation();
+    } catch (error) {
+      if (activeSource === "LOCAL" && availableSources.includes("WEB")) {
+        console.warn(
+          "Pocket Torah LOCAL source failed; switching to WEB and retrying once:",
+          error
+        );
+        applyActiveSource("WEB");
+        return await operation();
+      }
+      throw error;
     }
+  }
+
+  async function ensureResourcesLoaded() {
+    await ensureSourceConfigLoaded();
+    if (resourcesLoaded) return;
 
     const aliyahResponse = await fetch(
       buildLocalPath("data/aliyah.json") + "?v=" + Date.now(),
@@ -50,27 +140,35 @@
 
     if (!aliyahResponse.ok) {
       throw new Error(
-        "Could not load Pocket Torah web aliyah.json. Status: " +
+        "Could not load Pocket Torah " + activeSource + " aliyah.json. Status: " +
         aliyahResponse.status
       );
     }
 
     aliyahData = await aliyahResponse.json();
 
-    /*
-      Sefaria uses PocketTorah directly from the web.  These are the known
-      upstream filename exceptions that the local TropePlayer compatibility
-      map handled.
-    */
-    resourceNames = {
-      "Yitro": { labels: "yitro", audio: "Yitro" },
-      "Ki Teitzei": { labels: "Ki Teitzei", audio: "KiTeitzei" }
-    };
+    if (activeSource === "LOCAL") {
+      const resourceMapResponse = await fetch(
+        buildLocalPath("data/PocketTorahResourceMap.json") + "?v=" + Date.now(),
+        { cache: "no-store" }
+      );
+      if (!resourceMapResponse.ok) {
+        throw new Error(
+          "Could not load Pocket Torah LOCAL PocketTorahResourceMap.json. Status: " +
+          resourceMapResponse.status
+        );
+      }
+      resourceNames = await resourceMapResponse.json();
+    } else {
+      // Known upstream PocketTorah filename exceptions for WEB mode.
+      resourceNames = {
+        "Yitro": { labels: "yitro", audio: "Yitro" },
+        "Ki Teitzei": { labels: "Ki Teitzei", audio: "KiTeitzei" }
+      };
+    }
 
     resourcesLoaded = true;
-
-    console.log("Pocket Torah aliyah data loaded.");
-    console.log("Pocket Torah resource names loaded:", resourceNames);
+    console.log("Pocket Torah resources loaded from", activeSource + ".");
   }
 
   function resolveResourceName(parshaName) {
@@ -1001,12 +1099,14 @@
       }
       displayModalReference(selection);
 
-      const prepared = await prepareReadingTiming(
-        parshaName,
-        getModalReadingType(),
-        browserDurationLoader,
-        aliyahNumber
-      );
+      const prepared = await runWithSourceFallback(function() {
+        return prepareReadingTiming(
+          parshaName,
+          getModalReadingType(),
+          browserDurationLoader,
+          aliyahNumber
+        );
+      });
 
       if (serial !== modalCalculationSerial) return;
 
@@ -1108,7 +1208,9 @@
     if (!parshaSelect) return;
 
     try {
-      await ensureResourcesLoaded();
+      await runWithSourceFallback(function() {
+        return ensureResourcesLoaded();
+      });
 
       const parshaNames = getParshaNames();
 
@@ -1151,13 +1253,13 @@
       setAudioTogglePlaying(false);
 
       console.log(
-        "Pocket Torah web parsha list loaded:",
+        "Pocket Torah parsha list loaded:",
         parshaNames.length,
         "parshiot"
       );
     } catch (error) {
       clearModalReference();
-      console.error("Pocket Torah web parsha list could not be loaded:", error);
+      console.error("Pocket Torah parsha list could not be loaded:", error);
     }
   }
 
@@ -1182,6 +1284,11 @@
   global.PocketTorah = Object.freeze({
     setBasePath: setBasePath,
     getBasePath: getBasePath,
+    getAvailableSources: getAvailableSources,
+    getActiveSource: getActiveSource,
+    setActiveSource: setActiveSource,
+    ensureSourceConfigLoaded: ensureSourceConfigLoaded,
+    runWithSourceFallback: runWithSourceFallback,
     ensureResourcesLoaded: ensureResourcesLoaded,
     resolveResourceName: resolveResourceName,
     findAliyah: findAliyah,
