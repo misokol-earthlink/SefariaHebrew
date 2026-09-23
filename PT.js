@@ -603,49 +603,46 @@
     return null;
   }
 
-  function getReadingSelection(parshaName, readingType) {
+  function getReadingAliyahNumbers(parshaName, readingType) {
     const parsha = getParsha(parshaName);
-    if (!parsha) {
-      return null;
-    }
-
     const aliyot = getReadingAliyot(parsha, readingType);
-    if (!aliyot || !aliyot.length) {
-      return null;
-    }
-
-    const numberedAliyot = aliyot.filter(function(aliyah) {
-      return aliyah && String(aliyah._num).toUpperCase() !== "M";
-    });
-
-    if (!numberedAliyot.length) {
-      return null;
-    }
-
-    const start = parseChapterVerse(numberedAliyot[0]._begin);
-    const end = parseChapterVerse(numberedAliyot[numberedAliyot.length - 1]._end);
-    const bookName = getParshaBookName(parsha);
-
-    if (!start || !end || !bookName) {
-      return null;
-    }
-
-    return {
-      parshaName: parshaName,
-      readingType: readingType,
-      book: bookName,
-      bookCode: getBookCodeFromName(bookName),
-      startChapter: start.chapter,
-      startVerse: start.verse,
-      endChapter: end.chapter,
-      endVerse: end.verse
-    };
+    if (!aliyot) return [];
+    return aliyot.filter(function(a) { return a && a._num != null; })
+      .map(function(a) { return String(a._num).toUpperCase(); });
   }
 
-  async function prepareReadingTiming(parshaName, readingType, durationLoader) {
+  function getReadingSelection(parshaName, readingType, aliyahNumber) {
+    const parsha = getParsha(parshaName);
+    if (!parsha) return null;
+    const aliyot = getReadingAliyot(parsha, readingType);
+    if (!aliyot || !aliyot.length) return null;
+    let selectedAliyot;
+    if (aliyahNumber) {
+      const requested = String(aliyahNumber).toUpperCase();
+      selectedAliyot = aliyot.filter(function(a) {
+        return a && String(a._num).toUpperCase() === requested;
+      });
+    } else {
+      selectedAliyot = aliyot.filter(function(a) {
+        return a && String(a._num).toUpperCase() !== "M";
+      });
+    }
+    if (!selectedAliyot.length) return null;
+    const start = parseChapterVerse(selectedAliyot[0]._begin);
+    const end = parseChapterVerse(selectedAliyot[selectedAliyot.length - 1]._end);
+    const bookName = getParshaBookName(parsha);
+    if (!start || !end || !bookName) return null;
+    return { parshaName: parshaName, readingType: readingType,
+      aliyah: aliyahNumber ? String(aliyahNumber).toUpperCase() : null,
+      book: bookName, bookCode: getBookCodeFromName(bookName),
+      startChapter: start.chapter, startVerse: start.verse,
+      endChapter: end.chapter, endVerse: end.verse };
+  }
+
+  async function prepareReadingTiming(parshaName, readingType, durationLoader, aliyahNumber) {
     await ensureResourcesLoaded();
 
-    const selection = getReadingSelection(parshaName, readingType);
+    const selection = getReadingSelection(parshaName, readingType, aliyahNumber);
     const parsha = getParsha(parshaName);
 
     if (!selection || !parsha) {
@@ -941,6 +938,29 @@
     return selected ? selected.value : "full";
   }
 
+  function getModalAliyahNumber() {
+    const select = document.getElementById("ptAliyahSelect");
+    return select && select.value ? select.value : null;
+  }
+
+  function populateModalAliyahSelect() {
+    const parshaSelect = document.getElementById("ptParshaSelect");
+    const aliyahSelect = document.getElementById("ptAliyahSelect");
+    if (!parshaSelect || !aliyahSelect) return;
+    const parshaName = parshaSelect.value;
+    aliyahSelect.innerHTML = "";
+    const allOption = document.createElement("option");
+    allOption.value = ""; allOption.textContent = "All";
+    aliyahSelect.appendChild(allOption);
+    if (!parshaName) { aliyahSelect.disabled = true; return; }
+    const nums = getReadingAliyahNumbers(parshaName, getModalReadingType());
+    nums.forEach(function(n) {
+      const o=document.createElement("option"); o.value=n; o.textContent=n; aliyahSelect.appendChild(o);
+    });
+    aliyahSelect.disabled = nums.length === 0;
+    aliyahSelect.value = "";
+  }
+
   function browserDurationLoader(audioPath) {
     return new Promise(function(resolve, reject) {
       const audio = new Audio();
@@ -978,7 +998,7 @@
        * aliyah.json was loaded and interpreted before slower timing resources
        * are fetched.
        */
-      const selection = getReadingSelection(parshaName, getModalReadingType());
+      const selection = getReadingSelection(parshaName, getModalReadingType(), getModalAliyahNumber());
       if (!selection) {
         throw new Error("Pocket Torah reading range could not be resolved.");
       }
@@ -987,7 +1007,8 @@
       const prepared = await prepareReadingTiming(
         parshaName,
         getModalReadingType(),
-        browserDurationLoader
+        browserDurationLoader,
+        getModalAliyahNumber()
       );
 
       if (serial !== modalCalculationSerial) return;
@@ -1026,11 +1047,17 @@
         parshaSelect.appendChild(option);
       });
 
-      parshaSelect.addEventListener("change", recalculateSefariaModal);
-
-      document.querySelectorAll('input[name="ptReading"]').forEach(function(input) {
-        input.addEventListener("change", recalculateSefariaModal);
+      const aliyahSelect = document.getElementById("ptAliyahSelect");
+      parshaSelect.addEventListener("change", function() {
+        populateModalAliyahSelect(); recalculateSefariaModal();
       });
+      document.querySelectorAll('input[name="ptReading"]').forEach(function(input) {
+        input.addEventListener("change", function() {
+          populateModalAliyahSelect(); recalculateSefariaModal();
+        });
+      });
+      if (aliyahSelect) aliyahSelect.addEventListener("change", recalculateSefariaModal);
+      populateModalAliyahSelect();
 
       const audioToggle = document.getElementById("ptAudioToggle");
       if (audioToggle) {
@@ -1055,13 +1082,16 @@
 
   if (typeof document !== "undefined") {
     if (document.readyState === "loading") {
-      document.addEventListener(
-        "DOMContentLoaded",
-        initializeSefariaPocketTorahModal
-      );
+      document.addEventListener("DOMContentLoaded", initializeSefariaPocketTorahModal);
     } else {
       initializeSefariaPocketTorahModal();
     }
+    window.addEventListener("hashchange", function() {
+      if (window.location.hash !== "#pocketTorahModal") stopModalAudio();
+    });
+    document.addEventListener("click", function(event) {
+      if (event.target.closest && event.target.closest(".pt-modal-close")) stopModalAudio();
+    });
   }
 
   global.PocketTorah = Object.freeze({
@@ -1083,6 +1113,7 @@
     getParsha: getParsha,
     getParshaNames: getParshaNames,
     getReadingSelection: getReadingSelection,
+    getReadingAliyahNumbers: getReadingAliyahNumbers,
     prepareReadingTiming: prepareReadingTiming,
     initializeSefariaPocketTorahModal: initializeSefariaPocketTorahModal,
     recalculateSefariaModal: recalculateSefariaModal,

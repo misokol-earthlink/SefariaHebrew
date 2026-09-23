@@ -398,6 +398,12 @@
       font-size: 15px;
     }
 
+    #ptAliyahSelect {
+      min-width: 100px;
+      padding: 7px 9px;
+      font-size: 15px;
+    }
+
     .pt-reading-options {
       display: flex;
       gap: 14px;
@@ -541,8 +547,8 @@
   <div class="section-title">Lyrics JSON</div>
   <pre id="jsonOutput">{}</pre>
   <div id="downloadDocument" style="display:none;"></div>
-  <script src="PT.js?v=20260922F"></script>
-  <script src="Sefaria.js?v=20260922F"></script>
+  <script src="PT.js?v=20260923G"></script>
+  <script src="Sefaria.js?v=20260923G"></script>
 </div>
   <!--
     Pocket Torah Options modal.
@@ -568,13 +574,19 @@
         </div>
 
         <div class="pt-modal-field">
+          <label for="ptAliyahSelect">Aliyah</label>
+          <select id="ptAliyahSelect" disabled>
+            <option value="" selected>All</option>
+          </select>
+        </div>
+
+        <div class="pt-modal-field">
           <span class="pt-reading-label">Reading</span>
           <div class="pt-reading-options">
             <label><input type="radio" name="ptReading" value="full" checked> Full K'riyah</label>
             <label><input type="radio" name="ptReading" value="triennial1"> Triennial-1</label>
             <label><input type="radio" name="ptReading" value="triennial2"> Triennial-2</label>
             <label><input type="radio" name="ptReading" value="triennial3"> Triennial-3</label>
-            <label><input type="radio" name="ptReading" value="maftir" disabled> Maftir</label>
           </div>
         </div>
       </div>
