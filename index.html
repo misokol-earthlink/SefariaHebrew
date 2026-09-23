@@ -548,8 +548,8 @@
   <div class="section-title">Lyrics JSON</div>
   <pre id="jsonOutput">{}</pre>
   <div id="downloadDocument" style="display:none;"></div>
-  <script src="PT.js?v=20260923H"></script>
-  <script src="Sefaria.js?v=20260923H"></script>
+  <script src="PT.js?v=20260923I"></script>
+  <script src="Sefaria.js?v=20260923I"></script>
 </div>
   <!--
     Pocket Torah Options modal.
@@ -576,8 +576,16 @@
 
         <div class="pt-modal-field">
           <label for="ptAliyahSelect">Aliyah</label>
-          <select id="ptAliyahSelect" disabled>
-            <option value="" selected>All</option>
+          <select id="ptAliyahSelect">
+            <option value="-1" selected>Select Aliyah</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="M">M</option>
           </select>
         </div>
 

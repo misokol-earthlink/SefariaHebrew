@@ -940,25 +940,19 @@
 
   function getModalAliyahNumber() {
     const select = document.getElementById("ptAliyahSelect");
-    return select && select.value ? select.value : null;
+    if (!select || !select.value || select.value === "-1") return null;
+    return select.value;
   }
 
   function populateModalAliyahSelect() {
-    const parshaSelect = document.getElementById("ptParshaSelect");
+    /*
+     * Aliyah is intentionally independent of the Full/TR radio group.
+     * The HTML owns the fixed 1-7/M choices.  Do not rebuild or reset this
+     * select when the reading type changes.
+     */
     const aliyahSelect = document.getElementById("ptAliyahSelect");
-    if (!parshaSelect || !aliyahSelect) return;
-    const parshaName = parshaSelect.value;
-    aliyahSelect.innerHTML = "";
-    const allOption = document.createElement("option");
-    allOption.value = ""; allOption.textContent = "All";
-    aliyahSelect.appendChild(allOption);
-    if (!parshaName) { aliyahSelect.disabled = true; return; }
-    const nums = getReadingAliyahNumbers(parshaName, getModalReadingType());
-    nums.forEach(function(n) {
-      const o=document.createElement("option"); o.value=n; o.textContent=n; aliyahSelect.appendChild(o);
-    });
-    aliyahSelect.disabled = nums.length === 0;
-    aliyahSelect.value = "";
+    if (!aliyahSelect) return;
+    if (!aliyahSelect.value) aliyahSelect.value = "-1";
   }
 
   function browserDurationLoader(audioPath) {
@@ -990,6 +984,9 @@
 
     if (!parshaName) return;
 
+    const aliyahNumber = getModalAliyahNumber();
+    if (!aliyahNumber) return;
+
     const serial = ++modalCalculationSerial;
 
     try {
@@ -998,7 +995,7 @@
        * aliyah.json was loaded and interpreted before slower timing resources
        * are fetched.
        */
-      const selection = getReadingSelection(parshaName, getModalReadingType(), getModalAliyahNumber());
+      const selection = getReadingSelection(parshaName, getModalReadingType(), aliyahNumber);
       if (!selection) {
         throw new Error("Pocket Torah reading range could not be resolved.");
       }
@@ -1008,7 +1005,7 @@
         parshaName,
         getModalReadingType(),
         browserDurationLoader,
-        getModalAliyahNumber()
+        aliyahNumber
       );
 
       if (serial !== modalCalculationSerial) return;
@@ -1131,11 +1128,11 @@
 
       const aliyahSelect = document.getElementById("ptAliyahSelect");
       parshaSelect.addEventListener("change", function() {
-        populateModalAliyahSelect(); recalculateSefariaModal();
+        recalculateSefariaModal();
       });
       document.querySelectorAll('input[name="ptReading"]').forEach(function(input) {
         input.addEventListener("change", function() {
-          populateModalAliyahSelect(); recalculateSefariaModal();
+          recalculateSefariaModal();
         });
       });
       if (aliyahSelect) aliyahSelect.addEventListener("change", recalculateSefariaModal);
