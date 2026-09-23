@@ -1027,6 +1027,88 @@
     }
   }
 
+
+  function getPTReadingFileSuffix(readingType, aliyahNumber) {
+    if (String(aliyahNumber || "").toUpperCase() === "M") {
+      return "Maftir";
+    }
+
+    if (readingType === "triennial1") return "TR1";
+    if (readingType === "triennial2") return "TR2";
+    if (readingType === "triennial3") return "TR3";
+    return "Full";
+  }
+
+  async function getSefariaHebrewForModalSelection() {
+    const parshaSelect = document.getElementById("ptParshaSelect");
+    if (!parshaSelect || !parshaSelect.value) {
+      alert("Select a Parsha first.");
+      return;
+    }
+
+    const parshaName = parshaSelect.value;
+    const readingType = getModalReadingType();
+    const aliyahNumber = getModalAliyahNumber();
+
+    if (!aliyahNumber) {
+      alert("Select an individual Aliyah (1-7 or M) before getting Hebrew text.");
+      return;
+    }
+
+    const selection = getReadingSelection(
+      parshaName,
+      readingType,
+      aliyahNumber
+    );
+
+    if (!selection) {
+      alert("The selected Pocket Torah reading range could not be resolved.");
+      return;
+    }
+
+    const aliyahName = parshaName + "-" + aliyahNumber;
+    const jsonTitle = aliyahName + "-PT";
+    const fileBase =
+      aliyahName + "-" +
+      (aliyahNumber === "M"
+        ? "Maftir"
+        : getPTReadingFileSuffix(readingType, aliyahNumber));
+
+    if (
+      !window.SefariaPT ||
+      typeof window.SefariaPT.loadPocketTorahHebrew !== "function"
+    ) {
+      alert("The Sefaria Hebrew retrieval function is not available.");
+      return;
+    }
+
+    stopModalAudio();
+
+    const loaded = await window.SefariaPT.loadPocketTorahHebrew({
+      parshaName: parshaName,
+      readingType: readingType,
+      aliyahNumber: aliyahNumber,
+      jsonTitle: jsonTitle,
+      fileBase: fileBase,
+      book: selection.book,
+      startChapter: selection.startChapter,
+      startVerse: selection.startVerse,
+      endChapter: selection.endChapter,
+      endVerse: selection.endVerse
+    });
+
+    if (loaded) {
+      // Close the :target modal so the retrieved Hebrew/editor is visible.
+      if (window.location.hash === "#pocketTorahModal") {
+        history.replaceState(
+          null,
+          document.title,
+          window.location.pathname + window.location.search
+        );
+      }
+    }
+  }
+
   async function initializeSefariaPocketTorahModal() {
     const parshaSelect = document.getElementById("ptParshaSelect");
     if (!parshaSelect) return;
@@ -1063,6 +1145,15 @@
       if (audioToggle) {
         audioToggle.addEventListener("click", toggleModalAudioPlayback);
       }
+
+      const getHebrewText = document.getElementById("ptGetHebrewText");
+      if (getHebrewText) {
+        getHebrewText.addEventListener(
+          "click",
+          getSefariaHebrewForModalSelection
+        );
+      }
+
       setAudioTogglePlaying(false);
 
       console.log(
@@ -1118,6 +1209,7 @@
     initializeSefariaPocketTorahModal: initializeSefariaPocketTorahModal,
     recalculateSefariaModal: recalculateSefariaModal,
     getPreparedModalReading: getPreparedModalReading,
+    getSefariaHebrewForModalSelection: getSefariaHebrewForModalSelection,
     toggleModalAudioPlayback: toggleModalAudioPlayback,
     stopModalAudio: stopModalAudio
   });

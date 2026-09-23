@@ -9,6 +9,10 @@
     let lastFetchedRef = "";
     let lastSefariaData = null;
 
+    // Set only by the Pocket Torah retrieval path.  Ordinary Sefaria
+    // retrievals continue to use the editable JSON title as the save name.
+    let ptSaveContext = null;
+
     const torahBooks = [
       {
         label: "Genesis / Bereishit",
@@ -51,6 +55,7 @@
     document.getElementById("manualFetchBtn").addEventListener("click", fetchManualRef);
     document.getElementById("refreshJsonBtn").addEventListener("click", rebuildJsonFromEditor);
     document.getElementById("copyJsonBtn").addEventListener("click", copyCurrentJson);
+    document.getElementById("saveJsonBtn").addEventListener("click", saveCurrentJson);
     document.getElementById("toggleTranslitBtn").addEventListener("click", toggleWordDetails);
     document.getElementById("toggleParagraphBtn").addEventListener("click", toggleParagraphMarkers);
     titleInput.addEventListener("input", rebuildJsonFromEditor);
@@ -320,12 +325,14 @@ function getCurrentSelectorParsedRef() {
   };
 }
     async function fetchSelectedTorahText() {
+      ptSaveContext = null;
       updateGeneratedRefDisplay(false);
       titleInput.value = buildSelectedRef();
       await fetchSefariaText(buildSelectedRef());
     }
 
     async function fetchManualRef() {
+      ptSaveContext = null;
       const manualRef = document.getElementById("manualRefInput").value.trim();
       if (!manualRef) {
         document.getElementById("status").textContent = "Enter a manual source reference first.";
@@ -824,7 +831,12 @@ function flattenSefariaText(rawText) {
 
           const hebrew = document.createElement("div");
           hebrew.className = "word-hebrew";
+          hebrew.contentEditable = "true";
+          hebrew.spellcheck = false;
+          hebrew.setAttribute("role", "textbox");
+          hebrew.setAttribute("aria-label", "Editable Hebrew word");
           hebrew.textContent = wordData.hebrew;
+          hebrew.addEventListener("input", rebuildJsonFromEditor);
 
           const translit = document.createElement("input");
           translit.className = "word-translit";
@@ -965,6 +977,227 @@ function flattenSefariaText(rawText) {
         status.textContent = "Copy failed. You can manually copy from the JSON box.";
       }
     }
+
+
+    function sanitizeDownloadBaseName(value) {
+      return String(value || "Lyrics")
+        .replace(/[\\/:*?"<>|]/g, "_")
+        .trim() || "Lyrics";
+    }
+
+    function downloadJsonObject(jsonObject, fileName) {
+      const blob = new Blob(
+        [JSON.stringify(jsonObject, null, 2)],
+        { type: "application/json;charset=utf-8" }
+      );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName.toLowerCase().endsWith(".json")
+        ? fileName
+        : fileName + ".json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(function() { URL.revokeObjectURL(url); }, 0);
+    }
+
+    function getLineChapter(lineName) {
+      const match = String(lineName || "").match(/^[A-Z]{2}:(\d+):\d+$/);
+      return match ? parseInt(match[1], 10) : null;
+    }
+
+    function saveCurrentJson() {
+      const status = document.getElementById("status");
+      rebuildJsonFromEditor();
+
+      if (!currentLyricsJson.lines.length) {
+        status.textContent = "No Lyrics JSON is available to save.";
+        return;
+      }
+
+      if (ptSaveContext && ptSaveContext.splitChapter) {
+        const firstLines = currentLyricsJson.lines.filter(function(line) {
+          return getLineChapter(line.lineName) === ptSaveContext.startChapter;
+        });
+        const secondLines = currentLyricsJson.lines.filter(function(line) {
+          return getLineChapter(line.lineName) === ptSaveContext.endChapter;
+        });
+
+        if (!firstLines.length || !secondLines.length) {
+          status.textContent =
+            "The two Pocket Torah chapter parts could not be separated for saving.";
+          return;
+        }
+
+        downloadJsonObject(
+          { title: currentLyricsJson.title, lines: firstLines },
+          ptSaveContext.fileBase + "-A.json"
+        );
+        downloadJsonObject(
+          { title: currentLyricsJson.title, lines: secondLines },
+          ptSaveContext.fileBase + "-B.json"
+        );
+
+        status.textContent =
+          "Saved Pocket Torah JSON parts " +
+          ptSaveContext.fileBase + "-A.json and " +
+          ptSaveContext.fileBase + "-B.json.";
+        return;
+      }
+
+      const fileBase = ptSaveContext
+        ? ptSaveContext.fileBase
+        : sanitizeDownloadBaseName(currentLyricsJson.title);
+
+      downloadJsonObject(currentLyricsJson, fileBase + ".json");
+      status.textContent = "Saved " + fileBase + ".json.";
+    }
+
+    function getChapterVerseCount(bookName, chapter) {
+      const book = torahBooks.find(function(item) {
+        return item.sefariaBook === bookName;
+      });
+      if (!book || chapter < 1 || chapter > book.chapters.length) return null;
+      return book.chapters[chapter - 1];
+    }
+
+    async function fetchStandardSefariaPart(ref) {
+      const url = buildSefariaUrl(ref);
+      console.log("PT FETCH URL:", url);
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Sefaria returned HTTP " + response.status);
+      }
+
+      const data = await response.json();
+      if (responseHasNoText(data)) {
+        throw new Error("No Hebrew text was returned by Sefaria for " + ref + ".");
+      }
+
+      return {
+        ref: ref,
+        data: data,
+        lines: normalizeSefariaToEditorLines(ref, data)
+      };
+    }
+
+    /*
+      Bridge used by PT.js.  Pocket Torah supplies the already-resolved
+      Book/Chapter/Verse range and the two names.  Yitro and Va'etchanan are
+      deliberately excluded here until their dual-trope ranges are handled.
+    */
+    async function loadPocketTorahHebrew(request) {
+      const status = document.getElementById("status");
+      const normalizedParsha = String(request.parshaName || "")
+        .toLowerCase()
+        .replace(/[^a-z]/g, "");
+
+      if (
+        normalizedParsha === "yitro" ||
+        normalizedParsha === "vaetchanan" ||
+        normalizedParsha === "veetchanan"
+      ) {
+        alert(
+          "Pocket Torah Hebrew retrieval for Yitro and Va'etchanan is temporarily disabled because their Sefaria dual-trope verses require separate range handling."
+        );
+        return false;
+      }
+
+      if (!request.book || !request.startChapter || !request.endChapter) {
+        throw new Error("Pocket Torah did not supply a complete Hebrew text range.");
+      }
+
+      // PT retrieval deliberately uses the normal/default Sefaria source.
+      setTropeSelection("lower");
+
+      titleInput.value = request.jsonTitle;
+      ptSaveContext = {
+        fileBase: sanitizeDownloadBaseName(request.fileBase),
+        splitChapter: request.startChapter !== request.endChapter,
+        startChapter: request.startChapter,
+        endChapter: request.endChapter
+      };
+
+      document.getElementById("lineEditor").innerHTML = "";
+      document.getElementById("jsonOutput").textContent = "{}";
+      status.textContent = "Fetching Pocket Torah Hebrew range from Sefaria...";
+
+      try {
+        let parts = [];
+
+        if (request.startChapter === request.endChapter) {
+          const ref =
+            request.book + " " +
+            request.startChapter + ":" +
+            request.startVerse + "-" +
+            request.endVerse;
+          parts.push(await fetchStandardSefariaPart(ref));
+        } else {
+          const lastVerse = getChapterVerseCount(
+            request.book,
+            request.startChapter
+          );
+          if (!lastVerse) {
+            throw new Error("Could not determine the end of the starting chapter.");
+          }
+
+          const refA =
+            request.book + " " +
+            request.startChapter + ":" +
+            request.startVerse + "-" +
+            lastVerse;
+          const refB =
+            request.book + " " +
+            request.endChapter + ":1-" +
+            request.endVerse;
+
+          parts.push(await fetchStandardSefariaPart(refA));
+          parts.push(await fetchStandardSefariaPart(refB));
+        }
+
+        const allLines = [];
+        parts.forEach(function(part) {
+          part.lines.forEach(function(line) {
+            allLines.push(line);
+          });
+        });
+
+        // Renumber display-order line values while retaining canonical lineName.
+        allLines.forEach(function(line, index) {
+          line.line = index + 1;
+        });
+
+        lastFetchedRef = parts.map(function(part) { return part.ref; }).join(" + ");
+        lastSefariaData = parts[0].data;
+        updateSourceAttribution(parts[0].data, parts[0].ref);
+        renderEditorLines(allLines);
+        rebuildJsonFromEditor();
+
+        status.textContent =
+          "Loaded Pocket Torah range as " +
+          allLines.length +
+          " line(s). JSON title: " +
+          request.jsonTitle +
+          (ptSaveContext.splitChapter
+            ? ". Save JSON will create A and B chapter files."
+            : ".");
+
+        return true;
+      } catch (err) {
+        console.error(err);
+        ptSaveContext = null;
+        status.textContent = "Pocket Torah Hebrew load failed: " + err.message;
+        return false;
+      }
+    }
+
+    // Deliberately small public bridge for PT.js; the rest of Sefaria.js
+    // remains private to this page.
+    window.SefariaPT = {
+      loadPocketTorahHebrew: loadPocketTorahHebrew
+    };
 
 function buildDownloadDocument(lines) {
   const docDiv = document.getElementById("downloadDocument");
