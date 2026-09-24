@@ -582,7 +582,7 @@
     });
 
     console.log("Pocket Torah playback segments:", playbackSegments);
-
+    console.log(`Playback: ${activeSource}`);
     return {
       lineData: lineData,
       playbackSegments: playbackSegments
