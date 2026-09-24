@@ -2,12 +2,12 @@
  * PT.js
  * Pocket Torah data/analysis support shared by applications.
  *
- * This file deliberately contains no application DOM access.  Applications
- * supply their own UI values as arguments and, when audio metadata is needed,
- * supply an audio-duration loader callback.
+ * The core Pocket Torah processing is shared by applications. Sefaria also
+ * uses the optional modal adapter in this file; TropePlayer does not call it.
+ * Both applications use the same source-selection, canonical-reference,
+ * aliyah/timing, and audio-path processing.
  *
- * Local PocketTorah repository layout is preserved.  No PocketTorah web API
- * or remote resource URLs are used.
+ * source.json controls whether LOCAL, WEB, or both sources are permitted.
  */
 (function(global) {
   "use strict";
@@ -105,6 +105,22 @@
   async function setActiveSource(source) {
     await ensureSourceConfigLoaded();
     applyActiveSource(source);
+  }
+
+  async function resetSourceForNewReading() {
+    await ensureSourceConfigLoaded();
+
+    // A host application calls this when its definition of the reading changes.
+    // Sefaria calls it for Parsha / reading-type / Aliyah changes. TropePlayer
+    // calls it when a new Lyrics JSON is loaded. PT.js owns what reset means;
+    // each host owns the event that triggers it.
+    const preferredSource = availableSources.includes("LOCAL") ? "LOCAL" : "WEB";
+
+    if (activeSource !== preferredSource) {
+      applyActiveSource(preferredSource);
+    }
+
+    return activeSource;
   }
 
   function buildLocalPath(relativePath) {
@@ -1226,15 +1242,26 @@
       });
 
       const aliyahSelect = document.getElementById("ptAliyahSelect");
-      parshaSelect.addEventListener("change", function() {
-        recalculateSefariaModal();
-      });
+
+      async function resetAndRecalculateSefariaModal() {
+        try {
+          await resetSourceForNewReading();
+          await runWithSourceFallback(function() {
+            return ensureResourcesLoaded();
+          });
+          await recalculateSefariaModal();
+        } catch (error) {
+          console.error("Pocket Torah reading reset failed:", error);
+        }
+      }
+
+      parshaSelect.addEventListener("change", resetAndRecalculateSefariaModal);
       document.querySelectorAll('input[name="ptReading"]').forEach(function(input) {
-        input.addEventListener("change", function() {
-          recalculateSefariaModal();
-        });
+        input.addEventListener("change", resetAndRecalculateSefariaModal);
       });
-      if (aliyahSelect) aliyahSelect.addEventListener("change", recalculateSefariaModal);
+      if (aliyahSelect) {
+        aliyahSelect.addEventListener("change", resetAndRecalculateSefariaModal);
+      }
       populateModalAliyahSelect();
 
       const audioToggle = document.getElementById("ptAudioToggle");
@@ -1287,6 +1314,7 @@
     getAvailableSources: getAvailableSources,
     getActiveSource: getActiveSource,
     setActiveSource: setActiveSource,
+    resetSourceForNewReading: resetSourceForNewReading,
     ensureSourceConfigLoaded: ensureSourceConfigLoaded,
     runWithSourceFallback: runWithSourceFallback,
     ensureResourcesLoaded: ensureResourcesLoaded,
