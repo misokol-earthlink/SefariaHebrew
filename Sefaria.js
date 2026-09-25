@@ -1146,11 +1146,113 @@ function flattenSefariaText(rawText) {
         .replace(/\s+/g, "_");
     }
 
-    function downloadJsonObject(data, fileName) {
-      const blob = new Blob(
-        [JSON.stringify(data, null, 2)],
-        { type: "application/json" }
-      );
+    // Build a ZIP in the browser without an external library.  The ZIP uses
+    // the "stored" method (no compression), which is sufficient for these
+    // small JSON export files and avoids a second automatic browser download.
+    function crc32(bytes) {
+      let crc = 0xFFFFFFFF;
+
+      for (let i = 0; i < bytes.length; i++) {
+        crc ^= bytes[i];
+        for (let bit = 0; bit < 8; bit++) {
+          crc = (crc >>> 1) ^ ((crc & 1) ? 0xEDB88320 : 0);
+        }
+      }
+
+      return (crc ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    function writeUint16(view, offset, value) {
+      view.setUint16(offset, value & 0xFFFF, true);
+    }
+
+    function writeUint32(view, offset, value) {
+      view.setUint32(offset, value >>> 0, true);
+    }
+
+    function makeStoredZip(files) {
+      const encoder = new TextEncoder();
+      const prepared = files.map(function(file) {
+        const nameBytes = encoder.encode(file.name);
+        const dataBytes = encoder.encode(file.text);
+        return {
+          nameBytes: nameBytes,
+          dataBytes: dataBytes,
+          crc: crc32(dataBytes),
+          localOffset: 0
+        };
+      });
+
+      let localSize = 0;
+      prepared.forEach(function(file) {
+        localSize += 30 + file.nameBytes.length + file.dataBytes.length;
+      });
+
+      let centralSize = 0;
+      prepared.forEach(function(file) {
+        centralSize += 46 + file.nameBytes.length;
+      });
+
+      const totalSize = localSize + centralSize + 22;
+      const buffer = new ArrayBuffer(totalSize);
+      const bytes = new Uint8Array(buffer);
+      const view = new DataView(buffer);
+      let offset = 0;
+
+      prepared.forEach(function(file) {
+        file.localOffset = offset;
+
+        writeUint32(view, offset, 0x04034B50); offset += 4;
+        writeUint16(view, offset, 20); offset += 2;       // version needed
+        writeUint16(view, offset, 0x0800); offset += 2;   // UTF-8 names
+        writeUint16(view, offset, 0); offset += 2;        // stored, no compression
+        writeUint16(view, offset, 0); offset += 2;        // time
+        writeUint16(view, offset, 0); offset += 2;        // date
+        writeUint32(view, offset, file.crc); offset += 4;
+        writeUint32(view, offset, file.dataBytes.length); offset += 4;
+        writeUint32(view, offset, file.dataBytes.length); offset += 4;
+        writeUint16(view, offset, file.nameBytes.length); offset += 2;
+        writeUint16(view, offset, 0); offset += 2;
+        bytes.set(file.nameBytes, offset); offset += file.nameBytes.length;
+        bytes.set(file.dataBytes, offset); offset += file.dataBytes.length;
+      });
+
+      const centralOffset = offset;
+
+      prepared.forEach(function(file) {
+        writeUint32(view, offset, 0x02014B50); offset += 4;
+        writeUint16(view, offset, 20); offset += 2;       // version made by
+        writeUint16(view, offset, 20); offset += 2;       // version needed
+        writeUint16(view, offset, 0x0800); offset += 2;   // UTF-8 names
+        writeUint16(view, offset, 0); offset += 2;        // stored
+        writeUint16(view, offset, 0); offset += 2;
+        writeUint16(view, offset, 0); offset += 2;
+        writeUint32(view, offset, file.crc); offset += 4;
+        writeUint32(view, offset, file.dataBytes.length); offset += 4;
+        writeUint32(view, offset, file.dataBytes.length); offset += 4;
+        writeUint16(view, offset, file.nameBytes.length); offset += 2;
+        writeUint16(view, offset, 0); offset += 2;        // extra length
+        writeUint16(view, offset, 0); offset += 2;        // comment length
+        writeUint16(view, offset, 0); offset += 2;        // disk number
+        writeUint16(view, offset, 0); offset += 2;        // internal attributes
+        writeUint32(view, offset, 0); offset += 4;        // external attributes
+        writeUint32(view, offset, file.localOffset); offset += 4;
+        bytes.set(file.nameBytes, offset); offset += file.nameBytes.length;
+      });
+
+      writeUint32(view, offset, 0x06054B50); offset += 4;
+      writeUint16(view, offset, 0); offset += 2;
+      writeUint16(view, offset, 0); offset += 2;
+      writeUint16(view, offset, prepared.length); offset += 2;
+      writeUint16(view, offset, prepared.length); offset += 2;
+      writeUint32(view, offset, centralSize); offset += 4;
+      writeUint32(view, offset, centralOffset); offset += 4;
+      writeUint16(view, offset, 0); offset += 2;
+
+      return new Blob([buffer], { type: "application/zip" });
+    }
+
+    function downloadBlob(blob, fileName) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -1158,7 +1260,9 @@ function flattenSefariaText(rawText) {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      setTimeout(function() {
+        URL.revokeObjectURL(url);
+      }, 1000);
     }
 
     function saveLyricsAndTropeJson() {
@@ -1175,17 +1279,26 @@ function flattenSefariaText(rawText) {
         currentLyricsJson.title || tropeJson.name || "Sefaria"
       );
 
-      downloadJsonObject(currentLyricsJson, baseName + "_lyrics.json");
+      const lyricsFileName = baseName + "_lyrics.json";
+      const tropeFileName = baseName + ".json";
+      const zipFileName = baseName + ".zip";
 
-      // A short delay lets browsers register two separate user-initiated
-      // downloads reliably from the same Save JSON action.
-      setTimeout(function() {
-        downloadJsonObject(tropeJson, baseName + ".json");
-      }, 150);
+      const zipBlob = makeStoredZip([
+        {
+          name: lyricsFileName,
+          text: JSON.stringify(currentLyricsJson, null, 2)
+        },
+        {
+          name: tropeFileName,
+          text: JSON.stringify(tropeJson, null, 2)
+        }
+      ]);
+
+      downloadBlob(zipBlob, zipFileName);
 
       status.textContent =
-        "Saved Lyrics JSON and trope JSON: " +
-        baseName + "_lyrics.json and " + baseName + ".json";
+        "Saved " + zipFileName + " containing " +
+        lyricsFileName + " and " + tropeFileName + ".";
     }
 
 function buildDownloadDocument(lines) {
