@@ -9,10 +9,6 @@
     let lastFetchedRef = "";
     let lastSefariaData = null;
 
-    // Set only by the Pocket Torah retrieval path.  Ordinary Sefaria
-    // retrievals continue to use the editable JSON title as the save name.
-    let ptSaveContext = null;
-
     const torahBooks = [
       {
         label: "Genesis / Bereishit",
@@ -55,7 +51,10 @@
     document.getElementById("manualFetchBtn").addEventListener("click", fetchManualRef);
     document.getElementById("refreshJsonBtn").addEventListener("click", rebuildJsonFromEditor);
     document.getElementById("copyJsonBtn").addEventListener("click", copyCurrentJson);
-    document.getElementById("saveJsonBtn").addEventListener("click", saveCurrentJson);
+    const saveJsonBtn = document.getElementById("saveJsonBtn");
+    if (saveJsonBtn) {
+      saveJsonBtn.addEventListener("click", saveLyricsAndTropeJson);
+    }
     document.getElementById("toggleTranslitBtn").addEventListener("click", toggleWordDetails);
     document.getElementById("toggleParagraphBtn").addEventListener("click", toggleParagraphMarkers);
     titleInput.addEventListener("input", rebuildJsonFromEditor);
@@ -325,14 +324,12 @@ function getCurrentSelectorParsedRef() {
   };
 }
     async function fetchSelectedTorahText() {
-      ptSaveContext = null;
       updateGeneratedRefDisplay(false);
       titleInput.value = buildSelectedRef();
       await fetchSefariaText(buildSelectedRef());
     }
 
     async function fetchManualRef() {
-      ptSaveContext = null;
       const manualRef = document.getElementById("manualRefInput").value.trim();
       if (!manualRef) {
         document.getElementById("status").textContent = "Enter a manual source reference first.";
@@ -831,12 +828,7 @@ function flattenSefariaText(rawText) {
 
           const hebrew = document.createElement("div");
           hebrew.className = "word-hebrew";
-          hebrew.contentEditable = "true";
-          hebrew.spellcheck = false;
-          hebrew.setAttribute("role", "textbox");
-          hebrew.setAttribute("aria-label", "Editable Hebrew word");
           hebrew.textContent = wordData.hebrew;
-          hebrew.addEventListener("input", rebuildJsonFromEditor);
 
           const translit = document.createElement("input");
           translit.className = "word-translit";
@@ -979,194 +971,222 @@ function flattenSefariaText(rawText) {
     }
 
 
-    function sanitizeDownloadBaseName(value) {
-      return String(value || "Lyrics")
-        .replace(/[\\/:*?"<>|]/g, "_")
-        .trim() || "Lyrics";
+
+    /* =========================================================
+       TROPE JSON EXPORT
+       Derived only when Save JSON is requested.  The source Hebrew
+       displayed in .source-hebrew is used so punctuation such as
+       paseq (U+05C0), which is not a Lyrics word object, is retained.
+       ========================================================= */
+
+    const TROPE_MARK_NAMES = {
+      "\u0591": "EtNachTah",
+      "\u0592": "Segol",
+      "\u0593": "Shalshelet",
+      "\u0594": "Katon",
+      "\u0595": "ZakefGadol",
+      "\u0596": "Tipchah",
+      "\u0597": "Rvi'i",
+      "\u0599": "PashTa",
+      "\u059A": "Y'tiv",
+      "\u059B": "Tvir",
+      "\u059C": "Geresh",
+      "\u059E": "Gershayim",
+      "\u059F": "Karne-farah",
+      "\u05A0": "T'LishaGadola",
+      "\u05A1": "Pazer",
+      "\u05A3": "Munach",
+      "\u05A4": "Mapach",
+      "\u05A5": "Merchah",
+      "\u05A6": "MerchahK'fulah",
+      "\u05A7": "Darga",
+      "\u05A8": "Kadma",
+      "\u05A9": "T'LishaK'tanah",
+      "\u05AA": "YareachBenYomo",
+      "\u05AE": "Zarka",
+      "\u05C3": "SofPaSuk"
+    };
+
+    // TropePlayer documents these marks as positional duplicates when a
+    // second copy is placed on the accented syllable.  Such a pair is one
+    // playback event, not two.
+    const POSITIONAL_DUPLICATE_MARKS = new Set([
+      "\u0592", // Segol - postpositive
+      "\u0599", // PashTa - postpositive
+      "\u05AE", // Zarka - postpositive
+      "\u05A0", // T'LishaGadola - prepositive
+      "\u05A9"  // T'LishaK'tanah - postpositive
+    ]);
+
+    function collectTropeEventsFromHebrew(sourceHebrew) {
+      const chars = Array.from(String(sourceHebrew || "").normalize("NFD"));
+      const events = [];
+
+      // Record each trope mark and whether a paseq follows the same
+      // Munach before the next Hebrew letter/trope event.  Whitespace is
+      // deliberately ignored for this test.
+      for (let i = 0; i < chars.length; i++) {
+        const ch = chars[i];
+        if (!TROPE_MARK_NAMES[ch]) continue;
+
+        let hasFollowingPaseq = false;
+        if (ch === "\u05A3") {
+          for (let j = i + 1; j < chars.length; j++) {
+            const next = chars[j];
+            if (next === "\u05C0") {
+              hasFollowingPaseq = true;
+              break;
+            }
+            if (/\s/.test(next)) continue;
+            if (TROPE_MARK_NAMES[next] || /[\u05D0-\u05EA]/.test(next)) break;
+            // Vowels and other combining marks do not end the test.
+          }
+        }
+
+        events.push({
+          mark: ch,
+          name: TROPE_MARK_NAMES[ch],
+          charIndex: i,
+          hasFollowingPaseq: hasFollowingPaseq
+        });
+      }
+
+      return suppressPositionalDuplicateTropes(chars, events);
     }
 
-    function downloadJsonObject(jsonObject, fileName) {
+    function suppressPositionalDuplicateTropes(chars, events) {
+      if (events.length < 2) return events;
+
+      // Determine whitespace-delimited source token for each event.  This is
+      // used only to identify the documented duplicate positional marks; it
+      // does not otherwise control trope sequencing.
+      function tokenBounds(charIndex) {
+        let start = charIndex;
+        let end = charIndex;
+        while (start > 0 && !/\s/.test(chars[start - 1])) start--;
+        while (end + 1 < chars.length && !/\s/.test(chars[end + 1])) end++;
+        return start + ":" + end;
+      }
+
+      const seen = new Set();
+      return events.filter(function(event) {
+        if (!POSITIONAL_DUPLICATE_MARKS.has(event.mark)) return true;
+        const key = tokenBounds(event.charIndex) + ":" + event.mark;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function resolveTropePlaybackNames(sourceHebrew) {
+      const events = collectTropeEventsFromHebrew(sourceHebrew);
+      const result = [];
+
+      for (let i = 0; i < events.length; i++) {
+        const current = events[i];
+        const next = events[i + 1] || null;
+
+        // Explicit paseq controls Munach-l'garmeih.  Nothing following the
+        // paseq is required to establish this playback name.
+        if (current.mark === "\u05A3" && current.hasFollowingPaseq) {
+          result.push("Munach-l'garmeih");
+          continue;
+        }
+
+        // TropePlayer defines these adjacent source-trope pairs as single
+        // combo playback units.
+        if (current.mark === "\u05A8" && next && next.mark === "\u059C") {
+          result.push("Kadma-V'azlah");
+          i++;
+          continue;
+        }
+
+        if (current.mark === "\u05A3" && next && next.mark === "\u0594") {
+          result.push("Munach-Katon");
+          i++;
+          continue;
+        }
+
+        if (current.mark === "\u05A3" && next && next.mark === "\u0597") {
+          result.push("Munach-Rvi'i");
+          i++;
+          continue;
+        }
+
+        // U+059C is Geresh unless it has just been consumed with Kadma as
+        // Kadma-V'azlah.  Sof pasuq remains SofPaSuk (Sof 1 policy).
+        result.push(current.name);
+      }
+
+      return result;
+    }
+
+    function buildTropeJsonFromCurrentDisplay() {
+      const panels = Array.from(document.querySelectorAll(".line-panel"));
+
+      return {
+        name: titleInput.value.trim() || buildSelectedRef(),
+        description: "Description",
+        lines: panels.map(function(panel) {
+          const sourceHebrew = panel.querySelector(".source-hebrew");
+          return {
+            lineName: panel.dataset.lineName || "",
+            tropes: resolveTropePlaybackNames(
+              sourceHebrew ? sourceHebrew.textContent : ""
+            )
+          };
+        })
+      };
+    }
+
+    function makeSafeJsonBaseName(value) {
+      return String(value || "Sefaria")
+        .trim()
+        .replace(/[\\/:*?"<>|]+/g, "-")
+        .replace(/\s+/g, "_");
+    }
+
+    function downloadJsonObject(data, fileName) {
       const blob = new Blob(
-        [JSON.stringify(jsonObject, null, 2)],
-        { type: "application/json;charset=utf-8" }
+        [JSON.stringify(data, null, 2)],
+        { type: "application/json" }
       );
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = fileName.replace(/\.json$/i, "") + "_Lyrics.json";
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
-      link.remove();
-      setTimeout(function() { URL.revokeObjectURL(url); }, 0);
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     }
 
-    function getLineChapter(lineName) {
-      const match = String(lineName || "").match(/^[A-Z]{2}:(\d+):\d+$/);
-      return match ? parseInt(match[1], 10) : null;
-    }
-
-    function saveCurrentJson() {
+    function saveLyricsAndTropeJson() {
       const status = document.getElementById("status");
       rebuildJsonFromEditor();
 
-      if (!currentLyricsJson.lines.length) {
+      if (!currentLyricsJson.lines || currentLyricsJson.lines.length === 0) {
         status.textContent = "No Lyrics JSON is available to save.";
         return;
       }
 
-      // The editor already contains the normalized, combined Lyrics structure.
-      // Even when PT retrieval required two Sefaria chapter calls, save the
-      // complete currentLyricsJson as one output file.
-      const fileBase = ptSaveContext
-        ? ptSaveContext.fileBase
-        : sanitizeDownloadBaseName(currentLyricsJson.title);
+      const tropeJson = buildTropeJsonFromCurrentDisplay();
+      const baseName = makeSafeJsonBaseName(
+        currentLyricsJson.title || tropeJson.name || "Sefaria"
+      );
 
-      downloadJsonObject(currentLyricsJson, fileBase + ".json");
-      status.textContent = "Saved " + fileBase + "_Lyrics.json.";
+      downloadJsonObject(currentLyricsJson, baseName + "_lyrics.json");
+
+      // A short delay lets browsers register two separate user-initiated
+      // downloads reliably from the same Save JSON action.
+      setTimeout(function() {
+        downloadJsonObject(tropeJson, baseName + ".json");
+      }, 150);
+
+      status.textContent =
+        "Saved Lyrics JSON and trope JSON: " +
+        baseName + "_lyrics.json and " + baseName + ".json";
     }
-
-    function getChapterVerseCount(bookName, chapter) {
-      const book = torahBooks.find(function(item) {
-        return item.sefariaBook === bookName;
-      });
-      if (!book || chapter < 1 || chapter > book.chapters.length) return null;
-      return book.chapters[chapter - 1];
-    }
-
-    async function fetchStandardSefariaPart(ref) {
-      const url = buildSefariaUrl(ref);
-      console.log("PT FETCH URL:", url);
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Sefaria returned HTTP " + response.status);
-      }
-
-      const data = await response.json();
-      if (responseHasNoText(data)) {
-        throw new Error("No Hebrew text was returned by Sefaria for " + ref + ".");
-      }
-
-      return {
-        ref: ref,
-        data: data,
-        lines: normalizeSefariaToEditorLines(ref, data)
-      };
-    }
-
-    /*
-      Bridge used by PT.js.  Pocket Torah supplies the already-resolved
-      Book/Chapter/Verse range and the two names.  Yitro and Va'etchanan are
-      deliberately excluded here until their dual-trope ranges are handled.
-    */
-    async function loadPocketTorahHebrew(request) {
-      const status = document.getElementById("status");
-      const normalizedParsha = String(request.parshaName || "")
-        .toLowerCase()
-        .replace(/[^a-z]/g, "");
-
-      if (
-        normalizedParsha === "yitro" ||
-        normalizedParsha === "vaetchanan" ||
-        normalizedParsha === "veetchanan"
-      ) {
-        alert(
-          "Pocket Torah Hebrew retrieval for Yitro and Va'etchanan is temporarily disabled because their Sefaria dual-trope verses require separate range handling."
-        );
-        return false;
-      }
-
-      if (!request.book || !request.startChapter || !request.endChapter) {
-        throw new Error("Pocket Torah did not supply a complete Hebrew text range.");
-      }
-
-      // PT retrieval deliberately uses the normal/default Sefaria source.
-      setTropeSelection("lower");
-
-      titleInput.value = request.jsonTitle;
-      ptSaveContext = {
-        fileBase: sanitizeDownloadBaseName(request.fileBase),
-        splitChapter: request.startChapter !== request.endChapter,
-        startChapter: request.startChapter,
-        endChapter: request.endChapter
-      };
-
-      document.getElementById("lineEditor").innerHTML = "";
-      document.getElementById("jsonOutput").textContent = "{}";
-      status.textContent = "Fetching Pocket Torah Hebrew range from Sefaria...";
-
-      try {
-        let parts = [];
-
-        if (request.startChapter === request.endChapter) {
-          const ref =
-            request.book + " " +
-            request.startChapter + ":" +
-            request.startVerse + "-" +
-            request.endVerse;
-          parts.push(await fetchStandardSefariaPart(ref));
-        } else {
-          const lastVerse = getChapterVerseCount(
-            request.book,
-            request.startChapter
-          );
-          if (!lastVerse) {
-            throw new Error("Could not determine the end of the starting chapter.");
-          }
-
-          const refA =
-            request.book + " " +
-            request.startChapter + ":" +
-            request.startVerse + "-" +
-            lastVerse;
-          const refB =
-            request.book + " " +
-            request.endChapter + ":1-" +
-            request.endVerse;
-
-          parts.push(await fetchStandardSefariaPart(refA));
-          parts.push(await fetchStandardSefariaPart(refB));
-        }
-
-        const allLines = [];
-        parts.forEach(function(part) {
-          part.lines.forEach(function(line) {
-            allLines.push(line);
-          });
-        });
-
-        // Renumber display-order line values while retaining canonical lineName.
-        allLines.forEach(function(line, index) {
-          line.line = index + 1;
-        });
-
-        lastFetchedRef = parts.map(function(part) { return part.ref; }).join(" + ");
-        lastSefariaData = parts[0].data;
-        updateSourceAttribution(parts[0].data, parts[0].ref);
-        renderEditorLines(allLines);
-        rebuildJsonFromEditor();
-
-        status.textContent =
-          "Loaded Pocket Torah range as " +
-          allLines.length +
-          " line(s). JSON title: " +
-          request.jsonTitle +
-          ". Save JSON will create one complete Lyrics JSON file.";
-
-        return true;
-      } catch (err) {
-        console.error(err);
-        ptSaveContext = null;
-        status.textContent = "Pocket Torah Hebrew load failed: " + err.message;
-        return false;
-      }
-    }
-
-    // Deliberately small public bridge for PT.js; the rest of Sefaria.js
-    // remains private to this page.
-    window.SefariaPT = {
-      loadPocketTorahHebrew: loadPocketTorahHebrew
-    };
 
 function buildDownloadDocument(lines) {
   const docDiv = document.getElementById("downloadDocument");
