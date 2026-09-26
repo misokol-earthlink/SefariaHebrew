@@ -1031,15 +1031,38 @@ function flattenSefariaText(rawText) {
 
         let hasFollowingPaseq = false;
         if (ch === "\u05A3") {
+          /*
+            Munach-l'garmeih is identified by a paseq (U+05C0) following
+            the Munach-bearing word.  The Munach mark normally occurs
+            inside the word, so Hebrew letters and combining marks that
+            complete that same word must NOT terminate the look-ahead.
+
+            Whitespace immediately before the paseq is also allowed.
+            Once whitespace is followed by anything other than paseq,
+            or another trope mark is encountered, this Munach is not
+            l'garmeih.
+          */
           for (let j = i + 1; j < chars.length; j++) {
             const next = chars[j];
+
             if (next === "\u05C0") {
               hasFollowingPaseq = true;
               break;
             }
-            if (/\s/.test(next)) continue;
-            if (TROPE_MARK_NAMES[next] || /[\u05D0-\u05EA]/.test(next)) break;
-            // Vowels and other combining marks do not end the test.
+
+            if (TROPE_MARK_NAMES[next]) break;
+
+            if (/\s/.test(next)) {
+              let k = j + 1;
+              while (k < chars.length && /\s/.test(chars[k])) k++;
+              if (k < chars.length && chars[k] === "\u05C0") {
+                hasFollowingPaseq = true;
+              }
+              break;
+            }
+
+            // Hebrew letters, vowels, and other combining marks may finish
+            // the same Munach-bearing word before its trailing paseq.
           }
         }
 
