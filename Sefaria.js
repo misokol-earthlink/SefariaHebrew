@@ -1022,67 +1022,70 @@ function flattenSefariaText(rawText) {
       const chars = Array.from(String(sourceHebrew || "").normalize("NFD"));
       const events = [];
 
-      // Record each trope mark and whether a paseq follows the same
-      // Munach before the next Hebrew letter/trope event.  Whitespace is
-      // deliberately ignored for this test.
+      /*
+        First collect the trope marks exactly as they occur in the source.
+        L'garmeih is resolved in a second pass from the paseq itself.  This is
+        important: looking forward from every Munach can incorrectly attach one
+        paseq to several earlier Munachs in the same stretch of Hebrew.
+      */
       for (let i = 0; i < chars.length; i++) {
         const ch = chars[i];
         if (!TROPE_MARK_NAMES[ch]) continue;
-
-        let hasFollowingPaseq = false;
-        if (ch === "\u05A3") {
-          /*
-            Munach-l'garmeih is identified by a paseq (U+05C0) following
-            the Munach-bearing word.  The Munach mark normally occurs
-            inside the word, so Hebrew letters and combining marks that
-            complete that same word must NOT terminate the look-ahead.
-
-            Whitespace immediately before the paseq is also allowed.
-            Once whitespace is followed by anything other than paseq,
-            or another trope mark is encountered, this Munach is not
-            l'garmeih.
-          */
-          for (let j = i + 1; j < chars.length; j++) {
-            const next = chars[j];
-
-            if (next === "\u05C0") {
-              hasFollowingPaseq = true;
-              break;
-            }
-
-            if (TROPE_MARK_NAMES[next]) break;
-
-            if (/\s/.test(next)) {
-              let k = j + 1;
-              while (k < chars.length && /\s/.test(chars[k])) k++;
-              if (k < chars.length && chars[k] === "\u05C0") {
-                hasFollowingPaseq = true;
-              }
-              break;
-            }
-
-            // Hebrew letters, vowels, and other combining marks may finish
-            // the same Munach-bearing word before its trailing paseq.
-          }
-        }
 
         events.push({
           mark: ch,
           name: TROPE_MARK_NAMES[ch],
           charIndex: i,
-          hasFollowingPaseq: hasFollowingPaseq
+          hasFollowingPaseq: false
         });
       }
 
+      markMunachLgarmeihFromPaseq(chars, events);
       return suppressPositionalDuplicateTropes(chars, events);
+    }
+
+    function markMunachLgarmeihFromPaseq(chars, events) {
+      /*
+        A paseq U+05C0 identifies Munach-L'garmeih.  Work BACKWARD from each
+        paseq and mark only the nearest preceding Munach in the immediately
+        preceding source word/token.  Optional whitespace between that word and
+        the paseq is allowed.
+
+        This prevents a later paseq from converting earlier Munachs in the
+        verse into L'garmeih.  Nothing after the paseq is needed to establish
+        the identification.
+      */
+      for (let paseqIndex = 0; paseqIndex < chars.length; paseqIndex++) {
+        if (chars[paseqIndex] !== "\u05C0") continue;
+
+        let wordEnd = paseqIndex - 1;
+        while (wordEnd >= 0 && /\s/.test(chars[wordEnd])) wordEnd--;
+        if (wordEnd < 0) continue;
+
+        let wordStart = wordEnd;
+        while (wordStart > 0 && !/\s/.test(chars[wordStart - 1])) wordStart--;
+
+        // If a paseq was attached to the token, exclude it from the token scan.
+        // Select only the LAST Munach in this immediately preceding token.
+        for (let e = events.length - 1; e >= 0; e--) {
+          const event = events[e];
+          if (event.charIndex > wordEnd) continue;
+          if (event.charIndex < wordStart) break;
+
+          if (event.mark === "\u05A3") {
+            event.hasFollowingPaseq = true;
+            break;
+          }
+        }
+      }
     }
 
     function suppressPositionalDuplicateTropes(chars, events) {
       if (events.length < 2) return events;
 
       // Determine whitespace-delimited source token for each event.  This is
-      // used only to identify the documented duplicate positional marks; it
-      // does not otherwise control trope sequencing.
+      // used only to collapse repeated positional copies of the same mark in
+      // one source token; it does not otherwise control trope sequencing.
       function tokenBounds(charIndex) {
         let start = charIndex;
         let end = charIndex;
@@ -1109,21 +1112,24 @@ function flattenSefariaText(rawText) {
         const current = events[i];
         const next = events[i + 1] || null;
 
-        // Explicit paseq controls Munach-l'garmeih.  Nothing following the
-        // paseq is required to establish this playback name.
+        // Paseq alone establishes this special Munach playback form.
         if (current.mark === "\u05A3" && current.hasFollowingPaseq) {
-          result.push("Munach-l'garmeih");
+          result.push("Munach-L'garmeih");
           continue;
         }
 
-        // TropePlayer defines these adjacent source-trope pairs as single
-        // combo playback units.
+        /*
+          U+059C is Geresh by itself.  When it immediately follows Kadma
+          (U+05A8), the pair is the V'azlah construct used by TropePlayer and
+          is emitted as one playback item.
+        */
         if (current.mark === "\u05A8" && next && next.mark === "\u059C") {
           result.push("Kadma-V'azlah");
           i++;
           continue;
         }
 
+        // Specialized TropePlayer playback combinations.
         if (current.mark === "\u05A3" && next && next.mark === "\u0594") {
           result.push("Munach-Katon");
           i++;
@@ -1136,8 +1142,7 @@ function flattenSefariaText(rawText) {
           continue;
         }
 
-        // U+059C is Geresh unless it has just been consumed with Kadma as
-        // Kadma-V'azlah.  Sof pasuq remains SofPaSuk (Sof 1 policy).
+        // Sof pasuq remains source-driven; no verse-boundary inference occurs.
         result.push(current.name);
       }
 
