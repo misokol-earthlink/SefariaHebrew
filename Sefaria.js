@@ -1007,129 +1007,191 @@ function flattenSefariaText(rawText) {
       "\u05C3": "SofPaSuk"
     };
 
-    // TropePlayer documents these marks as positional duplicates when a
-    // second copy is placed on the accented syllable.  Such a pair is one
-    // playback event, not two.
-    const POSITIONAL_DUPLICATE_MARKS = new Set([
-      "\u0592", // Segol - postpositive
-      "\u0599", // PashTa - postpositive
-      "\u05AE", // Zarka - postpositive
-      "\u05A0", // T'LishaGadola - prepositive
-      "\u05A9"  // T'LishaK'tanah - postpositive
+    /*
+      Word-based trope extraction pipeline
+      ------------------------------------
+      1. Split the exact Sefaria source into analysis words.
+      2. Read every trope Unicode found in each word, in source order.
+      3. Resolve only word-local positional duplicates/special cases.
+      4. Flatten the word results into a literal line trope list.
+      5. Apply TropePlayer playback-combination rules to that list.
+
+      This deliberately separates source extraction from playback naming.
+    */
+
+    // These Unicode marks may be written twice in one analysis word as a
+    // positional copy of the same musical event.  Different trope marks in
+    // the same word are NEVER removed merely because the word has >1 mark.
+    const SAME_MARK_POSITIONAL_DUPLICATES = new Set([
+      "\u0592", // Segol
+      "\u0599", // PashTa
+      "\u05AE", // Zarka
+      "\u05A0", // T'LishaGadola
+      "\u05A9"  // T'LishaK'tanah
     ]);
 
-    function collectTropeEventsFromHebrew(sourceHebrew) {
+    function buildTropeAnalysisWords(sourceHebrew) {
       const chars = Array.from(String(sourceHebrew || "").normalize("NFD"));
-      const events = [];
+      const words = [];
+      let current = "";
 
-      /*
-        First collect the trope marks exactly as they occur in the source.
-        L'garmeih is resolved in a second pass from the paseq itself.  This is
-        important: looking forward from every Munach can incorrectly attach one
-        paseq to several earlier Munachs in the same stretch of Hebrew.
-      */
+      function pushCurrent() {
+        if (current.length) {
+          words.push(current);
+          current = "";
+        }
+      }
+
       for (let i = 0; i < chars.length; i++) {
         const ch = chars[i];
-        if (!TROPE_MARK_NAMES[ch]) continue;
+
+        if (!/\s/.test(ch)) {
+          current += ch;
+          continue;
+        }
+
+        // A space immediately before paseq belongs to the preceding analysis
+        // word, as does the paseq itself.  The whitespace AFTER the paseq is
+        // the boundary.  Example: "word <space>׀ <space>next".
+        let j = i;
+        while (j < chars.length && /\s/.test(chars[j])) j++;
+
+        if (j < chars.length && chars[j] === "\u05C0") {
+          current += chars.slice(i, j).join("");
+          current += chars[j];
+          i = j;
+          continue;
+        }
+
+        // Ordinary whitespace is a word boundary.  Maqaf and punctuation are
+        // not whitespace, so they remain inside the analysis word naturally.
+        pushCurrent();
+      }
+
+      pushCurrent();
+      return words;
+    }
+
+    function collectLiteralTropeEventsForWord(wordText, wordIndex) {
+      const chars = Array.from(String(wordText || "").normalize("NFD"));
+      const events = [];
+
+      for (let i = 0; i < chars.length; i++) {
+        const mark = chars[i];
+        const name = TROPE_MARK_NAMES[mark];
+        if (!name) continue;
 
         events.push({
-          mark: ch,
-          name: TROPE_MARK_NAMES[ch],
+          mark: mark,
+          name: name,
           charIndex: i,
-          hasFollowingPaseq: false
+          wordIndex: wordIndex
         });
       }
 
-      markMunachLgarmeihFromPaseq(chars, events);
-      return suppressPositionalDuplicateTropes(chars, events);
+      return collapseWordLocalPositionalDuplicates(events);
     }
 
-    function markMunachLgarmeihFromPaseq(chars, events) {
+    function collapseWordLocalPositionalDuplicates(events) {
+      if (events.length < 2) return events;
+
+      const result = [];
+      const seenSameMark = new Set();
+
+      for (const event of events) {
+        // Only a repeated occurrence of the SAME designated positional mark
+        // is collapsed here.  Two different marks in one word are preserved.
+        if (SAME_MARK_POSITIONAL_DUPLICATES.has(event.mark)) {
+          if (seenSameMark.has(event.mark)) continue;
+          seenSameMark.add(event.mark);
+        }
+        result.push(event);
+      }
+
       /*
-        A paseq U+05C0 identifies Munach-L'garmeih.  Work BACKWARD from each
-        paseq and mark only the nearest preceding Munach in the immediately
-        preceding source word/token.  Optional whitespace between that word and
-        the paseq is allowed.
-
-        This prevents a later paseq from converting earlier Munachs in the
-        verse into L'garmeih.  Nothing after the paseq is needed to establish
-        the identification.
+        PashTa is postpositive.  Some Sefaria/Masoretic encodings can contain
+        an accent-position Kadma (U+05A8) plus the postpositive PashTa
+        (U+0599) in the SAME analysis word.  They describe one PashTa event,
+        not Kadma followed by PashTa.  Word locality is essential: a Kadma in
+        another word remains a real Kadma.
       */
-      for (let paseqIndex = 0; paseqIndex < chars.length; paseqIndex++) {
-        if (chars[paseqIndex] !== "\u05C0") continue;
+      const hasPashTa = result.some(e => e.mark === "\u0599");
+      if (hasPashTa) {
+        const withoutKadmaCopy = result.filter(e => e.mark !== "\u05A8");
+        if (withoutKadmaCopy.length !== result.length) return withoutKadmaCopy;
+      }
 
-        let wordEnd = paseqIndex - 1;
-        while (wordEnd >= 0 && /\s/.test(chars[wordEnd])) wordEnd--;
-        if (wordEnd < 0) continue;
+      return result;
+    }
 
-        let wordStart = wordEnd;
-        while (wordStart > 0 && !/\s/.test(chars[wordStart - 1])) wordStart--;
+    function analyzeTropeWord(wordText, wordIndex) {
+      const events = collectLiteralTropeEventsForWord(wordText, wordIndex);
+      const hasPaseq = String(wordText || "").includes("\u05C0");
 
-        // If a paseq was attached to the token, exclude it from the token scan.
-        // Select only the LAST Munach in this immediately preceding token.
-        for (let e = events.length - 1; e >= 0; e--) {
-          const event = events[e];
-          if (event.charIndex > wordEnd) continue;
-          if (event.charIndex < wordStart) break;
-
-          if (event.mark === "\u05A3") {
-            event.hasFollowingPaseq = true;
+      // Paseq is part of this analysis word by construction.  It can therefore
+      // qualify only a Munach in THIS word as Munach-L'garmeih; there is no
+      // forward/backward search across neighboring words.
+      if (hasPaseq) {
+        for (let i = events.length - 1; i >= 0; i--) {
+          if (events[i].mark === "\u05A3") {
+            events[i] = Object.assign({}, events[i], {
+              name: "Munach-L'garmeih",
+              isLgarmeih: true
+            });
             break;
           }
         }
       }
+
+      return {
+        wordIndex: wordIndex,
+        text: wordText,
+        hasPaseq: hasPaseq,
+        hasMaqaf: String(wordText || "").includes("\u05BE"),
+        events: events
+      };
     }
 
-    function suppressPositionalDuplicateTropes(chars, events) {
-      if (events.length < 2) return events;
-
-      // Determine whitespace-delimited source token for each event.  This is
-      // used only to collapse repeated positional copies of the same mark in
-      // one source token; it does not otherwise control trope sequencing.
-      function tokenBounds(charIndex) {
-        let start = charIndex;
-        let end = charIndex;
-        while (start > 0 && !/\s/.test(chars[start - 1])) start--;
-        while (end + 1 < chars.length && !/\s/.test(chars[end + 1])) end++;
-        return start + ":" + end;
-      }
-
-      const seen = new Set();
-      return events.filter(function(event) {
-        if (!POSITIONAL_DUPLICATE_MARKS.has(event.mark)) return true;
-        const key = tokenBounds(event.charIndex) + ":" + event.mark;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
+    function extractLiteralTropeLine(sourceHebrew) {
+      const words = buildTropeAnalysisWords(sourceHebrew);
+      const wordAnalysis = words.map(function(wordText, index) {
+        return analyzeTropeWord(wordText, index);
       });
+
+      const events = [];
+      wordAnalysis.forEach(function(word) {
+        word.events.forEach(function(event) {
+          events.push(event);
+        });
+      });
+
+      return {
+        words: wordAnalysis,
+        events: events
+      };
     }
 
-    function resolveTropePlaybackNames(sourceHebrew) {
-      const events = collectTropeEventsFromHebrew(sourceHebrew);
+    function applyTropePlaybackCombinations(events) {
       const result = [];
 
       for (let i = 0; i < events.length; i++) {
         const current = events[i];
         const next = events[i + 1] || null;
 
-        // Paseq alone establishes this special Munach playback form.
-        if (current.mark === "\u05A3" && current.hasFollowingPaseq) {
+        // Word-local paseq resolution has already made this atomic.
+        if (current.name === "Munach-L'garmeih") {
           result.push("Munach-L'garmeih");
           continue;
         }
 
-        /*
-          U+059C is Geresh by itself.  When it immediately follows Kadma
-          (U+05A8), the pair is the V'azlah construct used by TropePlayer and
-          is emitted as one playback item.
-        */
+        // U+059C is Geresh alone.  Kadma immediately followed by that source
+        // mark is the V'azlah use and becomes one TropePlayer playback item.
         if (current.mark === "\u05A8" && next && next.mark === "\u059C") {
           result.push("Kadma-V'azlah");
           i++;
           continue;
         }
 
-        // Specialized TropePlayer playback combinations.
         if (current.mark === "\u05A3" && next && next.mark === "\u0594") {
           result.push("Munach-Katon");
           i++;
@@ -1142,11 +1204,39 @@ function flattenSefariaText(rawText) {
           continue;
         }
 
-        // Sof pasuq remains source-driven; no verse-boundary inference occurs.
+        // SofAliyah 1/2/3 substitutions intentionally remain OUT of this
+        // pass until their exact Portnoy/TropePlayer cadence definitions have
+        // been reviewed.  For now the literal ending events remain visible.
         result.push(current.name);
       }
 
       return result;
+    }
+
+    function logTropeAnalysis(lineName, analysis, finalNames) {
+      // Development trace: this lets us distinguish source extraction from
+      // word-local interpretation and final playback-combination rules.
+      console.groupCollapsed("Trope analysis " + (lineName || ""));
+      analysis.words.forEach(function(word) {
+        const names = word.events.map(e => e.name);
+        console.log(
+          "word " + (word.wordIndex + 1),
+          word.text,
+          names.length ? names.join(", ") : "(no trope)",
+          word.hasPaseq ? "[PASEQ]" : "",
+          word.hasMaqaf ? "[MAQAF]" : ""
+        );
+      });
+      console.log("Literal line:", analysis.events.map(e => e.name).join(", "));
+      console.log("Final line:", finalNames.join(", "));
+      console.groupEnd();
+    }
+
+    function resolveTropePlaybackNames(sourceHebrew, lineName) {
+      const analysis = extractLiteralTropeLine(sourceHebrew);
+      const finalNames = applyTropePlaybackCombinations(analysis.events);
+      logTropeAnalysis(lineName, analysis, finalNames);
+      return finalNames;
     }
 
     function buildTropeJsonFromCurrentDisplay() {
@@ -1160,7 +1250,8 @@ function flattenSefariaText(rawText) {
           return {
             lineName: panel.dataset.lineName || "",
             tropes: resolveTropePlaybackNames(
-              sourceHebrew ? sourceHebrew.textContent : ""
+              sourceHebrew ? sourceHebrew.textContent : "",
+              panel.dataset.lineName || ""
             )
           };
         })
