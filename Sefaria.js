@@ -622,31 +622,45 @@ function reviewSefariaTropeUnicode(hebrewText, lineName) {
     );
   });
 
-  // Positional review: U+0599 is PashTa only when it is postpositive on the
-  // final Hebrew letter of its source word.  A non-postpositive U+0599 is
-  // preserved in the Hebrew/Lyrics source but is tainted here and recovered
-  // as Kadma later in trope analysis.
+  // Limited PashTa positional review.  Positional accents may legitimately be
+  // written twice in the same source word (accent-position copy plus the
+  // pre/postpositive copy).  Therefore repeated U+0599 marks are accepted as
+  // a normal positional duplicate and are NOT tainted, even if one copy is
+  // internal.  We apply the PashTa->Kadma recovery only when the source word
+  // has exactly ONE U+0599 and that single mark is non-postpositive.
+  //
+  // Different trope marks in the same word are also legitimate and are never
+  // a taint condition by themselves; this review is not a trope-family grammar
+  // validator.
   source.split(/\s+/).filter(Boolean).forEach(function(word) {
     const chars = Array.from(word);
+    const pashTaIndexes = [];
+
     chars.forEach(function(char, index) {
-      if (char !== "\u0599") return;
-      if (isPostpositivePashTaAt(chars, index)) return;
-
-      const key = "NON_POSTPOSITIVE_PASHTA:" + word + ":" + index;
-      if (seen.has(key)) return;
-      seen.add(key);
-
-      anomalies.push({
-        char: char,
-        name: "PASHTA IN NON-POSTPOSITIVE POSITION",
-        code: "U+0599"
-      });
-      console.warn(
-        "TAINTED " + (lineName || "line") +
-        " — PashTa U+0599 found in non-postpositive position in " + word +
-        "; source preserved, trope analysis will recover it as Kadma"
-      );
+      if (char === "\u0599") pashTaIndexes.push(index);
     });
+
+    // A repeated positional code is allowed.  Duplicate suppression later in
+    // trope analysis reduces the repeated code to one playback event.
+    if (pashTaIndexes.length !== 1) return;
+
+    const index = pashTaIndexes[0];
+    if (isPostpositivePashTaAt(chars, index)) return;
+
+    const key = "SINGLE_NON_POSTPOSITIVE_PASHTA:" + word + ":" + index;
+    if (seen.has(key)) return;
+    seen.add(key);
+
+    anomalies.push({
+      char: "\u0599",
+      name: "SINGLE PASHTA IN NON-POSTPOSITIVE POSITION",
+      code: "U+0599"
+    });
+    console.warn(
+      "TAINTED " + (lineName || "line") +
+      " — single PashTa U+0599 found in non-postpositive position in " + word +
+      "; source preserved, trope analysis will recover it as Kadma"
+    );
   });
 
   return anomalies;
@@ -1188,11 +1202,17 @@ function flattenSefariaText(rawText) {
       const chars = Array.from(String(wordText || "").normalize("NFD"));
       const events = [];
 
+      const pashTaCount = chars.reduce(function(count, char) {
+        return count + (char === "\u0599" ? 1 : 0);
+      }, 0);
+
       for (let i = 0; i < chars.length; i++) {
         const mark = chars[i];
         const recovery = TROPE_ANALYSIS_RECOVERIES[mark] || null;
         const nonPostpositivePashTa =
-          mark === "\u0599" && !isPostpositivePashTaAt(chars, i);
+          mark === "\u0599" &&
+          pashTaCount === 1 &&
+          !isPostpositivePashTaAt(chars, i);
 
         let analysisMark = mark;
         let name = TROPE_MARK_NAMES[mark] || (recovery ? recovery.name : null);
