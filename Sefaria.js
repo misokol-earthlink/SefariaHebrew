@@ -575,11 +575,36 @@ const UNUSUAL_TROPE_UNICODE_NAMES = {
   "\u05AF": "MASORA CIRCLE"
 };
 
+function isPostpositivePashTaAt(chars, markIndex) {
+  // PashTa U+0599 is postpositive: its combining mark belongs to the final
+  // Hebrew letter of its whitespace-delimited source word.  We test the base
+  // letter carrying the mark, not merely whether U+0599 is the last code point,
+  // because vowels and other combining marks may follow that base letter.
+  let baseLetterIndex = -1;
+  for (let i = markIndex - 1; i >= 0; i--) {
+    if (/[\u05D0-\u05EA]/.test(chars[i])) {
+      baseLetterIndex = i;
+      break;
+    }
+  }
+
+  if (baseLetterIndex < 0) return false;
+
+  let lastHebrewLetterIndex = -1;
+  for (let i = 0; i < chars.length; i++) {
+    if (/[\u05D0-\u05EA]/.test(chars[i])) lastHebrewLetterIndex = i;
+  }
+
+  return baseLetterIndex === lastHebrewLetterIndex;
+}
+
 function reviewSefariaTropeUnicode(hebrewText, lineName) {
   const anomalies = [];
   const seen = new Set();
+  const source = String(hebrewText || "").normalize("NFD");
 
-  Array.from(String(hebrewText || "").normalize("NFD")).forEach(function(char) {
+  // First-level Unicode review: unexpected cantillation code points.
+  Array.from(source).forEach(function(char) {
     const cp = char.codePointAt(0);
     if (cp < 0x0591 || cp > 0x05AF) return;
     if (STANDARD_TORAH_TROPE_MARKS.has(char)) return;
@@ -595,6 +620,33 @@ function reviewSefariaTropeUnicode(hebrewText, lineName) {
       "TAINTED " + (lineName || "line") +
       " — unusual trope " + unicodeName + " (" + code + ") recovered from Sefaria"
     );
+  });
+
+  // Positional review: U+0599 is PashTa only when it is postpositive on the
+  // final Hebrew letter of its source word.  A non-postpositive U+0599 is
+  // preserved in the Hebrew/Lyrics source but is tainted here and recovered
+  // as Kadma later in trope analysis.
+  source.split(/\s+/).filter(Boolean).forEach(function(word) {
+    const chars = Array.from(word);
+    chars.forEach(function(char, index) {
+      if (char !== "\u0599") return;
+      if (isPostpositivePashTaAt(chars, index)) return;
+
+      const key = "NON_POSTPOSITIVE_PASHTA:" + word + ":" + index;
+      if (seen.has(key)) return;
+      seen.add(key);
+
+      anomalies.push({
+        char: char,
+        name: "PASHTA IN NON-POSTPOSITIVE POSITION",
+        code: "U+0599"
+      });
+      console.warn(
+        "TAINTED " + (lineName || "line") +
+        " — PashTa U+0599 found in non-postpositive position in " + word +
+        "; source preserved, trope analysis will recover it as Kadma"
+      );
+    });
   });
 
   return anomalies;
@@ -1139,14 +1191,28 @@ function flattenSefariaText(rawText) {
       for (let i = 0; i < chars.length; i++) {
         const mark = chars[i];
         const recovery = TROPE_ANALYSIS_RECOVERIES[mark] || null;
-        const name = TROPE_MARK_NAMES[mark] || (recovery ? recovery.name : null);
+        const nonPostpositivePashTa =
+          mark === "\u0599" && !isPostpositivePashTaAt(chars, i);
+
+        let analysisMark = mark;
+        let name = TROPE_MARK_NAMES[mark] || (recovery ? recovery.name : null);
+        let recoveredFrom = recovery ? recovery.recoveredFrom : null;
+
+        if (recovery) {
+          analysisMark = "\u0596"; // known Dehi -> Tipchah recovery
+        } else if (nonPostpositivePashTa) {
+          analysisMark = "\u05A8"; // positional PashTa source anomaly -> Kadma
+          name = "Kadma";
+          recoveredFrom = "non-postpositive PashTa";
+        }
+
         if (!name) continue;
 
         events.push({
-          mark: recovery ? "\u0596" : mark,
+          mark: analysisMark,
           sourceMark: mark,
           name: name,
-          recoveredFrom: recovery ? recovery.recoveredFrom : null,
+          recoveredFrom: recoveredFrom,
           charIndex: i,
           wordIndex: wordIndex
         });
