@@ -555,6 +555,51 @@ const selectedText = textArray.slice(firstIndex, lastIndex + 1);
   data.ref = requestedRef;
 }
 
+// Cantillation-source sanity check.  This is diagnostic only: it never
+// changes the Hebrew returned by Sefaria or the Hebrew stored in Lyrics JSON.
+// Marks in U+0591-U+05AF that are not in our accepted Torah trope set taint
+// the line so it can be reviewed without interrupting the normal workflow.
+const STANDARD_TORAH_TROPE_MARKS = new Set([
+  "\u0591", "\u0592", "\u0593", "\u0594", "\u0595", "\u0596", "\u0597",
+  "\u0599", "\u059A", "\u059B", "\u059C", "\u059E", "\u059F",
+  "\u05A0", "\u05A1", "\u05A3", "\u05A4", "\u05A5", "\u05A6", "\u05A7",
+  "\u05A8", "\u05A9", "\u05AA", "\u05AE"
+]);
+
+const UNUSUAL_TROPE_UNICODE_NAMES = {
+  "\u0598": "TSINNORIT",
+  "\u059D": "GERESH MUQDAM",
+  "\u05AB": "OLE",
+  "\u05AC": "ILUY",
+  "\u05AD": "DEHI",
+  "\u05AF": "MASORA CIRCLE"
+};
+
+function reviewSefariaTropeUnicode(hebrewText, lineName) {
+  const anomalies = [];
+  const seen = new Set();
+
+  Array.from(String(hebrewText || "").normalize("NFD")).forEach(function(char) {
+    const cp = char.codePointAt(0);
+    if (cp < 0x0591 || cp > 0x05AF) return;
+    if (STANDARD_TORAH_TROPE_MARKS.has(char)) return;
+
+    const key = char + ":" + cp;
+    if (seen.has(key)) return;
+    seen.add(key);
+
+    const unicodeName = UNUSUAL_TROPE_UNICODE_NAMES[char] || "UNRECOGNIZED HEBREW ACCENT";
+    const code = "U+" + cp.toString(16).toUpperCase().padStart(4, "0");
+    anomalies.push({ char: char, name: unicodeName, code: code });
+    console.warn(
+      "TAINTED " + (lineName || "line") +
+      " — unusual trope " + unicodeName + " (" + code + ") recovered from Sefaria"
+    );
+  });
+
+  return anomalies;
+}
+
 function normalizeSefariaToEditorLines(requestedRef, data) {
   const sourceVersion = findHebrewVersion(data);
 
@@ -579,15 +624,19 @@ function normalizeSefariaToEditorLines(requestedRef, data) {
     const tokens = extractHebrewWordTokens(cleanHebrew);
     const sourceVerseNumber =
       startVerse === null ? index + 1 : startVerse + index;
+    const lineName =
+      sourceChapter === null
+        ? String(sourceVerseNumber).padStart(2, "0")
+        : buildPocketTorahLineName(sourceBook, sourceChapter, sourceVerseNumber);
+    const tropeAnomalies = reviewSefariaTropeUnicode(cleanHebrew, lineName);
 
     return {
       line: index + 1,
-      lineName:
-        sourceChapter === null
-          ? String(sourceVerseNumber).padStart(2, "0")
-          : buildPocketTorahLineName(sourceBook, sourceChapter, sourceVerseNumber),
+      lineName: lineName,
       sourceVerseNumber: sourceVerseNumber,
       displayHebrew: cleanHebrew,
+      tainted: tropeAnomalies.length > 0,
+      tropeAnomalies: tropeAnomalies,
       words: tokens.map(function (hebrewWord) {
         return {
           hebrew: hebrewWord,
@@ -806,6 +855,10 @@ function flattenSefariaText(rawText) {
         const sourceHebrew = document.createElement("div");
         sourceHebrew.className = "source-hebrew";
         sourceHebrew.textContent = lineData.displayHebrew;
+        if (lineData.tainted) {
+          sourceHebrew.style.color = "darkred";
+          sourceHebrew.dataset.tainted = "true";
+        }
 
         const note = document.createElement("div");
         note.className = "small-note";
@@ -1007,6 +1060,12 @@ function flattenSefariaText(rawText) {
       "\u05C3": "SofPaSuk"
     };
 
+    // Explicit musical recovery for a known Sefaria source anomaly.
+    // The Hebrew source itself is NOT changed; this affects trope analysis only.
+    const TROPE_ANALYSIS_RECOVERIES = {
+      "\u05AD": { name: "Tipchah", recoveredFrom: "Dehi" }
+    };
+
     /*
       Word-based trope extraction pipeline
       ------------------------------------
@@ -1027,6 +1086,7 @@ function flattenSefariaText(rawText) {
       "\u0599", // PashTa
       "\u05AE", // Zarka
       "\u05A0", // T'LishaGadola
+      "\u05A8", // Kadma
       "\u05A9"  // T'LishaK'tanah
     ]);
 
@@ -1078,12 +1138,15 @@ function flattenSefariaText(rawText) {
 
       for (let i = 0; i < chars.length; i++) {
         const mark = chars[i];
-        const name = TROPE_MARK_NAMES[mark];
+        const recovery = TROPE_ANALYSIS_RECOVERIES[mark] || null;
+        const name = TROPE_MARK_NAMES[mark] || (recovery ? recovery.name : null);
         if (!name) continue;
 
         events.push({
-          mark: mark,
+          mark: recovery ? "\u0596" : mark,
+          sourceMark: mark,
           name: name,
+          recoveredFrom: recovery ? recovery.recoveredFrom : null,
           charIndex: i,
           wordIndex: wordIndex
         });
@@ -1204,10 +1267,34 @@ function flattenSefariaText(rawText) {
           continue;
         }
 
-        // SofAliyah 1/2/3 substitutions intentionally remain OUT of this
-        // pass until their exact Portnoy/TropePlayer cadence definitions have
-        // been reviewed.  For now the literal ending events remain visible.
         result.push(current.name);
+      }
+
+      return applySofAliyahEnding(result);
+    }
+
+    function applySofAliyahEnding(names) {
+      const result = names.slice();
+
+      // Match longest cadence first.  These substitutions apply only at the
+      // END of a trope line and produce the TropePlayer combined WAV name.
+      const endings = [
+        { pattern: ["Merchah", "Tipchah", "Merchah", "SofPaSuk"], name: "SofAliyah" },
+        { pattern: ["Merchah", "Tipchah", "SofPaSuk"], name: "SofAliyah2" },
+        { pattern: ["Tipchah", "SofPaSuk"], name: "SofAliyah3" }
+      ];
+
+      for (const ending of endings) {
+        if (result.length < ending.pattern.length) continue;
+        const start = result.length - ending.pattern.length;
+        const matches = ending.pattern.every(function(name, index) {
+          return result[start + index] === name;
+        });
+
+        if (matches) {
+          result.splice(start, ending.pattern.length, ending.name);
+          break;
+        }
       }
 
       return result;
@@ -1481,7 +1568,7 @@ verseTd.style.top = "5px";
     hebrewTd.style.fontFamily = '"Times New Roman", Times, serif';
     hebrewTd.style.fontSize = "30px";
     hebrewTd.style.lineHeight = "1.8";
-    hebrewTd.style.color = "royalblue";
+    hebrewTd.style.color = lineData.tainted ? "darkred" : "royalblue";
     hebrewTd.style.paddingBottom = "12px";
 
     tr.appendChild(verseTd);
