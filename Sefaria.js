@@ -1595,23 +1595,36 @@ verseTd.style.top = "5px";
   docDiv.appendChild(table);
 }
 
-// Load the DOCX browser library only when a Word download is requested.
-// Pin the version to avoid unexpected changes from a moving CDN release.
+// Prefer a locally hosted browser bundle. Fall back to two public CDNs.
+// To make downloads independent of CDNs, host the docx v8.5.0 browser
+// bundle at ./vendor/docx.umd.js alongside Sefaria.js.
 let docxLibraryPromise = null;
 function loadDocxLibrary() {
   if (window.docx && window.docx.Packer) return Promise.resolve(window.docx);
   if (!docxLibraryPromise) {
+    const sources = [
+      "./vendor/docx.umd.js",
+      "https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js",
+      "https://unpkg.com/docx@8.5.0/build/index.umd.js"
+    ];
     docxLibraryPromise = new Promise(function(resolve, reject) {
-      const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/docx@9.5.1/dist/index.umd.cjs";
-      script.onload = function() {
-        if (window.docx && window.docx.Packer) resolve(window.docx);
-        else reject(new Error("The DOCX library loaded without its browser API."));
-      };
-      script.onerror = function() { reject(new Error("Could not load the DOCX library. Check the network connection.")); };
-      document.head.appendChild(script);
+      function trySource(index) {
+        if (index >= sources.length) {
+          reject(new Error("DOCX library unavailable. Host docx.umd.js in the vendor folder or check CDN access."));
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = sources[index];
+        script.onload = function() {
+          if (window.docx && window.docx.Packer) resolve(window.docx);
+          else { script.remove(); trySource(index + 1); }
+        };
+        script.onerror = function() { script.remove(); trySource(index + 1); };
+        document.head.appendChild(script);
+      }
+      trySource(0);
     }).catch(function(error) {
-      docxLibraryPromise = null; // permit retry after transient network failures
+      docxLibraryPromise = null;
       throw error;
     });
   }
