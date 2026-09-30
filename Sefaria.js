@@ -1658,11 +1658,24 @@ async function downloadHebrewDocument() {
       })
     ];
 
-    // Each verse is one editable RTL paragraph.  The number is an isolated
-    // LTR run; the Hebrew is explicitly RTL.  Avoid Word tab stops here:
-    // they caused Word to move continuation lines to the opposite margin.
-    // A positive RTL first-line indent moves only the numbered line into the outer gutter.
-    const NUMBER_GUTTER = 600; // twips (~0.42 inch)
+    // Hebrew numbering removes mixed LTR/RTL runs from the verse paragraphs.
+    // Each verse remains a single editable Word paragraph.
+    function hebrewVerseNumber(number) {
+      let n = Number(number);
+      if (!Number.isInteger(n) || n < 1 || n > 999) return String(number);
+      const hundreds = ["", "ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק"];
+      const tens = ["", "י", "כ", "ל", "מ", "נ", "ס", "ע", "פ", "צ"];
+      const ones = ["", "א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט"];
+      let result = hundreds[Math.floor(n / 100)];
+      n %= 100;
+      // Traditional Hebrew numerals avoid writing the Divine Name in 15/16.
+      if (n === 15) return result + "טו";
+      if (n === 16) return result + "טז";
+      result += tens[Math.floor(n / 10)] + ones[n % 10];
+      return result;
+    }
+
+    const NUMBER_GUTTER = 650; // twips, right-side number area
     const sourceRows = Array.from(docDiv.querySelectorAll("table tr"));
     sourceRows.forEach(function(sourceRow) {
       const cells = sourceRow.querySelectorAll("td");
@@ -1674,19 +1687,15 @@ async function downloadHebrewDocument() {
       children.push(new d.Paragraph({
         bidirectional: true,
         alignment: d.AlignmentType.RIGHT,
-        // In an RTL paragraph this reserves the right gutter for the number.
-        // Word applies the first-line offset only to the numbered line.
-        indent: { right: NUMBER_GUTTER, firstLine: NUMBER_GUTTER },
+        // Right hanging indent: the Hebrew numeral occupies the outer gutter;
+        // continuation lines should return to the inset Hebrew text margin.
+        indent: { right: NUMBER_GUTTER, hanging: NUMBER_GUTTER },
         spacing: { after: 170, line: 650 },
         children: [
           new d.TextRun({
-            // Direction marks keep the punctuation attached to the LTR number.
-            text: "\u200E:" + number + "\u200E",
-            bold: true, font: "Arial", size: 36,
-            rightToLeft: false
-          }),
-          new d.TextRun({
-            text: "  ", rightToLeft: true, font: "Times New Roman", size: 45
+            text: hebrewVerseNumber(number) + ":  ",
+            bold: true, font: "Times New Roman", size: 36,
+            rightToLeft: true
           }),
           new d.TextRun({
             text: hebrew, rightToLeft: true, font: "Times New Roman",
