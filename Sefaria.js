@@ -1661,7 +1661,7 @@ async function downloadHebrewDocument() {
     // Each verse is one editable RTL paragraph.  The number is an isolated
     // LTR run; the Hebrew is explicitly RTL.  Avoid Word tab stops here:
     // they caused Word to move continuation lines to the opposite margin.
-    // A positive RTL hanging indent keeps the number in the outer gutter.
+    // A positive RTL first-line indent moves only the numbered line into the outer gutter.
     const NUMBER_GUTTER = 600; // twips (~0.42 inch)
     const sourceRows = Array.from(docDiv.querySelectorAll("table tr"));
     sourceRows.forEach(function(sourceRow) {
@@ -1675,8 +1675,8 @@ async function downloadHebrewDocument() {
         bidirectional: true,
         alignment: d.AlignmentType.RIGHT,
         // In an RTL paragraph this reserves the right gutter for the number.
-        // Word applies the hanging offset only to the first line.
-        indent: { right: NUMBER_GUTTER, hanging: NUMBER_GUTTER },
+        // Word applies the first-line offset only to the numbered line.
+        indent: { right: NUMBER_GUTTER, firstLine: NUMBER_GUTTER },
         spacing: { after: 170, line: 650 },
         children: [
           new d.TextRun({
