@@ -1673,7 +1673,11 @@ async function downloadHebrewDocument() {
             rightToLeft: false
           })
         ]
-      })
+      }),
+      // Leave two blank lines between the English heading/source section
+      // and the Hebrew verse section.
+      new d.Paragraph({ spacing: { after: 0 }, children: [] }),
+      new d.Paragraph({ spacing: { after: 0 }, children: [] })
     ];
 
     // Section 2 reproduces the tested Word style from Genesis.docx:
@@ -1704,7 +1708,7 @@ async function downloadHebrewDocument() {
             text: ":" + String(number).padStart(2, "0") + "\t",
             bold: true,
             font: "Arial",
-            size: 40,
+            size: 28, // 14 pt verse number
             rightToLeft: false,
             color: "000000"
           }),
