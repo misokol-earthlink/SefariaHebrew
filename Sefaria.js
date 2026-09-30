@@ -1658,36 +1658,36 @@ async function downloadHebrewDocument() {
       })
     ];
 
-    // One editable paragraph per verse, not a table.  A right-side hanging
-    // indent reserves a number gutter outside the Hebrew text's right edge.
-    // Both the verse number and the Hebrew belong to the same paragraph.
-    const NUMBER_GUTTER = 650; // twips: ~0.45 inch
-    const NUMBER_GAP = 130;    // twips: space between number and Hebrew
+    // Each verse is one editable RTL paragraph.  The number is an isolated
+    // LTR run; the Hebrew is explicitly RTL.  Avoid Word tab stops here:
+    // they caused Word to move continuation lines to the opposite margin.
+    // A positive RTL hanging indent keeps the number in the outer gutter.
+    const NUMBER_GUTTER = 600; // twips (~0.42 inch)
     const sourceRows = Array.from(docDiv.querySelectorAll("table tr"));
     sourceRows.forEach(function(sourceRow) {
       const cells = sourceRow.querySelectorAll("td");
       if (cells.length < 2) return;
-      const rawNumber = (cells[0].textContent || "").trim();
-      const number = rawNumber.replace(/[:：]/g, "");
+      const number = (cells[0].textContent || "").trim().replace(/[:：]/g, "");
       const hebrew = cells[1].textContent || "";
       const tainted = cells[1].style.color === "darkred";
 
       children.push(new d.Paragraph({
         bidirectional: true,
         alignment: d.AlignmentType.RIGHT,
-        // First line begins in the number gutter; wrapped lines begin at
-        // the ordinary Hebrew right margin.  Word represents hanging indent
-        // on an RTL paragraph with a positive right indent and hanging offset.
+        // In an RTL paragraph this reserves the right gutter for the number.
+        // Word applies the hanging offset only to the first line.
         indent: { right: NUMBER_GUTTER, hanging: NUMBER_GUTTER },
         spacing: { after: 170, line: 650 },
-        tabStops: [{ type: d.TabStopType.RIGHT, position: NUMBER_GUTTER - NUMBER_GAP }],
         children: [
           new d.TextRun({
-            text: ":" + number,
+            // Direction marks keep the punctuation attached to the LTR number.
+            text: "\u200E:" + number + "\u200E",
             bold: true, font: "Arial", size: 36,
             rightToLeft: false
           }),
-          new d.TextRun({ text: "\t" }),
+          new d.TextRun({
+            text: "  ", rightToLeft: true, font: "Times New Roman", size: 45
+          }),
           new d.TextRun({
             text: hebrew, rightToLeft: true, font: "Times New Roman",
             size: 45, color: tainted ? "8B0000" : "4169E1"
