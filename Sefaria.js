@@ -1642,75 +1642,129 @@ async function downloadHebrewDocument() {
   try {
     if (status) status.textContent = "Creating Word document...";
     const d = await loadDocxLibrary();
-    const children = [
+
+    const attributionText =
+      docDiv.children[1] ? docDiv.children[1].textContent || "" : "";
+
+    // Section 1 is ordinary LTR material: title and source attribution.
+    const headingChildren = [
       new d.Paragraph({
         alignment: d.AlignmentType.CENTER,
         spacing: { after: 240 },
-        children: [new d.TextRun({ text: title, font: "Arial", size: 36, bold: true })]
+        children: [
+          new d.TextRun({
+            text: title,
+            font: "Arial",
+            size: 36,
+            bold: true,
+            rightToLeft: false
+          })
+        ]
       }),
       new d.Paragraph({
         alignment: d.AlignmentType.CENTER,
-        spacing: { after: 250 },
-        children: [new d.TextRun({
-          text: docDiv.children[1] ? docDiv.children[1].textContent || "" : "",
-          font: "Arial", size: 20, color: "555555"
-        })]
+        spacing: { after: 240 },
+        children: [
+          new d.TextRun({
+            text: attributionText,
+            font: "Arial",
+            size: 20,
+            color: "555555",
+            rightToLeft: false
+          })
+        ]
       })
     ];
 
-    // Hebrew numbering removes mixed LTR/RTL runs from the verse paragraphs.
-    // Each verse remains a single editable Word paragraph.
-    function hebrewVerseNumber(number) {
-      let n = Number(number);
-      if (!Number.isInteger(n) || n < 1 || n > 999) return String(number);
-      const hundreds = ["", "ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק"];
-      const tens = ["", "י", "כ", "ל", "מ", "נ", "ס", "ע", "פ", "צ"];
-      const ones = ["", "א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט"];
-      let result = hundreds[Math.floor(n / 100)];
-      n %= 100;
-      // Traditional Hebrew numerals avoid writing the Divine Name in 15/16.
-      if (n === 15) return result + "טו";
-      if (n === 16) return result + "טז";
-      result += tens[Math.floor(n / 10)] + ones[n % 10];
-      return result;
-    }
-
-    const NUMBER_GUTTER = 650; // twips, right-side number area
+    // Section 2 reproduces the tested Word style from Genesis.docx:
+    //   Hebrew Outdent RTL
+    //   paragraph bidi/RTL
+    //   left indent 720 twips with a 720-twip hanging indent
+    //   English verse number, TAB, then an explicitly RTL Hebrew run.
+    const hebrewChildren = [];
     const sourceRows = Array.from(docDiv.querySelectorAll("table tr"));
+
     sourceRows.forEach(function(sourceRow) {
       const cells = sourceRow.querySelectorAll("td");
       if (cells.length < 2) return;
-      const number = (cells[0].textContent || "").trim().replace(/[:：]/g, "");
+
+      const number = (cells[0].textContent || "")
+        .trim()
+        .replace(/[:：]/g, "");
       const hebrew = cells[1].textContent || "";
       const tainted = cells[1].style.color === "darkred";
 
-      children.push(new d.Paragraph({
-        bidirectional: true,
-        alignment: d.AlignmentType.RIGHT,
-        // Right hanging indent: the Hebrew numeral occupies the outer gutter;
-        // continuation lines should return to the inset Hebrew text margin.
-        indent: { right: NUMBER_GUTTER, hanging: NUMBER_GUTTER },
-        spacing: { after: 170, line: 650 },
+      hebrewChildren.push(new d.Paragraph({
+        style: "HebrewOutdentRTL",
         children: [
+          // In an RTL paragraph Word stores :01 and displays it as 01:.
+          // The tab is deliberately between the English number and Hebrew text,
+          // matching the tested prototype document.
           new d.TextRun({
-            text: hebrewVerseNumber(number) + ":  ",
-            bold: true, font: "Times New Roman", size: 36,
-            rightToLeft: true
+            text: ":" + String(number).padStart(2, "0") + "\t",
+            bold: true,
+            font: "Arial",
+            size: 40,
+            rightToLeft: false,
+            color: "000000"
           }),
           new d.TextRun({
-            text: hebrew, rightToLeft: true, font: "Times New Roman",
-            size: 45, color: tainted ? "8B0000" : "4169E1"
+            text: hebrew,
+            rightToLeft: true,
+            font: "Times New Roman",
+            size: 40,
+            color: tainted ? "8B0000" : "4169E1"
           })
         ]
       }));
     });
 
+    const commonPage = {
+      margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
+    };
+
     const documentFile = new d.Document({
-      sections: [{
-        properties: { page: { margin: { top: 850, right: 720, bottom: 850, left: 720 } } },
-        children: children
-      }]
+      styles: {
+        paragraphStyles: [
+          {
+            id: "NoSpacing",
+            name: "No Spacing",
+            quickFormat: true,
+            paragraph: {
+              spacing: { after: 0, line: 240, lineRule: "auto" }
+            }
+          },
+          {
+            id: "HebrewOutdentRTL",
+            name: "Hebrew Outdent RTL",
+            basedOn: "NoSpacing",
+            quickFormat: true,
+            paragraph: {
+              bidirectional: true,
+              indent: { left: 720, hanging: 720 }
+            },
+            run: {
+              font: "Times New Roman",
+              size: 40
+            }
+          }
+        ]
+      },
+      sections: [
+        {
+          properties: { page: commonPage },
+          children: headingChildren
+        },
+        {
+          properties: {
+            type: d.SectionType ? d.SectionType.CONTINUOUS : undefined,
+            page: commonPage
+          },
+          children: hebrewChildren
+        }
+      ]
     });
+
     const blob = await d.Packer.toBlob(documentFile);
     downloadBlob(blob, safeName + ".docx");
     if (status) status.textContent = "Saved " + safeName + ".docx";
