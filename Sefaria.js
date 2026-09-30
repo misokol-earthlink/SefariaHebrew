@@ -1633,64 +1633,15 @@ function loadDocxLibrary() {
 
 async function downloadHebrewDocument() {
   const docDiv = document.getElementById("downloadDocument");
-  if (!docDiv || !docDiv.querySelector("table")) {
-    alert("No Hebrew document is available. Click Get Hebrew first.");
-    return;
-  }
-
   const status = document.getElementById("status");
+  const downloadButton = document.getElementById("downloadDocBtn");
   const title = titleInput.value.trim() || buildSelectedRef();
   const safeName = title.replace(/[\\/:*?"<>|]/g, "_");
-  const downloadButton = document.getElementById("downloadDocBtn");
   if (downloadButton) downloadButton.disabled = true;
 
   try {
     if (status) status.textContent = "Creating Word document...";
     const d = await loadDocxLibrary();
-    const rows = [];
-    const sourceRows = Array.from(docDiv.querySelectorAll("table tr"));
-
-    sourceRows.forEach(function(sourceRow) {
-      const cells = sourceRow.querySelectorAll("td");
-      if (cells.length < 2) return;
-      const verseNumber = cells[0].textContent || "";
-      const hebrewText = cells[1].textContent || "";
-      const tainted = cells[1].style.color === "darkred";
-
-      rows.push(new d.TableRow({
-        cantSplit: true,
-        children: [
-          // Hebrew is the wider first column; a right-to-left table displays
-          // it at the right, with the verse-number column immediately to its left.
-          new d.TableCell({
-            width: { size: 86, type: d.WidthType.PERCENTAGE },
-            borders: { top: { style: d.BorderStyle.NONE }, bottom: { style: d.BorderStyle.NONE },
-                       left: { style: d.BorderStyle.NONE }, right: { style: d.BorderStyle.NONE } },
-            children: [new d.Paragraph({
-              bidirectional: true,
-              alignment: d.AlignmentType.RIGHT,
-              spacing: { after: 170, line: 650 },
-              children: [new d.TextRun({
-                text: hebrewText, rightToLeft: true, font: "Times New Roman",
-                size: 45, color: tainted ? "8B0000" : "4169E1"
-              })]
-            })]
-          }),
-          new d.TableCell({
-            width: { size: 14, type: d.WidthType.PERCENTAGE },
-            borders: { top: { style: d.BorderStyle.NONE }, bottom: { style: d.BorderStyle.NONE },
-                       left: { style: d.BorderStyle.NONE }, right: { style: d.BorderStyle.NONE } },
-            children: [new d.Paragraph({
-              alignment: d.AlignmentType.RIGHT,
-              spacing: { before: 90 },
-              children: [new d.TextRun({ text: verseNumber, bold: true, font: "Arial", size: 36 })]
-            })]
-          })
-        ]
-      }));
-    });
-
-    const attribution = docDiv.children[1] ? docDiv.children[1].textContent || "" : "";
     const children = [
       new d.Paragraph({
         alignment: d.AlignmentType.CENTER,
@@ -1700,21 +1651,50 @@ async function downloadHebrewDocument() {
       new d.Paragraph({
         alignment: d.AlignmentType.CENTER,
         spacing: { after: 250 },
-        children: [new d.TextRun({ text: attribution, font: "Arial", size: 20, color: "555555" })]
+        children: [new d.TextRun({
+          text: docDiv.children[1] ? docDiv.children[1].textContent || "" : "",
+          font: "Arial", size: 20, color: "555555"
+        })]
       })
     ];
-    if (rows.length) {
-      children.push(new d.Table({
-        width: { size: 100, type: d.WidthType.PERCENTAGE },
-        columnWidths: [8500, 1500],
-        rows: rows,
-        borders: {
-          top: { style: d.BorderStyle.NONE }, bottom: { style: d.BorderStyle.NONE },
-          left: { style: d.BorderStyle.NONE }, right: { style: d.BorderStyle.NONE },
-          insideHorizontal: { style: d.BorderStyle.NONE }, insideVertical: { style: d.BorderStyle.NONE }
-        }
+
+    // One editable paragraph per verse, not a table.  A right-side hanging
+    // indent reserves a number gutter outside the Hebrew text's right edge.
+    // Both the verse number and the Hebrew belong to the same paragraph.
+    const NUMBER_GUTTER = 650; // twips: ~0.45 inch
+    const NUMBER_GAP = 130;    // twips: space between number and Hebrew
+    const sourceRows = Array.from(docDiv.querySelectorAll("table tr"));
+    sourceRows.forEach(function(sourceRow) {
+      const cells = sourceRow.querySelectorAll("td");
+      if (cells.length < 2) return;
+      const rawNumber = (cells[0].textContent || "").trim();
+      const number = rawNumber.replace(/[:：]/g, "");
+      const hebrew = cells[1].textContent || "";
+      const tainted = cells[1].style.color === "darkred";
+
+      children.push(new d.Paragraph({
+        bidirectional: true,
+        alignment: d.AlignmentType.RIGHT,
+        // First line begins in the number gutter; wrapped lines begin at
+        // the ordinary Hebrew right margin.  Word represents hanging indent
+        // on an RTL paragraph with a positive right indent and negative firstLine.
+        indent: { right: NUMBER_GUTTER, firstLine: -NUMBER_GUTTER },
+        spacing: { after: 170, line: 650 },
+        tabStops: [{ type: d.TabStopType.RIGHT, position: NUMBER_GUTTER - NUMBER_GAP }],
+        children: [
+          new d.TextRun({
+            text: ":" + number,
+            bold: true, font: "Arial", size: 36,
+            rightToLeft: false
+          }),
+          new d.TextRun({ text: "\t" }),
+          new d.TextRun({
+            text: hebrew, rightToLeft: true, font: "Times New Roman",
+            size: 45, color: tainted ? "8B0000" : "4169E1"
+          })
+        ]
       }));
-    }
+    });
 
     const documentFile = new d.Document({
       sections: [{
