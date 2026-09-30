@@ -1595,40 +1595,130 @@ verseTd.style.top = "5px";
   docDiv.appendChild(table);
 }
 
-function downloadHebrewDocument() {
-  const docDiv = document.getElementById("downloadDocument");
+// Load the DOCX browser library only when a Word download is requested.
+// Pin the version to avoid unexpected changes from a moving CDN release.
+let docxLibraryPromise = null;
+function loadDocxLibrary() {
+  if (window.docx && window.docx.Packer) return Promise.resolve(window.docx);
+  if (!docxLibraryPromise) {
+    docxLibraryPromise = new Promise(function(resolve, reject) {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/docx@9.5.1/dist/index.umd.cjs";
+      script.onload = function() {
+        if (window.docx && window.docx.Packer) resolve(window.docx);
+        else reject(new Error("The DOCX library loaded without its browser API."));
+      };
+      script.onerror = function() { reject(new Error("Could not load the DOCX library. Check the network connection.")); };
+      document.head.appendChild(script);
+    }).catch(function(error) {
+      docxLibraryPromise = null; // permit retry after transient network failures
+      throw error;
+    });
+  }
+  return docxLibraryPromise;
+}
 
-  if (!docDiv || !docDiv.innerHTML.trim()) {
+async function downloadHebrewDocument() {
+  const docDiv = document.getElementById("downloadDocument");
+  if (!docDiv || !docDiv.querySelector("table")) {
     alert("No Hebrew document is available. Click Get Hebrew first.");
     return;
   }
 
+  const status = document.getElementById("status");
   const title = titleInput.value.trim() || buildSelectedRef();
   const safeName = title.replace(/[\\/:*?"<>|]/g, "_");
+  const downloadButton = document.getElementById("downloadDocBtn");
+  if (downloadButton) downloadButton.disabled = true;
 
-  const html =
-`<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>${escapeHtml(title)}</title>
-</head>
-<body>
-${docDiv.innerHTML}
-</body>
-</html>`;
+  try {
+    if (status) status.textContent = "Creating Word document...";
+    const d = await loadDocxLibrary();
+    const rows = [];
+    const sourceRows = Array.from(docDiv.querySelectorAll("table tr"));
 
- const blob = new Blob([html], { type: "application/msword;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
+    sourceRows.forEach(function(sourceRow) {
+      const cells = sourceRow.querySelectorAll("td");
+      if (cells.length < 2) return;
+      const verseNumber = cells[0].textContent || "";
+      const hebrewText = cells[1].textContent || "";
+      const tainted = cells[1].style.color === "darkred";
 
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = safeName + ".doc";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+      rows.push(new d.TableRow({
+        cantSplit: true,
+        children: [
+          // Hebrew is the wider first column; a right-to-left table displays
+          // it at the right, with the verse-number column immediately to its left.
+          new d.TableCell({
+            width: { size: 86, type: d.WidthType.PERCENTAGE },
+            borders: { top: { style: d.BorderStyle.NONE }, bottom: { style: d.BorderStyle.NONE },
+                       left: { style: d.BorderStyle.NONE }, right: { style: d.BorderStyle.NONE } },
+            children: [new d.Paragraph({
+              bidirectional: true,
+              alignment: d.AlignmentType.RIGHT,
+              spacing: { after: 170, line: 650 },
+              children: [new d.TextRun({
+                text: hebrewText, rightToLeft: true, font: "Times New Roman",
+                size: 45, color: tainted ? "8B0000" : "4169E1"
+              })]
+            })]
+          }),
+          new d.TableCell({
+            width: { size: 14, type: d.WidthType.PERCENTAGE },
+            borders: { top: { style: d.BorderStyle.NONE }, bottom: { style: d.BorderStyle.NONE },
+                       left: { style: d.BorderStyle.NONE }, right: { style: d.BorderStyle.NONE } },
+            children: [new d.Paragraph({
+              alignment: d.AlignmentType.RIGHT,
+              spacing: { before: 90 },
+              children: [new d.TextRun({ text: verseNumber, bold: true, font: "Arial", size: 36 })]
+            })]
+          })
+        ]
+      }));
+    });
 
-  URL.revokeObjectURL(url);
+    const attribution = docDiv.children[1] ? docDiv.children[1].textContent || "" : "";
+    const children = [
+      new d.Paragraph({
+        alignment: d.AlignmentType.CENTER,
+        spacing: { after: 240 },
+        children: [new d.TextRun({ text: title, font: "Arial", size: 36, bold: true })]
+      }),
+      new d.Paragraph({
+        alignment: d.AlignmentType.CENTER,
+        spacing: { after: 250 },
+        children: [new d.TextRun({ text: attribution, font: "Arial", size: 20, color: "555555" })]
+      })
+    ];
+    if (rows.length) {
+      children.push(new d.Table({
+        width: { size: 100, type: d.WidthType.PERCENTAGE },
+        columnWidths: [8500, 1500],
+        rows: rows,
+        borders: {
+          top: { style: d.BorderStyle.NONE }, bottom: { style: d.BorderStyle.NONE },
+          left: { style: d.BorderStyle.NONE }, right: { style: d.BorderStyle.NONE },
+          insideHorizontal: { style: d.BorderStyle.NONE }, insideVertical: { style: d.BorderStyle.NONE }
+        }
+      }));
+    }
+
+    const documentFile = new d.Document({
+      sections: [{
+        properties: { page: { margin: { top: 850, right: 720, bottom: 850, left: 720 } } },
+        children: children
+      }]
+    });
+    const blob = await d.Packer.toBlob(documentFile);
+    downloadBlob(blob, safeName + ".docx");
+    if (status) status.textContent = "Saved " + safeName + ".docx";
+  } catch (error) {
+    console.error("DOCX download failed:", error);
+    if (status) status.textContent = "Word document download failed: " + error.message;
+    alert("Could not create the Word document: " + error.message);
+  } finally {
+    if (downloadButton) downloadButton.disabled = false;
+  }
 }
 
 function escapeHtml(value) {
