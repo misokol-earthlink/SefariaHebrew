@@ -1677,8 +1677,8 @@ async function downloadHebrewDocument() {
         alignment: d.AlignmentType.RIGHT,
         // First line begins in the number gutter; wrapped lines begin at
         // the ordinary Hebrew right margin.  Word represents hanging indent
-        // on an RTL paragraph with a positive right indent and negative firstLine.
-        indent: { right: NUMBER_GUTTER, firstLine: -NUMBER_GUTTER },
+        // on an RTL paragraph with a positive right indent and hanging offset.
+        indent: { right: NUMBER_GUTTER, hanging: NUMBER_GUTTER },
         spacing: { after: 170, line: 650 },
         tabStops: [{ type: d.TabStopType.RIGHT, position: NUMBER_GUTTER - NUMBER_GAP }],
         children: [
