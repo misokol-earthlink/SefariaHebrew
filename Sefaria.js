@@ -46,7 +46,6 @@
     const lowerTropeBtn = document.getElementById("lowerTropeBtn");
     const upperTropeBtn = document.getElementById("upperTropeBtn");
     const dualTropeBtn = document.getElementById("dualTropeBtn");
-    document.getElementById("downloadDocBtn").addEventListener("click", downloadHebrewDocument);
     document.getElementById("fetchBtn").addEventListener("click", fetchSelectedTorahText);
     document.getElementById("manualFetchBtn").addEventListener("click", fetchManualRef);
     document.getElementById("refreshJsonBtn").addEventListener("click", rebuildJsonFromEditor);
@@ -58,6 +57,8 @@
     document.getElementById("toggleTranslitBtn").addEventListener("click", toggleWordDetails);
     document.getElementById("toggleParagraphBtn").addEventListener("click", toggleParagraphMarkers);
     titleInput.addEventListener("input", rebuildJsonFromEditor);
+
+    initializeOutputDocumentsModal();
 
     lowerTropeBtn.addEventListener("click", function () {
       setTropeSelection("lower");
@@ -1583,7 +1584,7 @@ verseTd.style.top = "5px";
     hebrewTd.style.fontFamily = '"Times New Roman", Times, serif';
     hebrewTd.style.fontSize = "30px";
     hebrewTd.style.lineHeight = "1.8";
-    hebrewTd.style.color = lineData.tainted ? "darkred" : "royalblue";
+    hebrewTd.style.color = "royalblue";
     hebrewTd.style.paddingBottom = "12px";
 
     tr.appendChild(verseTd);
@@ -1631,153 +1632,354 @@ function loadDocxLibrary() {
   return docxLibraryPromise;
 }
 
-async function downloadHebrewDocument() {
+function initializeOutputDocumentsModal() {
+  const modal = document.getElementById("outputDocumentsModal");
+  const none = document.getElementById("outputNone");
+  const choices = [
+    document.getElementById("outputLineByLineDocx"),
+    document.getElementById("outputFullParagraphDocx"),
+    document.getElementById("outputLineByLineText")
+  ].filter(Boolean);
+  const closeButton = document.getElementById("outputDocumentsClose");
+  const downloadButton = document.getElementById("downloadSelectionsBtn");
+
+  if (!modal || !none || choices.length !== 3 || !downloadButton) return;
+
+  function resetSelections() {
+    none.checked = true;
+    choices.forEach(function(choice) { choice.checked = false; });
+  }
+
+  none.addEventListener("change", function() {
+    if (none.checked) {
+      choices.forEach(function(choice) { choice.checked = false; });
+    } else if (!choices.some(function(choice) { return choice.checked; })) {
+      none.checked = true;
+    }
+  });
+
+  choices.forEach(function(choice) {
+    choice.addEventListener("change", function() {
+      if (choice.checked) none.checked = false;
+      if (!choices.some(function(item) { return item.checked; })) none.checked = true;
+    });
+  });
+
+  if (closeButton) {
+    closeButton.addEventListener("click", function() {
+      resetSelections();
+    });
+  }
+
+  downloadButton.addEventListener("click", async function() {
+    if (none.checked || !choices.some(function(choice) { return choice.checked; })) {
+      modal.classList.remove("open");
+      resetSelections();
+      return;
+    }
+
+    try {
+      downloadButton.disabled = true;
+      await downloadSelectedDocuments({
+        lineDocx: document.getElementById("outputLineByLineDocx").checked,
+        fullDocx: document.getElementById("outputFullParagraphDocx").checked,
+        lineText: document.getElementById("outputLineByLineText").checked
+      });
+      modal.classList.remove("open");
+      resetSelections();
+    } finally {
+      downloadButton.disabled = false;
+    }
+  });
+}
+
+function getDocumentOutputData() {
   const docDiv = document.getElementById("downloadDocument");
-  const status = document.getElementById("status");
-  const downloadButton = document.getElementById("downloadDocBtn");
   const title = titleInput.value.trim() || buildSelectedRef();
   const safeName = title.replace(/[\\/:*?"<>|]/g, "_");
-  if (downloadButton) downloadButton.disabled = true;
+  const attributionText =
+    docDiv && docDiv.children[1] ? docDiv.children[1].textContent || "" : "";
 
-  try {
-    if (status) status.textContent = "Creating Word document...";
-    const d = await loadDocxLibrary();
-
-    const attributionText =
-      docDiv.children[1] ? docDiv.children[1].textContent || "" : "";
-
-    // Section 1 is ordinary LTR material: title and source attribution.
-    const headingChildren = [
-      new d.Paragraph({
-        alignment: d.AlignmentType.CENTER,
-        spacing: { after: 240 },
-        children: [
-          new d.TextRun({
-            text: title,
-            font: "Arial",
-            size: 36,
-            bold: true,
-            rightToLeft: false
-          })
-        ]
-      }),
-      new d.Paragraph({
-        alignment: d.AlignmentType.CENTER,
-        spacing: { after: 240 },
-        children: [
-          new d.TextRun({
-            text: attributionText,
-            font: "Arial",
-            size: 20,
-            color: "555555",
-            rightToLeft: false
-          })
-        ]
-      }),
-      // Leave two blank lines between the English heading/source section
-      // and the Hebrew verse section.
-      new d.Paragraph({ spacing: { after: 0 }, children: [] }),
-      new d.Paragraph({ spacing: { after: 0 }, children: [] })
-    ];
-
-    // Section 2 reproduces the tested Word style from Genesis.docx:
-    //   Hebrew Outdent RTL
-    //   paragraph bidi/RTL
-    //   left indent 720 twips with a 720-twip hanging indent
-    //   English verse number, TAB, then an explicitly RTL Hebrew run.
-    const hebrewChildren = [];
-    const sourceRows = Array.from(docDiv.querySelectorAll("table tr"));
-
-    sourceRows.forEach(function(sourceRow) {
+  const verses = [];
+  if (docDiv) {
+    Array.from(docDiv.querySelectorAll("table tr")).forEach(function(sourceRow) {
       const cells = sourceRow.querySelectorAll("td");
       if (cells.length < 2) return;
-
-      const number = (cells[0].textContent || "")
-        .trim()
-        .replace(/[:：]/g, "");
-      const hebrew = cells[1].textContent || "";
-      const tainted = cells[1].style.color === "darkred";
-
-      hebrewChildren.push(new d.Paragraph({
-        style: "HebrewOutdentRTL",
-        children: [
-          // In an RTL paragraph Word stores :01 and displays it as 01:.
-          // The tab is deliberately between the English number and Hebrew text,
-          // matching the tested prototype document.
-          new d.TextRun({
-            text: ":" + String(number).padStart(2, "0") + "\t",
-            bold: true,
-            font: "Arial",
-            size: 28, // 14 pt verse number
-            rightToLeft: false,
-            color: "000000"
-          }),
-          new d.TextRun({
-            text: hebrew,
-            rightToLeft: true,
-            font: "Times New Roman",
-            size: 40,
-            color: tainted ? "8B0000" : "4169E1"
-          })
-        ]
-      }));
+      const number = (cells[0].textContent || "").trim().replace(/[:：]/g, "");
+      verses.push({
+        number: String(number).padStart(2, "0"),
+        hebrew: cells[1].textContent || ""
+      });
     });
+  }
 
-    const commonPage = {
-      margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
-    };
+  return { title: title, safeName: safeName, attributionText: attributionText, verses: verses };
+}
 
-    const documentFile = new d.Document({
-      styles: {
-        paragraphStyles: [
-          {
-            id: "NoSpacing",
-            name: "No Spacing",
-            quickFormat: true,
-            paragraph: {
-              spacing: { after: 0, line: 240, lineRule: "auto" }
-            }
-          },
-          {
-            id: "HebrewOutdentRTL",
-            name: "Hebrew Outdent RTL",
-            basedOn: "NoSpacing",
-            quickFormat: true,
-            paragraph: {
-              bidirectional: true,
-              indent: { left: 720, hanging: 720 }
-            },
-            run: {
-              font: "Times New Roman",
-              size: 40
-            }
-          }
-        ]
+function makeDocxHeadingChildren(d, data) {
+  return [
+    new d.Paragraph({
+      alignment: d.AlignmentType.CENTER,
+      spacing: { after: 240 },
+      children: [new d.TextRun({
+        text: data.title, font: "Arial", size: 36, bold: true, rightToLeft: false
+      })]
+    }),
+    new d.Paragraph({
+      alignment: d.AlignmentType.CENTER,
+      spacing: { after: 240 },
+      children: [new d.TextRun({
+        text: data.attributionText, font: "Arial", size: 20,
+        color: "555555", rightToLeft: false
+      })]
+    }),
+    new d.Paragraph({ spacing: { after: 0 }, children: [] }),
+    new d.Paragraph({ spacing: { after: 0 }, children: [] })
+  ];
+}
+
+function getDocxStyles() {
+  return {
+    paragraphStyles: [
+      {
+        id: "NoSpacing",
+        name: "No Spacing",
+        quickFormat: true,
+        paragraph: { spacing: { after: 0, line: 240, lineRule: "auto" } }
       },
-      sections: [
-        {
-          properties: { page: commonPage },
-          children: headingChildren
-        },
-        {
-          properties: {
-            type: d.SectionType ? d.SectionType.CONTINUOUS : undefined,
-            page: commonPage
-          },
-          children: hebrewChildren
-        }
+      {
+        id: "HebrewOutdentRTL",
+        name: "Hebrew Outdent RTL",
+        basedOn: "NoSpacing",
+        quickFormat: true,
+        paragraph: { bidirectional: true, indent: { left: 720, hanging: 720 } },
+        run: { font: "Times New Roman", size: 40 }
+      }
+    ]
+  };
+}
+
+function getCommonDocxPage() {
+  return { margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } };
+}
+
+async function createLineByLineDocxBlob(d, data) {
+  const hebrewChildren = data.verses.map(function(verse) {
+    return new d.Paragraph({
+      style: "HebrewOutdentRTL",
+      children: [
+        new d.TextRun({
+          text: ":" + verse.number + "\t",
+          bold: true, font: "Arial", size: 28,
+          rightToLeft: false, color: "000000"
+        }),
+        new d.TextRun({
+          text: verse.hebrew,
+          rightToLeft: true, font: "Times New Roman", size: 40,
+          color: "4169E1"
+        })
       ]
     });
+  });
 
-    const blob = await d.Packer.toBlob(documentFile);
-    downloadBlob(blob, safeName + ".docx");
-    if (status) status.textContent = "Saved " + safeName + ".docx";
+  const page = getCommonDocxPage();
+  const documentFile = new d.Document({
+    styles: getDocxStyles(),
+    sections: [
+      { properties: { page: page }, children: makeDocxHeadingChildren(d, data) },
+      {
+        properties: { type: d.SectionType ? d.SectionType.CONTINUOUS : undefined, page: page },
+        children: hebrewChildren
+      }
+    ]
+  });
+  return d.Packer.toBlob(documentFile);
+}
+
+async function createFullParagraphDocxBlob(d, data) {
+  const runs = [];
+  data.verses.forEach(function(verse, index) {
+    if (index > 0) {
+      runs.push(new d.TextRun({ text: "   ", rightToLeft: true, font: "Times New Roman", size: 40 }));
+    }
+    // Same mixed-direction run pattern as the tested line-by-line document,
+    // but all verses remain in one RTL paragraph and wrap naturally.
+    runs.push(new d.TextRun({
+      text: ":" + verse.number + " ",
+      bold: true, font: "Arial", size: 28,
+      rightToLeft: false, color: "000000"
+    }));
+    runs.push(new d.TextRun({
+      text: verse.hebrew,
+      rightToLeft: true, font: "Times New Roman", size: 40,
+      color: "4169E1"
+    }));
+  });
+
+  const page = getCommonDocxPage();
+  const fullParagraph = new d.Paragraph({
+    bidirectional: true,
+    alignment: d.AlignmentType.RIGHT,
+    children: runs
+  });
+
+  const documentFile = new d.Document({
+    styles: getDocxStyles(),
+    sections: [
+      { properties: { page: page }, children: makeDocxHeadingChildren(d, data) },
+      {
+        properties: { type: d.SectionType ? d.SectionType.CONTINUOUS : undefined, page: page },
+        children: [fullParagraph]
+      }
+    ]
+  });
+  return d.Packer.toBlob(documentFile);
+}
+
+function createLineByLineText(data) {
+  return data.verses.map(function(verse) {
+    return verse.number + ":\t" + verse.hebrew;
+  }).join("\r\n");
+}
+
+async function makeStoredZipFromEntries(entries) {
+  const encoder = new TextEncoder();
+  const prepared = [];
+
+  for (const entry of entries) {
+    let dataBytes;
+    if (entry.blob) {
+      dataBytes = new Uint8Array(await entry.blob.arrayBuffer());
+    } else if (entry.bytes) {
+      dataBytes = entry.bytes;
+    } else {
+      dataBytes = encoder.encode(entry.text || "");
+    }
+    prepared.push({
+      nameBytes: encoder.encode(entry.name),
+      dataBytes: dataBytes,
+      crc: crc32(dataBytes),
+      localOffset: 0
+    });
+  }
+
+  let localSize = 0;
+  let centralSize = 0;
+  prepared.forEach(function(file) {
+    localSize += 30 + file.nameBytes.length + file.dataBytes.length;
+    centralSize += 46 + file.nameBytes.length;
+  });
+
+  const buffer = new ArrayBuffer(localSize + centralSize + 22);
+  const bytes = new Uint8Array(buffer);
+  const view = new DataView(buffer);
+  let offset = 0;
+
+  prepared.forEach(function(file) {
+    file.localOffset = offset;
+    writeUint32(view, offset, 0x04034B50); offset += 4;
+    writeUint16(view, offset, 20); offset += 2;
+    writeUint16(view, offset, 0x0800); offset += 2;
+    writeUint16(view, offset, 0); offset += 2;
+    writeUint16(view, offset, 0); offset += 2;
+    writeUint16(view, offset, 0); offset += 2;
+    writeUint32(view, offset, file.crc); offset += 4;
+    writeUint32(view, offset, file.dataBytes.length); offset += 4;
+    writeUint32(view, offset, file.dataBytes.length); offset += 4;
+    writeUint16(view, offset, file.nameBytes.length); offset += 2;
+    writeUint16(view, offset, 0); offset += 2;
+    bytes.set(file.nameBytes, offset); offset += file.nameBytes.length;
+    bytes.set(file.dataBytes, offset); offset += file.dataBytes.length;
+  });
+
+  const centralOffset = offset;
+  prepared.forEach(function(file) {
+    writeUint32(view, offset, 0x02014B50); offset += 4;
+    writeUint16(view, offset, 20); offset += 2;
+    writeUint16(view, offset, 20); offset += 2;
+    writeUint16(view, offset, 0x0800); offset += 2;
+    writeUint16(view, offset, 0); offset += 2;
+    writeUint16(view, offset, 0); offset += 2;
+    writeUint16(view, offset, 0); offset += 2;
+    writeUint32(view, offset, file.crc); offset += 4;
+    writeUint32(view, offset, file.dataBytes.length); offset += 4;
+    writeUint32(view, offset, file.dataBytes.length); offset += 4;
+    writeUint16(view, offset, file.nameBytes.length); offset += 2;
+    writeUint16(view, offset, 0); offset += 2;
+    writeUint16(view, offset, 0); offset += 2;
+    writeUint16(view, offset, 0); offset += 2;
+    writeUint16(view, offset, 0); offset += 2;
+    writeUint32(view, offset, 0); offset += 4;
+    writeUint32(view, offset, file.localOffset); offset += 4;
+    bytes.set(file.nameBytes, offset); offset += file.nameBytes.length;
+  });
+
+  writeUint32(view, offset, 0x06054B50); offset += 4;
+  writeUint16(view, offset, 0); offset += 2;
+  writeUint16(view, offset, 0); offset += 2;
+  writeUint16(view, offset, prepared.length); offset += 2;
+  writeUint16(view, offset, prepared.length); offset += 2;
+  writeUint32(view, offset, centralSize); offset += 4;
+  writeUint32(view, offset, centralOffset); offset += 4;
+  writeUint16(view, offset, 0); offset += 2;
+
+  return new Blob([buffer], { type: "application/zip" });
+}
+
+async function downloadSelectedDocuments(selection) {
+  const status = document.getElementById("status");
+  const data = getDocumentOutputData();
+
+  if (!data.verses.length) {
+    if (status) status.textContent = "No Hebrew text is available to download.";
+    return;
+  }
+
+  try {
+    if (status) status.textContent = "Creating selected output documents...";
+    const entries = [];
+    let d = null;
+
+    if (selection.lineDocx || selection.fullDocx) {
+      d = await loadDocxLibrary();
+    }
+
+    if (selection.lineDocx) {
+      entries.push({
+        name: data.safeName + "_Line.docx",
+        blob: await createLineByLineDocxBlob(d, data)
+      });
+    }
+
+    if (selection.fullDocx) {
+      entries.push({
+        name: data.safeName + "_Full.docx",
+        blob: await createFullParagraphDocxBlob(d, data)
+      });
+    }
+
+    if (selection.lineText) {
+      entries.push({
+        name: data.safeName + ".txt",
+        text: createLineByLineText(data)
+      });
+    }
+
+    if (!entries.length) return;
+
+    const zipName = data.safeName + "_Documents.zip";
+    const zipBlob = await makeStoredZipFromEntries(entries);
+    downloadBlob(zipBlob, zipName);
+
+    if (status) {
+      status.textContent = "Saved " + zipName + " containing " +
+        entries.map(function(entry) { return entry.name; }).join(", ") + ".";
+    }
   } catch (error) {
-    console.error("DOCX download failed:", error);
-    if (status) status.textContent = "Word document download failed: " + error.message;
-    alert("Could not create the Word document: " + error.message);
-  } finally {
-    if (downloadButton) downloadButton.disabled = false;
+    console.error("Document download failed:", error);
+    if (status) status.textContent = "Document download failed: " + error.message;
+    alert("Could not create the selected documents: " + error.message);
+    throw error;
   }
 }
 
