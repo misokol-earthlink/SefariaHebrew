@@ -58,8 +58,6 @@
     document.getElementById("toggleParagraphBtn").addEventListener("click", toggleParagraphMarkers);
     titleInput.addEventListener("input", rebuildJsonFromEditor);
 
-    initializeOutputDocumentsModal();
-
     lowerTropeBtn.addEventListener("click", function () {
       setTropeSelection("lower");
       document.getElementById("status").textContent =
@@ -107,6 +105,7 @@ dualTropeBtn.addEventListener("click", function () {
 
     window.addEventListener("load", function () {
       initializeSelectors();
+      initializeOutputDocumentsModal();
     });
 
     function initializeSelectors() {
