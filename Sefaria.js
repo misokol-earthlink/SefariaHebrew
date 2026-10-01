@@ -9,6 +9,12 @@
     let lastFetchedRef = "";
     let lastSefariaData = null;
 
+    // Identifies how the text currently loaded into the editor was selected.
+    // Pocket Torah text receives the -PT title convention; ordinary selector
+    // and manual-reference retrieval do not.
+    let currentTextSource = "standard";
+    let currentPocketTorahTitle = "";
+
     const torahBooks = [
       {
         label: "Genesis / Bereishit",
@@ -106,6 +112,7 @@ dualTropeBtn.addEventListener("click", function () {
     window.addEventListener("load", function () {
       initializeSelectors();
       initializeOutputDocumentsModal();
+      initializePocketTorahHebrewRetrieval();
     });
 
     function initializeSelectors() {
@@ -323,7 +330,186 @@ function getCurrentSelectorParsedRef() {
     endVerse: parseInt(endVerseSelect.value, 10)
   };
 }
+
+    function parseTorahRangeRef(ref) {
+      const value = String(ref || "").trim();
+
+      let match = value.match(/^(.+?)\s+(\d+):(\d+)-(\d+):(\d+)$/);
+      if (match) {
+        return {
+          book: match[1],
+          startChapter: parseInt(match[2], 10),
+          startVerse: parseInt(match[3], 10),
+          endChapter: parseInt(match[4], 10),
+          endVerse: parseInt(match[5], 10)
+        };
+      }
+
+      match = value.match(/^(.+?)\s+(\d+):(\d+)(?:-(\d+))?$/);
+      if (!match) return null;
+
+      return {
+        book: match[1],
+        startChapter: parseInt(match[2], 10),
+        startVerse: parseInt(match[3], 10),
+        endChapter: parseInt(match[2], 10),
+        endVerse: match[4] ? parseInt(match[4], 10) : parseInt(match[3], 10)
+      };
+    }
+
+    function findTorahBookByName(value) {
+      const wanted = String(value || "").trim().toLowerCase();
+      return torahBooks.find(function(book) {
+        return book.sefariaBook.toLowerCase() === wanted ||
+               book.label.toLowerCase() === wanted ||
+               book.label.toLowerCase().startsWith(wanted + " /") ||
+               book.label.toLowerCase().endsWith("/ " + wanted);
+      }) || null;
+    }
+
+    function buildVerseLocationsForRef(ref, count) {
+      const parsed = parseTorahRangeRef(ref);
+      if (!parsed) return [];
+
+      const book = findTorahBookByName(parsed.book);
+      if (!book) return [];
+
+      const locations = [];
+      let chapter = parsed.startChapter;
+      let verse = parsed.startVerse;
+
+      while (locations.length < count && chapter <= parsed.endChapter) {
+        locations.push({ chapter: chapter, verse: verse });
+
+        if (chapter === parsed.endChapter && verse >= parsed.endVerse) break;
+
+        const chapterLength = book.chapters[chapter - 1];
+        if (!chapterLength) break;
+
+        if (verse >= chapterLength) {
+          chapter += 1;
+          verse = 1;
+        } else {
+          verse += 1;
+        }
+      }
+
+      return locations;
+    }
+
+    function getPocketTorahDisplayValue(id) {
+      const element = document.getElementById(id);
+      return element ? String(element.textContent || "").trim() : "";
+    }
+
+    function normalizePocketTorahBookName(value) {
+      const raw = String(value || "").trim();
+      const direct = findTorahBookByName(raw);
+      if (direct) return direct.sefariaBook;
+
+      const firstPart = raw.split("/")[0].trim();
+      const byFirstPart = findTorahBookByName(firstPart);
+      return byFirstPart ? byFirstPart.sefariaBook : raw;
+    }
+
+    function buildPocketTorahSefariaRefFromDisplays() {
+      const book = normalizePocketTorahBookName(getPocketTorahDisplayValue("ptBookDisplay"));
+      const startChapter = parseInt(getPocketTorahDisplayValue("ptStartChapterDisplay"), 10);
+      const startVerse = parseInt(getPocketTorahDisplayValue("ptStartVerseDisplay"), 10);
+      const endChapter = parseInt(getPocketTorahDisplayValue("ptEndChapterDisplay"), 10);
+      const endVerse = parseInt(getPocketTorahDisplayValue("ptEndVerseDisplay"), 10);
+
+      if (!book ||
+          !Number.isInteger(startChapter) || !Number.isInteger(startVerse) ||
+          !Number.isInteger(endChapter) || !Number.isInteger(endVerse)) {
+        return "";
+      }
+
+      if (startChapter === endChapter) {
+        if (startVerse === endVerse) {
+          return book + " " + startChapter + ":" + startVerse;
+        }
+        return book + " " + startChapter + ":" + startVerse + "-" + endVerse;
+      }
+
+      return book + " " + startChapter + ":" + startVerse +
+             "-" + endChapter + ":" + endVerse;
+    }
+
+    function getSelectedPocketTorahTitle() {
+      const parshaSelect = document.getElementById("ptParshaSelect");
+      if (!parshaSelect || parshaSelect.selectedIndex < 0) return "";
+
+      const option = parshaSelect.options[parshaSelect.selectedIndex];
+      const parshaName = option ? String(option.textContent || "").trim() : "";
+      if (!parshaName || /^select parsha$/i.test(parshaName)) return "";
+
+      const readingSelect = document.getElementById("ptReadingSelect");
+      let readingName = "";
+      if (readingSelect && readingSelect.selectedIndex >= 0) {
+        const readingOption = readingSelect.options[readingSelect.selectedIndex];
+        readingName = readingOption ? String(readingOption.textContent || "").trim() : "";
+      }
+
+      // Preserve the Pocket Torah naming context.  If the reading selector has
+      // a meaningful value (Aliyah, Maftir, etc.), include it; otherwise the
+      // parsha name alone is sufficient.  -PT is always the final title suffix.
+      if (readingName &&
+          !/^select/i.test(readingName) &&
+          readingName.toLowerCase() !== parshaName.toLowerCase()) {
+        return parshaName + "-" + readingName + "-PT";
+      }
+
+      return parshaName + "-PT";
+    }
+
+    function setLoadedTextSource(source, pocketTorahTitle) {
+      currentTextSource = source === "PT" ? "PT" : "standard";
+      currentPocketTorahTitle =
+        currentTextSource === "PT" ? String(pocketTorahTitle || "").trim() : "";
+    }
+
+    function initializePocketTorahHebrewRetrieval() {
+      const originalButton = document.getElementById("ptGetHebrewText");
+      if (!originalButton || !originalButton.parentNode) return;
+
+      /*
+        PT.js previously owned this button with a placeholder "not available"
+        handler.  Replace the button node after PT.js has initialized so that
+        its existing Parsha/Aliyah/audio logic remains untouched while this
+        button is handed to the Sefaria retrieval path.
+      */
+      const button = originalButton.cloneNode(true);
+      originalButton.parentNode.replaceChild(button, originalButton);
+
+      button.addEventListener("click", async function() {
+        const ref = buildPocketTorahSefariaRefFromDisplays();
+        const status = document.getElementById("status");
+
+        if (!ref) {
+          if (status) {
+            status.textContent =
+              "Select a Pocket Torah Parsha, Aliyah, and reading before requesting Hebrew text.";
+          }
+          return;
+        }
+
+        const ptTitle = getSelectedPocketTorahTitle();
+        setLoadedTextSource("PT", ptTitle);
+        titleInput.value = ptTitle || (ref + "-PT");
+        generatedRefDisplay.textContent = ref;
+
+        // Close the :target Pocket Torah modal before the network request begins.
+        if (window.location.hash === "#pocketTorahModal") {
+          history.replaceState(null, "", window.location.pathname + window.location.search);
+        }
+
+        await fetchSefariaText(ref);
+      });
+    }
+
     async function fetchSelectedTorahText() {
+      setLoadedTextSource("standard", "");
       updateGeneratedRefDisplay(false);
       titleInput.value = buildSelectedRef();
       await fetchSefariaText(buildSelectedRef());
@@ -335,6 +521,7 @@ function getCurrentSelectorParsedRef() {
         document.getElementById("status").textContent = "Enter a manual source reference first.";
         return;
       }
+      setLoadedTextSource("standard", "");
       titleInput.value = manualRef;
       await fetchSefariaText(manualRef);
     }
@@ -618,15 +805,21 @@ function normalizeSefariaToEditorLines(requestedRef, data) {
 
   const cleanTextArray = textArray.map(cleanSefariaHebrewText);
   console.log(cleanTextArray);
+
+  const rangeRef = parseTorahRangeRef(requestedRef);
+  const verseLocations = buildVerseLocationsForRef(requestedRef, cleanTextArray.length);
   const startVerse = getStartVerseNumber(data.ref || requestedRef);
-  const parsedRef = parseSimpleTorahRef(requestedRef);
-  const sourceBook = parsedRef ? parsedRef.book : "";
-  const sourceChapter = parsedRef ? parsedRef.chapter : null;
 
   return cleanTextArray.map(function (cleanHebrew, index) {
     const tokens = extractHebrewWordTokens(cleanHebrew);
-    const sourceVerseNumber =
-      startVerse === null ? index + 1 : startVerse + index;
+    const location = verseLocations[index] || null;
+    const sourceVerseNumber = location
+      ? location.verse
+      : (startVerse === null ? index + 1 : startVerse + index);
+    const sourceChapter = location
+      ? location.chapter
+      : (rangeRef ? rangeRef.startChapter : null);
+    const sourceBook = rangeRef ? rangeRef.book : "";
     const lineName =
       sourceChapter === null
         ? String(sourceVerseNumber).padStart(2, "0")
@@ -921,8 +1114,20 @@ function flattenSefariaText(rawText) {
         };
       });
 
+      let jsonTitle = titleInput.value.trim() || buildSelectedRef();
+
+      if (currentTextSource === "PT") {
+        if (currentPocketTorahTitle) {
+          jsonTitle = currentPocketTorahTitle;
+        }
+        if (!/-PT$/i.test(jsonTitle)) {
+          jsonTitle += "-PT";
+        }
+        titleInput.value = jsonTitle;
+      }
+
       currentLyricsJson = {
-        title: titleInput.value.trim() || buildSelectedRef(),
+        title: jsonTitle,
         lines: lines
       };
 
@@ -1345,7 +1550,7 @@ function flattenSefariaText(rawText) {
       const panels = Array.from(document.querySelectorAll(".line-panel"));
 
       return {
-        name: titleInput.value.trim() || buildSelectedRef(),
+        name: currentLyricsJson.title || titleInput.value.trim() || buildSelectedRef(),
         description: "Description",
         lines: panels.map(function(panel) {
           const sourceHebrew = panel.querySelector(".source-hebrew");
@@ -1804,12 +2009,12 @@ async function createFullParagraphDocxBlob(d, data) {
     // Same mixed-direction run pattern as the tested line-by-line document,
     // but all verses remain in one RTL paragraph and wrap naturally.
     runs.push(new d.TextRun({
-      text: ":" + verse.number + " ",
+      text: ":" + verse.number,
       bold: true, font: "Arial", size: 28,
       rightToLeft: false, color: "000000"
     }));
     runs.push(new d.TextRun({
-      text: verse.hebrew,
+      text: " " + verse.hebrew,
       rightToLeft: true, font: "Times New Roman", size: 40,
       color: "4169E1"
     }));
