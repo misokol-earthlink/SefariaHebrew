@@ -112,7 +112,6 @@ dualTropeBtn.addEventListener("click", function () {
     window.addEventListener("load", function () {
       initializeSelectors();
       initializeOutputDocumentsModal();
-      initializePocketTorahHebrewRetrieval();
     });
 
     function initializeSelectors() {
@@ -469,44 +468,48 @@ function getCurrentSelectorParsedRef() {
         currentTextSource === "PT" ? String(pocketTorahTitle || "").trim() : "";
     }
 
-    function initializePocketTorahHebrewRetrieval() {
-      const originalButton = document.getElementById("ptGetHebrewText");
-      if (!originalButton || !originalButton.parentNode) return;
 
-      /*
-        PT.js previously owned this button with a placeholder "not available"
-        handler.  Replace the button node after PT.js has initialized so that
-        its existing Parsha/Aliyah/audio logic remains untouched while this
-        button is handed to the Sefaria retrieval path.
-      */
-      const button = originalButton.cloneNode(true);
-      originalButton.parentNode.replaceChild(button, originalButton);
+    async function loadPocketTorahHebrew(options) {
+      const request = options || {};
+      const book = String(request.book || "").trim();
+      const startChapter = Number(request.startChapter);
+      const startVerse = Number(request.startVerse);
+      const endChapter = Number(request.endChapter);
+      const endVerse = Number(request.endVerse);
 
-      button.addEventListener("click", async function() {
-        const ref = buildPocketTorahSefariaRefFromDisplays();
+      if (!book ||
+          !Number.isInteger(startChapter) || !Number.isInteger(startVerse) ||
+          !Number.isInteger(endChapter) || !Number.isInteger(endVerse)) {
         const status = document.getElementById("status");
+        if (status) status.textContent = "Pocket Torah supplied an invalid Hebrew text range.";
+        return false;
+      }
 
-        if (!ref) {
-          if (status) {
-            status.textContent =
-              "Select a Pocket Torah Parsha, Aliyah, and reading before requesting Hebrew text.";
-          }
-          return;
-        }
+      const ref =
+        startChapter === endChapter
+          ? (startVerse === endVerse
+              ? book + " " + startChapter + ":" + startVerse
+              : book + " " + startChapter + ":" + startVerse + "-" + endVerse)
+          : book + " " + startChapter + ":" + startVerse +
+            "-" + endChapter + ":" + endVerse;
 
-        const ptTitle = getSelectedPocketTorahTitle();
-        setLoadedTextSource("PT", ptTitle);
-        titleInput.value = ptTitle || (ref + "-PT");
-        generatedRefDisplay.textContent = ref;
+      const suppliedTitle = String(request.jsonTitle || "").trim();
+      const ptTitle = suppliedTitle
+        ? (/-PT$/i.test(suppliedTitle) ? suppliedTitle : suppliedTitle + "-PT")
+        : ((String(request.parshaName || "").trim() || ref) + "-PT");
 
-        // Close the :target Pocket Torah modal before the network request begins.
-        if (window.location.hash === "#pocketTorahModal") {
-          history.replaceState(null, "", window.location.pathname + window.location.search);
-        }
+      setLoadedTextSource("PT", ptTitle);
+      titleInput.value = ptTitle;
+      generatedRefDisplay.textContent = ref;
 
-        await fetchSefariaText(ref);
-      });
+      return await fetchSefariaText(ref);
     }
+
+    // Public bridge used by PT.js.  PT.js owns the Pocket Torah reading
+    // selection/range; Sefaria.js owns retrieval, display, and JSON generation.
+    window.SefariaPT = Object.assign(window.SefariaPT || {}, {
+      loadPocketTorahHebrew: loadPocketTorahHebrew
+    });
 
     async function fetchSelectedTorahText() {
       setLoadedTextSource("standard", "");
@@ -536,7 +539,7 @@ function getCurrentSelectorParsedRef() {
     alert(
       "Please select a verse range exclusively within a single or dual trope range domain."
     );
-    return;
+    return false;
   }
 
   status.textContent = "Fetching from Sefaria...";
@@ -582,7 +585,7 @@ if (responseHasNoText(data)) {
   status.textContent = textMessage;
   lineEditor.innerHTML = "";
   jsonOutput.textContent = "{}";
-  return;
+  return false;
 }
 
     if (parsedRef && isSpecialDualTropeRequest(parsedRef)) {
@@ -614,9 +617,11 @@ status.textContent =
   lines.length +
   " line(s). " +
   getTropeStatusText(parsedRef);
+    return true;
   } catch (err) {
     console.error(err);
     status.textContent = "Load failed: " + err.message;
+    return false;
   }
 }
 
