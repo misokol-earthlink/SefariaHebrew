@@ -468,6 +468,23 @@
       }
     }
 
+
+    /* Output Documents modal — UI shell only */
+    .output-modal { display:none; position:fixed; inset:0; z-index:100001;
+      background:rgba(0,0,0,.48); align-items:center; justify-content:center; padding:24px; }
+    .output-modal.open { display:flex; }
+    .output-modal-panel { width:min(500px,94vw); background:#fff; border:1px solid #888;
+      border-radius:10px; box-shadow:0 8px 28px rgba(0,0,0,.28); padding:22px 26px 24px; position:relative; }
+    .output-modal-title { margin:0 0 20px 0; font-size:24px; }
+    .output-modal-close { position:absolute; top:10px; right:16px; border:0; background:transparent;
+      color:#555; padding:0; font-size:28px; line-height:1; font-weight:normal; }
+    .output-modal-close:hover { background:transparent; color:#000; }
+    .output-choice-list { display:flex; flex-direction:column; gap:12px; margin:4px 0 24px; }
+    .output-choice-list label { display:flex; align-items:center; gap:9px; font-size:16px;
+      font-weight:normal; cursor:pointer; }
+    .output-choice-list input[type="checkbox"] { width:18px; height:18px; margin:0; }
+    .output-modal-actions { display:flex; justify-content:flex-end; }
+
   </style>
 </head>
 <body>
@@ -521,7 +538,8 @@
     <button id="refreshJsonBtn" class="secondary-btn">Refresh JSON</button>
     <button id="copyJsonBtn" class="secondary-btn">Copy JSON</button>
     <button id="saveJsonBtn" class="secondary-btn">Save JSON</button>
-    <button id="downloadDocBtn" class="secondary-btn">Download Document</button>
+    <button id="downloadDocBtn" class="secondary-btn" type="button"
+      onclick="document.getElementById('outputDocumentsModal').classList.add('open')">Download Document</button>
   </div>
 
   <div class="generated-ref">
@@ -549,8 +567,29 @@
   <pre id="jsonOutput">{}</pre>
   <div id="downloadDocument" style="display:none;"></div>
   <script src="PT.js?v=20260923L"></script>
-  <script src="Sefaria.js?v=20260923L"></script>
+  <script src="Sefaria.js?v=20261001A"></script>
 </div>
+
+  <!-- Output Documents modal. Download behavior will be implemented in Sefaria.js. -->
+  <div id="outputDocumentsModal" class="output-modal" role="dialog"
+       aria-modal="true" aria-labelledby="outputDocumentsModalTitle">
+    <div class="output-modal-panel">
+      <button type="button" id="outputDocumentsClose" class="output-modal-close"
+              aria-label="Close Select Output Documents"
+              onclick="document.getElementById('outputDocumentsModal').classList.remove('open')">&times;</button>
+      <h2 id="outputDocumentsModalTitle" class="output-modal-title">Select Output Documents</h2>
+      <div class="output-choice-list">
+        <label><input type="checkbox" id="outputNone" checked><span>None</span></label>
+        <label><input type="checkbox" id="outputLineByLineDocx"><span>Line By Line Word Docx</span></label>
+        <label><input type="checkbox" id="outputFullParagraphDocx"><span>Full Paragraph Word Docx</span></label>
+        <label><input type="checkbox" id="outputLineByLineText"><span>Line By Line Text</span></label>
+      </div>
+      <div class="output-modal-actions">
+        <button type="button" id="downloadSelectionsBtn" class="secondary-btn">Download Selections</button>
+      </div>
+    </div>
+  </div>
+
   <!--
     Pocket Torah Options modal.
     This is currently a UI shell only:
@@ -596,9 +635,6 @@
             <label><input type="radio" name="ptReading" value="triennial1"> Triennial-1</label>
             <label><input type="radio" name="ptReading" value="triennial2"> Triennial-2</label>
             <label><input type="radio" name="ptReading" value="triennial3"> Triennial-3</label>
-            <label id="ptUseAltWrapper" hidden>
-              <input type="checkbox" id="ptUseAlt"> Use Full Holiday Reading
-            </label>
           </div>
         </div>
       </div>
