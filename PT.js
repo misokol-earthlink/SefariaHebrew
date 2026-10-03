@@ -668,13 +668,15 @@
     return bookMap[bookName] || null;
   }
 
-  function resolveTriennialYear(parsha, yearNumber) {
-    const years =
-      parsha &&
-      parsha.triennial &&
-      Array.isArray(parsha.triennial.year)
-        ? parsha.triennial.year
-        : [];
+  function resolveTriennialYear(parsha, yearNumber, useAlt) {
+    const branch =
+      parsha && useAlt && parsha["triennial-alt"]
+        ? parsha["triennial-alt"]
+        : parsha && parsha.triennial
+          ? parsha.triennial
+          : null;
+
+    const years = branch && Array.isArray(branch.year) ? branch.year : [];
 
     const requested = years[yearNumber - 1] || null;
 
@@ -696,7 +698,7 @@
     return null;
   }
 
-  function getReadingAliyot(parsha, readingType) {
+  function getReadingAliyot(parsha, readingType, useAlt) {
     if (!parsha) {
       return null;
     }
@@ -710,25 +712,25 @@
 
     const match = String(readingType || "").match(/^triennial([123])$/);
     if (match) {
-      const year = resolveTriennialYear(parsha, Number(match[1]));
+      const year = resolveTriennialYear(parsha, Number(match[1]), Boolean(useAlt));
       return year && Array.isArray(year.aliyah) ? year.aliyah : null;
     }
 
     return null;
   }
 
-  function getReadingAliyahNumbers(parshaName, readingType) {
+  function getReadingAliyahNumbers(parshaName, readingType, useAlt) {
     const parsha = getParsha(parshaName);
-    const aliyot = getReadingAliyot(parsha, readingType);
+    const aliyot = getReadingAliyot(parsha, readingType, useAlt);
     if (!aliyot) return [];
     return aliyot.filter(function(a) { return a && a._num != null; })
       .map(function(a) { return String(a._num).toUpperCase(); });
   }
 
-  function getReadingSelection(parshaName, readingType, aliyahNumber) {
+  function getReadingSelection(parshaName, readingType, aliyahNumber, useAlt) {
     const parsha = getParsha(parshaName);
     if (!parsha) return null;
-    const aliyot = getReadingAliyot(parsha, readingType);
+    const aliyot = getReadingAliyot(parsha, readingType, useAlt);
     if (!aliyot || !aliyot.length) return null;
     let selectedAliyot;
     if (aliyahNumber) {
@@ -753,10 +755,10 @@
       endChapter: end.chapter, endVerse: end.verse };
   }
 
-  async function prepareReadingTiming(parshaName, readingType, durationLoader, aliyahNumber) {
+  async function prepareReadingTiming(parshaName, readingType, durationLoader, aliyahNumber, useAlt) {
     await ensureResourcesLoaded();
 
-    const selection = getReadingSelection(parshaName, readingType, aliyahNumber);
+    const selection = getReadingSelection(parshaName, readingType, aliyahNumber, useAlt);
     const parsha = getParsha(parshaName);
 
     if (!selection || !parsha) {
@@ -1052,6 +1054,39 @@
     return selected ? selected.value : "full";
   }
 
+  function parshaHasTriennialAlt(parshaName) {
+    const parsha = getParsha(parshaName);
+    const alt = parsha && parsha["triennial-alt"];
+    return Boolean(alt && Array.isArray(alt.year) && alt.year.length);
+  }
+
+  function getModalUseAltBranch() {
+    const wrapper = document.getElementById("ptUseAltWrapper");
+    const checkbox = document.getElementById("ptUseAlt");
+
+    // For parshiot that provide triennial-alt, the alternate branch is the
+    // normal triennial reading. Checking "Use Full Holiday Reading"
+    // deliberately switches back to Pocket Torah's regular triennial branch.
+    return Boolean(wrapper && checkbox && !wrapper.hidden && !checkbox.checked);
+  }
+
+  function updateModalAltControl(resetChecked) {
+    const wrapper = document.getElementById("ptUseAltWrapper");
+    const checkbox = document.getElementById("ptUseAlt");
+    const parshaSelect = document.getElementById("ptParshaSelect");
+    if (!wrapper || !checkbox || !parshaSelect) return;
+
+    if (resetChecked) checkbox.checked = false;
+
+    const readingType = getModalReadingType();
+    const show =
+      readingType !== "full" &&
+      parshaHasTriennialAlt(parshaSelect.value);
+
+    wrapper.hidden = !show;
+    if (!show) checkbox.checked = false;
+  }
+
   function getModalAliyahNumber() {
     const select = document.getElementById("ptAliyahSelect");
     if (!select || !select.value || select.value === "-1") return null;
@@ -1109,7 +1144,12 @@
        * aliyah.json was loaded and interpreted before slower timing resources
        * are fetched.
        */
-      const selection = getReadingSelection(parshaName, getModalReadingType(), aliyahNumber);
+      const selection = getReadingSelection(
+        parshaName,
+        getModalReadingType(),
+        aliyahNumber,
+        getModalUseAltBranch()
+      );
       if (!selection) {
         throw new Error("Pocket Torah reading range could not be resolved.");
       }
@@ -1120,7 +1160,8 @@
           parshaName,
           getModalReadingType(),
           browserDurationLoader,
-          aliyahNumber
+          aliyahNumber,
+          getModalUseAltBranch()
         );
       });
 
@@ -1171,7 +1212,8 @@
     const selection = getReadingSelection(
       parshaName,
       readingType,
-      aliyahNumber
+      aliyahNumber,
+      getModalUseAltBranch()
     );
 
     if (!selection) {
@@ -1255,14 +1297,25 @@
         }
       }
 
-      parshaSelect.addEventListener("change", resetAndRecalculateSefariaModal);
-      document.querySelectorAll('input[name="ptReading"]').forEach(function(input) {
-        input.addEventListener("change", resetAndRecalculateSefariaModal);
+      parshaSelect.addEventListener("change", function() {
+        updateModalAltControl(true);
+        resetAndRecalculateSefariaModal();
       });
+      document.querySelectorAll('input[name="ptReading"]').forEach(function(input) {
+        input.addEventListener("change", function() {
+          updateModalAltControl(false);
+          resetAndRecalculateSefariaModal();
+        });
+      });
+      const useAlt = document.getElementById("ptUseAlt");
+      if (useAlt) {
+        useAlt.addEventListener("change", resetAndRecalculateSefariaModal);
+      }
       if (aliyahSelect) {
         aliyahSelect.addEventListener("change", resetAndRecalculateSefariaModal);
       }
       populateModalAliyahSelect();
+      updateModalAltControl(true);
 
       const audioToggle = document.getElementById("ptAudioToggle");
       if (audioToggle) {
