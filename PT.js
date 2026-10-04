@@ -1046,7 +1046,7 @@
       link.target = "_blank";
       link.rel = "noopener noreferrer";
       link.textContent = label;
-      link.style.color = "#555";
+      link.style.color = "#3f3f3f";
       link.style.textDecoration = "none";
       link.addEventListener("mouseenter", function() {
         link.style.textDecoration = "underline";
