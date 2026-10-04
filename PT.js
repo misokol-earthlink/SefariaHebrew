@@ -1024,6 +1024,52 @@
     playModalSegment(0, token);
   }
 
+  function ensurePocketTorahSourceCitations() {
+    if (document.getElementById("ptSourceCitations")) return;
+
+    const referenceBox = document.querySelector("#pocketTorahModal .pt-reference-box");
+    const actionRow = document.querySelector("#pocketTorahModal .pt-action-row");
+    if (!referenceBox || !actionRow || !referenceBox.parentNode) return;
+
+    const sources = document.createElement("div");
+    sources.id = "ptSourceCitations";
+    sources.style.margin = "8px 0 8px 22px";
+    sources.style.fontSize = "14px";
+    sources.style.lineHeight = "1.45";
+    sources.style.fontWeight = "400";
+    sources.style.color = "#555";
+
+    function addSourceLine(label, href) {
+      const line = document.createElement("div");
+      const link = document.createElement("a");
+      link.href = href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = label;
+      link.style.color = "#555";
+      link.style.textDecoration = "none";
+      link.addEventListener("mouseenter", function() {
+        link.style.textDecoration = "underline";
+      });
+      link.addEventListener("mouseleave", function() {
+        link.style.textDecoration = "none";
+      });
+      line.appendChild(link);
+      sources.appendChild(line);
+    }
+
+    addSourceLine(
+      "Full K'riyah — Hebcal Traditional Schedule",
+      "https://www.hebcal.com/home/category/sedrot"
+    );
+    addSourceLine(
+      "Triennial — Jewish Law & Standards, Rabbinical Assembly, 2020",
+      "https://www.rabbinicalassembly.org/sites/default/files/teshuvot/1703225420_30.pdf?id=49574+"
+    );
+
+    referenceBox.parentNode.insertBefore(sources, actionRow);
+  }
+
   function setModalText(id, value) {
     const element = document.getElementById(id);
     if (!element) return;
@@ -1262,6 +1308,8 @@
   }
 
   async function initializeSefariaPocketTorahModal() {
+    ensurePocketTorahSourceCitations();
+
     const parshaSelect = document.getElementById("ptParshaSelect");
     if (!parshaSelect) return;
 
