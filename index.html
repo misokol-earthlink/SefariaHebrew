@@ -485,10 +485,53 @@
     .output-choice-list input[type="checkbox"] { width:18px; height:18px; margin:0; }
     .output-modal-actions { display:flex; justify-content:flex-end; }
 
+
+    /* License Information */
+    .license-information-link {
+      margin: 0 0 12px 0;
+      font-family: sans-serif;
+      font-size: 14px;
+      font-weight: bold;
+      color: royalblue;
+      text-decoration: underline;
+      cursor: pointer;
+      width: max-content;
+    }
+    .license-information-popup {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 500000;
+      background: rgba(0,0,0,0.35);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .license-information-panel {
+      font-family: sans-serif;
+      line-height: 1.5;
+      color: #333;
+      width: 600px;
+      max-width: 85vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: white;
+      border: 3px solid maroon;
+      box-shadow: 0 0 18px gray;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .license-information-panel a {
+      color: #0066cc;
+      text-decoration: underline;
+    }
+
   </style>
 </head>
 <body>
 <div id="main-app-dom">
+  <div id="licenseInformationLink" class="license-information-link"
+       role="button" tabindex="0">License Information</div>
   <h1>Sefaria Lyrics JSON Builder</h1>
 <!--
   <div class="note">
@@ -699,6 +742,52 @@
     </div>
   </div>
 
+
+<!-- License Information Popup -->
+<div id="licenseInformationPopup" class="license-information-popup"
+     role="dialog" aria-modal="true" aria-labelledby="licenseInformationTitle">
+  <div class="license-information-panel">
+    <div style="text-align:center; margin-bottom:18px;">
+      <img src="ISokieLogo_Clear.png" alt="I_Sokie Enterprises"
+           style="display:block; width:180px; max-width:45%; height:auto; margin:0 auto;">
+    </div>
+
+    <h3 id="licenseInformationTitle"
+        style="margin-top:0; color:#111; border-bottom:1px solid #ccc; padding-bottom:8px;">
+      Audio Attribution &amp; Licensing
+    </h3>
+
+    <p style="margin-top:12px; margin-bottom:12px;">
+      <strong>Temple Sinai, Sharon, MA:</strong>
+      High Holiday trope audio selections are provided through the public
+      High Holy Day readings made available by Temple Sinai of Sharon,
+      Massachusetts. Audio playback is opened directly from the synagogue's
+      website; the recordings are not copied, stored, modified, or redistributed
+      by this application.
+      <a href="https://www.temple-sinai.com/worship-music/high-holy-days/high-holy-day-readings"
+         target="_blank" rel="noopener">Temple Sinai High Holy Day Readings</a>.
+    </p>
+
+    <p style="margin-top:18px; margin-bottom:12px;">
+      <strong>PocketTorah:</strong>
+      Portions of this application utilize Torah chanting audio recordings
+      and associated timing and Torah-text metadata from the PocketTorah
+      project, created by Russel Neiss and Rabbi Charlie Schwartz.
+      PocketTorah materials are used under the terms of the
+      <a href="https://creativecommons.org/licenses/by-sa/4.0/"
+         target="_blank" rel="noopener">Creative Commons Attribution-ShareAlike
+      4.0 International License (CC BY-SA 4.0)</a>.
+    </p>
+
+    <div style="text-align:center; margin-top:20px;">
+      <button id="licenseInformationClose" type="button"
+              style="background:maroon; color:white; font-weight:bold; padding:7px 20px;
+                     border:2px solid black; cursor:pointer;">CLOSE</button>
+    </div>
+  </div>
+</div>
+<!-- End License Information Popup -->
+
 <div id="splash-screen">
 
     <h2 class="splash-title">
@@ -708,5 +797,32 @@
     <img src="ISokieButton.svg" alt="I_Sokie Enterprises">
 
 </div>
+
+<script>
+(function () {
+  const link = document.getElementById("licenseInformationLink");
+  const popup = document.getElementById("licenseInformationPopup");
+  const close = document.getElementById("licenseInformationClose");
+
+  function openLicense() { popup.style.display = "flex"; }
+  function closeLicense() { popup.style.display = "none"; }
+
+  link.addEventListener("click", openLicense);
+  link.addEventListener("keydown", function (event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openLicense();
+    }
+  });
+  close.addEventListener("click", closeLicense);
+  popup.addEventListener("click", function (event) {
+    if (event.target === popup) closeLicense();
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && popup.style.display === "flex") closeLicense();
+  });
+})();
+</script>
+
 </body>
 </html>
