@@ -1489,9 +1489,8 @@
         endChapter: selection.endChapter,
         endVerse: selection.endVerse
       });
-      if (loaded && window.location.hash === "#pocketTorahModal") {
-        window.location.hash = "";
-      }
+      // Keep the common audio-selection modal open after Hebrew retrieval.
+      // This preserves the selected reading/reference while the user plays audio.
       return;
     }
 
@@ -1543,13 +1542,8 @@
       endVerse: selection.endVerse
     });
 
-    if (loaded) {
-      // Close the :target modal immediately so the retrieved Hebrew/editor
-      // and the main-page Save JSON control are visible.
-      if (window.location.hash === "#pocketTorahModal") {
-        window.location.hash = "";
-      }
-    }
+    // Deliberately keep the modal open after Hebrew retrieval so the
+    // selected reading/reference remains visible during audio playback.
   }
 
   async function initializeSefariaPocketTorahModal() {
