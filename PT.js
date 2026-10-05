@@ -1141,6 +1141,43 @@
     );
 
     referenceBox.parentNode.insertBefore(sources, actionRow);
+
+    // High Holiday attribution uses the same location/style as the PT sources,
+    // but is shown only while the modal is in HH mode.
+    let hhSources = document.getElementById("hhSourceCitations");
+    if (!hhSources) {
+      hhSources = document.createElement("div");
+      hhSources.id = "hhSourceCitations";
+      hhSources.style.margin = "10px 0 10px 22px";
+      hhSources.style.fontSize = "14px";
+      hhSources.style.lineHeight = "1.45";
+      hhSources.style.fontWeight = "400";
+      hhSources.style.color = "#555";
+      hhSources.style.display = "none";
+
+      const line1 = document.createElement("div");
+      const templeLink = document.createElement("a");
+      templeLink.href = "https://www.temple-sinai.com/worship-music/high-holy-days/high-holy-day-readings";
+      templeLink.target = "_blank";
+      templeLink.rel = "noopener noreferrer";
+      templeLink.textContent = "High Holiday Trope — Temple Sinai, Sharon, MA";
+      templeLink.style.color = "#3f3f3f";
+      templeLink.style.textDecoration = "none";
+      templeLink.addEventListener("mouseenter", function() {
+        templeLink.style.textDecoration = "underline";
+      });
+      templeLink.addEventListener("mouseleave", function() {
+        templeLink.style.textDecoration = "none";
+      });
+      line1.appendChild(templeLink);
+
+      const line2 = document.createElement("div");
+      line2.textContent = "Playback directly from the synagogue site.";
+
+      hhSources.appendChild(line1);
+      hhSources.appendChild(line2);
+      referenceBox.parentNode.insertBefore(hhSources, actionRow);
+    }
   }
 
   function setModalText(id, value) {
@@ -1197,6 +1234,9 @@
 
     const sources = document.getElementById("ptSourceCitations");
     if (sources) sources.style.display = hh ? "none" : "";
+
+    const hhSources = document.getElementById("hhSourceCitations");
+    if (hhSources) hhSources.style.display = hh ? "" : "none";
 
     const audioButton = document.getElementById("ptAudioToggle");
     if (audioButton) {
