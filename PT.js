@@ -308,7 +308,13 @@
     const manifestKey = String(logicalLabelKey).replace(/#U2019/gi, "’").toLowerCase();
     const labelKey = pocketTorahLabelFiles[manifestKey] || logicalLabelKey;
 
+    // Cache under the logical key used by the rest of PT.js as well as the
+    // exact physical filename key. The two can differ in capitalization.
+    if (labelData[logicalLabelKey]) {
+      return labelData[logicalLabelKey];
+    }
     if (labelData[labelKey]) {
+      labelData[logicalLabelKey] = labelData[labelKey];
       return labelData[labelKey];
     }
 
@@ -330,7 +336,7 @@
 
     const labelText = await response.text();
 
-    labelData[labelKey] = labelText
+    const parsedLabels = labelText
       .split(",")
       .map(function(value) {
         return Number(value.trim());
@@ -339,13 +345,21 @@
         return Number.isFinite(value);
       });
 
+    // Downstream timing code addresses labels by the logical resource name
+    // (for example "Noach-1"), while the physical file may be "noach-1.txt".
+    // Store both aliases so both paths reference the same parsed label array.
+    labelData[labelKey] = parsedLabels;
+    labelData[logicalLabelKey] = parsedLabels;
+
     console.log(
       "Pocket Torah labels loaded:",
-      labelKey,
-      labelData[labelKey].length
+      logicalLabelKey,
+      "from",
+      labelKey + ".txt",
+      parsedLabels.length
     );
 
-    return labelData[labelKey];
+    return parsedLabels;
   }
 
   function getAudioPath(parshaName, aliyahNumber) {
