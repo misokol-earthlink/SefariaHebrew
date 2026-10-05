@@ -897,15 +897,17 @@
   let modalPlaybackIndex = -1;
   let modalPlaybackToken = 0;
   let modalTimeUpdateHandler = null;
+  let hhAudioWindow = null;
 
   function setAudioTogglePlaying(isPlaying) {
     const button = document.getElementById("ptAudioToggle");
     const icon = document.getElementById("ptAudioToggleIcon");
+    const sourceName = isHHMode() ? "High Holiday" : "Pocket Torah";
     if (button) {
       button.setAttribute("aria-pressed", isPlaying ? "true" : "false");
       button.setAttribute(
         "aria-label",
-        isPlaying ? "Stop Pocket Torah audio" : "Play Pocket Torah audio"
+        isPlaying ? "Stop " + sourceName + " audio" : "Play " + sourceName + " audio"
       );
     }
     if (icon) {
@@ -915,6 +917,11 @@
 
   function stopModalAudio() {
     modalPlaybackToken += 1;
+
+    if (hhAudioWindow && !hhAudioWindow.closed) {
+      hhAudioWindow.close();
+    }
+    hhAudioWindow = null;
 
     if (modalAudio) {
       if (modalTimeUpdateHandler) {
@@ -1004,6 +1011,45 @@
   }
 
   function toggleModalAudioPlayback() {
+    if (isHHMode()) {
+      if (hhAudioWindow && !hhAudioWindow.closed) {
+        stopModalAudio();
+        return;
+      }
+
+      const selection = getHHSelection();
+      if (!selection || !selection.audioUrl) {
+        console.warn("High Holiday audio is not ready. Select a reading and Aliyah first.");
+        return;
+      }
+
+      stopModalAudio();
+
+      const width = 400;
+      const height = 180;
+      const left = Math.max(0, screen.availWidth - width - 20);
+      const top = Math.max(0, screen.availHeight - height - 60);
+
+      hhAudioWindow = window.open(
+        selection.audioUrl,
+        "ShulCloudAudio",
+        "width=" + width +
+          ",height=" + height +
+          ",left=" + left +
+          ",top=" + top
+      );
+
+      if (!hhAudioWindow) {
+        console.warn("High Holiday playback window was blocked by the browser.");
+        setAudioTogglePlaying(false);
+        return;
+      }
+
+      setAudioTogglePlaying(true);
+      window.focus();
+      return;
+    }
+
     if (modalAudio && !modalAudio.paused) {
       stopModalAudio();
       return;
@@ -1130,10 +1176,13 @@
 
     const audioButton = document.getElementById("ptAudioToggle");
     if (audioButton) {
-      audioButton.disabled = hh;
-      audioButton.style.opacity = hh ? "0.45" : "";
-      audioButton.title = hh ? "High Holiday playback will be added in the next pass." : "";
+      audioButton.disabled = false;
+      audioButton.style.opacity = "";
+      audioButton.title = hh
+        ? "Play the selected High Holiday recording directly from the synagogue site."
+        : "";
     }
+    setAudioTogglePlaying(false);
   }
 
   function populateHHAliyot(reading) {
