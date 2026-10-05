@@ -1,0 +1,149 @@
+{
+  "source": "ShulCloud published High Holy Day recording selections",
+  "readings": [
+    {
+      "id": "rosh-hashanah-1",
+      "name": "Rosh Hashanah 1",
+      "book": "Genesis",
+      "begin": "22:1",
+      "end": "22:19",
+      "aliyot": [
+        {
+          "num": "1",
+          "begin": "22:1",
+          "end": "22:3",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/genesis_22_1-3_hhd_trope.m4a"
+        },
+        {
+          "num": "2",
+          "begin": "22:4",
+          "end": "22:7",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/genesis_22_4-7_hhd_trope.m4a"
+        },
+        {
+          "num": "3",
+          "begin": "22:8",
+          "end": "22:11",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/genesis_22_8-11_hhd_trope.m4a"
+        },
+        {
+          "num": "4",
+          "begin": "22:12",
+          "end": "22:15",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/genesis_22_12-15_hhd_trope.m4a"
+        },
+        {
+          "num": "5",
+          "begin": "22:16",
+          "end": "22:19",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/genesis_22_16-19_hhd_trope.m4a"
+        }
+      ]
+    },
+    {
+      "id": "rosh-hashanah-2",
+      "name": "Rosh Hashanah 2",
+      "book": "Genesis",
+      "begin": "1:1",
+      "end": "2:3",
+      "aliyot": [
+        {
+          "num": "1",
+          "begin": "1:1",
+          "end": "1:8",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/genesis_1_1-8_hhd_trope.m4a"
+        },
+        {
+          "num": "2",
+          "begin": "1:9",
+          "end": "1:13",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/genesis_1_9-13_hhd_trope.m4a"
+        },
+        {
+          "num": "3",
+          "begin": "1:14",
+          "end": "1:23",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/genesis_1_14-23_hhd_trope.m4a"
+        },
+        {
+          "num": "4",
+          "begin": "1:24",
+          "end": "1:31",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/genesis_1_24-31_hhd_trope.m4a"
+        },
+        {
+          "num": "5",
+          "begin": "2:1",
+          "end": "2:3",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/genesis_2_1-3_hhd_trope.m4a"
+        }
+      ]
+    },
+    {
+      "id": "yom-kippur-morning",
+      "name": "Yom Kippur Morning",
+      "book": "Deuteronomy",
+      "begin": "29:9",
+      "end": "30:20",
+      "aliyot": [
+        {
+          "num": "1",
+          "begin": "29:9",
+          "end": "29:11",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/deuteronomy_29_9-11.m4a"
+        },
+        {
+          "num": "2",
+          "begin": "29:12",
+          "end": "29:14",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/deuteronomy_29_12-14.m4a"
+        },
+        {
+          "num": "3",
+          "begin": "30:11",
+          "end": "30:14",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/deuteronomy_30_11-14.m4a"
+        },
+        {
+          "num": "4",
+          "begin": "30:15",
+          "end": "30:17",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/deuteronomy_30_15-17.m4a"
+        },
+        {
+          "num": "5",
+          "begin": "30:18",
+          "end": "30:20",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/deuteronomy_30_18-20.m4a"
+        }
+      ]
+    },
+    {
+      "id": "yom-kippur-afternoon",
+      "name": "Yom Kippur Afternoon",
+      "book": "Leviticus",
+      "begin": "19:1",
+      "end": "19:18",
+      "aliyot": [
+        {
+          "num": "1",
+          "begin": "19:1",
+          "end": "19:4",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/leviticus_19_1-4.m4a"
+        },
+        {
+          "num": "2",
+          "begin": "19:9",
+          "end": "19:13",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/leviticus_19_9-13.m4a"
+        },
+        {
+          "num": "3",
+          "begin": "19:14",
+          "end": "19:18",
+          "audioUrl": "https://images.shulcloud.com/13710/uploads/uploaded_images/leviticus_19_14-18.m4a"
+        }
+      ]
+    }
+  ]
+}

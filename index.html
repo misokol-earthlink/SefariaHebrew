@@ -544,7 +544,7 @@
 
   <div class="generated-ref">
     Sefaria ref to fetch: <span id="generatedRefDisplay"></span>
-    <a class="pocket-torah-link" href="#pocketTorahModal">Use Pocket Torah</a>
+    <a class="pocket-torah-link" href="#pocketTorahModal">Get Audio Selection</a>
   </div>
 
   <div class="controls">
@@ -628,7 +628,7 @@
           </select>
         </div>
 
-        <div class="pt-modal-field">
+        <div class="pt-modal-field" id="ptReadingOptionsField">
           <span class="pt-reading-label">Reading</span>
           <div class="pt-reading-options">
             <label><input type="radio" name="ptReading" value="full" checked> Full K'riyah</label>
@@ -677,6 +677,24 @@
           <span class="pt-action-icon">&#128196;</span>
           <span>Get Parsha Hebrew Text</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- High Holiday reading selector. Shown only after "High Holidays" is chosen. -->
+  <div id="hhReadingModal" class="pt-modal" role="dialog" aria-modal="true"
+       aria-labelledby="hhReadingModalTitle">
+    <div class="pt-modal-panel" style="width:min(460px,94vw);">
+      <button type="button" id="hhReadingModalClose" class="pt-modal-close"
+              aria-label="Close High Holiday Selection"
+              style="border:0;background:transparent;padding:0;">&times;</button>
+      <h2 id="hhReadingModalTitle" class="pt-modal-title">Select High Holiday Reading</h2>
+      <div class="pt-modal-field">
+        <label for="hhReadingSelect">High Holiday Reading</label>
+        <select id="hhReadingSelect" style="min-width:280px;padding:7px 9px;font-size:15px;">
+          <option value="" selected>Select Reading</option>
+        </select>
       </div>
     </div>
   </div>

@@ -886,6 +886,9 @@
    */
   let modalCalculationSerial = 0;
   let preparedModalReading = null;
+  let hhCatalog = null;
+  let selectedHHReading = null;
+  const HH_CATALOG_PATH = "HH.json";
 
   // Sefaria modal audio playback state.  Playback consumes the already
   // calculated aliyah-relative audioPath/startTime/endTime segments.
@@ -1095,6 +1098,141 @@
     setModalText("ptEndVerseDisplay", selection.endVerse);
   }
 
+  async function ensureHHCatalogLoaded() {
+    if (hhCatalog) return hhCatalog;
+    const response = await fetch(HH_CATALOG_PATH + "?v=" + Date.now(), { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("Could not load " + HH_CATALOG_PATH + ". Status: " + response.status);
+    }
+    hhCatalog = await response.json();
+    if (!hhCatalog || !Array.isArray(hhCatalog.readings)) {
+      throw new Error(HH_CATALOG_PATH + " does not contain a readings array.");
+    }
+    return hhCatalog;
+  }
+
+  function isHHMode() {
+    return window.PlayMode === "HH";
+  }
+
+  function setPTModalMode(mode) {
+    const hh = mode === "HH";
+    window.PlayMode = hh ? "HH" : (mode === "PT" ? "PT" : null);
+
+    const title = document.getElementById("pocketTorahModalTitle");
+    if (title) title.textContent = hh ? "High Holiday Trope Option" : "Pocket Torah Options";
+
+    const readingField = document.getElementById("ptReadingOptionsField");
+    if (readingField) readingField.style.display = hh ? "none" : "";
+
+    const sources = document.getElementById("ptSourceCitations");
+    if (sources) sources.style.display = hh ? "none" : "";
+
+    const audioButton = document.getElementById("ptAudioToggle");
+    if (audioButton) {
+      audioButton.disabled = hh;
+      audioButton.style.opacity = hh ? "0.45" : "";
+      audioButton.title = hh ? "High Holiday playback will be added in the next pass." : "";
+    }
+  }
+
+  function populateHHAliyot(reading) {
+    const select = document.getElementById("ptAliyahSelect");
+    if (!select) return;
+    select.innerHTML = '<option value="-1" selected>Select Aliyah</option>';
+    (reading && Array.isArray(reading.aliyot) ? reading.aliyot : []).forEach(function(aliyah) {
+      const option = document.createElement("option");
+      option.value = String(aliyah.num);
+      option.textContent = String(aliyah.num);
+      select.appendChild(option);
+    });
+  }
+
+  function restorePTAliyot() {
+    const select = document.getElementById("ptAliyahSelect");
+    if (!select) return;
+    select.innerHTML =
+      '<option value="-1" selected>Select Aliyah</option>' +
+      '<option value="1">1</option><option value="2">2</option>' +
+      '<option value="3">3</option><option value="4">4</option>' +
+      '<option value="5">5</option><option value="6">6</option>' +
+      '<option value="7">7</option><option value="M">M</option>';
+  }
+
+  function getHHSelection() {
+    if (!selectedHHReading) return null;
+    const aliyahNumber = getModalAliyahNumber();
+    if (!aliyahNumber) return null;
+    const aliyah = selectedHHReading.aliyot.find(function(item) {
+      return String(item.num) === String(aliyahNumber);
+    });
+    if (!aliyah) return null;
+
+    const begin = parseChapterVerse(aliyah.begin);
+    const end = parseChapterVerse(aliyah.end);
+    if (!begin || !end) return null;
+
+    return {
+      book: selectedHHReading.book,
+      startChapter: begin.chapter,
+      startVerse: begin.verse,
+      endChapter: end.chapter,
+      endVerse: end.verse,
+      audioUrl: aliyah.audioUrl
+    };
+  }
+
+  function recalculateHHModal() {
+    stopModalAudio();
+    preparedModalReading = null;
+    clearModalReference();
+    const selection = getHHSelection();
+    if (selection) displayModalReference(selection);
+  }
+
+  async function openHHReadingSelector() {
+    try {
+      const catalog = await ensureHHCatalogLoaded();
+      const select = document.getElementById("hhReadingSelect");
+      const modal = document.getElementById("hhReadingModal");
+      if (!select || !modal) return;
+
+      select.innerHTML = '<option value="" selected>Select Reading</option>';
+      catalog.readings.forEach(function(reading) {
+        const option = document.createElement("option");
+        option.value = reading.id;
+        option.textContent = reading.name;
+        select.appendChild(option);
+      });
+      modal.style.display = "flex";
+    } catch (error) {
+      console.error("High Holiday catalog could not be loaded:", error);
+      alert("The High Holiday selection catalog could not be loaded.");
+    }
+  }
+
+  function closeHHReadingSelector() {
+    const modal = document.getElementById("hhReadingModal");
+    if (modal) modal.style.display = "none";
+  }
+
+  async function selectHHReading(readingId) {
+    const catalog = await ensureHHCatalogLoaded();
+    selectedHHReading = catalog.readings.find(function(reading) {
+      return reading.id === readingId;
+    }) || null;
+    if (!selectedHHReading) return;
+
+    setPTModalMode("HH");
+    populateHHAliyot(selectedHHReading);
+    clearModalReference();
+
+    const parshaSelect = document.getElementById("ptParshaSelect");
+    if (parshaSelect) parshaSelect.value = "__HH__";
+
+    closeHHReadingSelector();
+  }
+
   function getModalReadingType() {
     const selected = document.querySelector('input[name="ptReading"]:checked');
     return selected ? selected.value : "full";
@@ -1178,6 +1316,10 @@
     clearModalReference();
 
     if (!parshaName) return;
+    if (isHHMode()) {
+      recalculateHHModal();
+      return;
+    }
 
     const aliyahNumber = getModalAliyahNumber();
     if (!aliyahNumber) return;
@@ -1249,6 +1391,36 @@
     const parshaName = parshaSelect.value;
     const readingType = getModalReadingType();
     const aliyahNumber = getModalAliyahNumber();
+
+    if (isHHMode()) {
+      if (!aliyahNumber) {
+        alert("Select an individual Aliyah before getting Hebrew text.");
+        return;
+      }
+      const selection = getHHSelection();
+      if (!selection) {
+        alert("The selected High Holiday reading range could not be resolved.");
+        return;
+      }
+      if (!window.SefariaPT || typeof window.SefariaPT.loadPocketTorahHebrew !== "function") {
+        alert("The Sefaria Hebrew retrieval function is not available.");
+        return;
+      }
+      const loaded = await window.SefariaPT.loadPocketTorahHebrew({
+        sourceMode: "HH",
+        parshaName: selectedHHReading.name,
+        jsonTitle: selectedHHReading.name + "-Aliyah-" + aliyahNumber,
+        book: selection.book,
+        startChapter: selection.startChapter,
+        startVerse: selection.startVerse,
+        endChapter: selection.endChapter,
+        endVerse: selection.endVerse
+      });
+      if (loaded && window.location.hash === "#pocketTorahModal") {
+        window.location.hash = "";
+      }
+      return;
+    }
 
     if (!aliyahNumber) {
       alert("Select an individual Aliyah (1-7 or M) before getting Hebrew text.");
@@ -1324,6 +1496,11 @@
         parshaSelect.remove(1);
       }
 
+      const hhOption = document.createElement("option");
+      hhOption.value = "__HH__";
+      hhOption.textContent = "High Holidays";
+      parshaSelect.appendChild(hhOption);
+
       parshaNames.forEach(function(parshaName) {
         const option = document.createElement("option");
         option.value = parshaName;
@@ -1346,6 +1523,18 @@
       }
 
       parshaSelect.addEventListener("change", function() {
+        if (parshaSelect.value === "__HH__") {
+          setPTModalMode("HH");
+          selectedHHReading = null;
+          populateHHAliyot(null);
+          clearModalReference();
+          openHHReadingSelector();
+          return;
+        }
+
+        selectedHHReading = null;
+        setPTModalMode(parshaSelect.value ? "PT" : null);
+        restorePTAliyot();
         updateModalAltControl(true);
         resetAndRecalculateSefariaModal();
       });
@@ -1360,10 +1549,46 @@
         useAlt.addEventListener("change", resetAndRecalculateSefariaModal);
       }
       if (aliyahSelect) {
-        aliyahSelect.addEventListener("change", resetAndRecalculateSefariaModal);
+        aliyahSelect.addEventListener("change", function() {
+          if (isHHMode()) recalculateHHModal();
+          else resetAndRecalculateSefariaModal();
+        });
       }
       populateModalAliyahSelect();
       updateModalAltControl(true);
+
+      const hhReadingSelect = document.getElementById("hhReadingSelect");
+      if (hhReadingSelect) {
+        hhReadingSelect.addEventListener("change", function() {
+          if (hhReadingSelect.value) selectHHReading(hhReadingSelect.value);
+        });
+      }
+      const hhClose = document.getElementById("hhReadingModalClose");
+      if (hhClose) {
+        hhClose.addEventListener("click", function() {
+          closeHHReadingSelector();
+          parshaSelect.value = "";
+          selectedHHReading = null;
+          setPTModalMode(null);
+          restorePTAliyot();
+          clearModalReference();
+        });
+      }
+
+      const audioSelectionLink = document.querySelector('a.pocket-torah-link[href="#pocketTorahModal"]');
+      if (audioSelectionLink) {
+        audioSelectionLink.addEventListener("click", function() {
+          stopModalAudio();
+          selectedHHReading = null;
+          setPTModalMode(null);
+          restorePTAliyot();
+          parshaSelect.value = "";
+          clearModalReference();
+          if (window.SefariaPT && typeof window.SefariaPT.clearAudioSelectionState === "function") {
+            window.SefariaPT.clearAudioSelectionState();
+          }
+        });
+      }
 
       const audioToggle = document.getElementById("ptAudioToggle");
       if (audioToggle) {

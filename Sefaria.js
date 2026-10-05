@@ -15,6 +15,10 @@
     let currentTextSource = "standard";
     let currentPocketTorahTitle = "";
 
+    // Audio-selection mode. Playback branching will be added in a later pass.
+    // null = no audio selection, PT = Pocket Torah, HH = High Holiday catalog.
+    window.PlayMode = window.PlayMode || null;
+
     const torahBooks = [
       {
         label: "Genesis / Bereishit",
@@ -463,9 +467,32 @@ function getCurrentSelectorParsedRef() {
     }
 
     function setLoadedTextSource(source, pocketTorahTitle) {
-      currentTextSource = source === "PT" ? "PT" : "standard";
+      currentTextSource =
+        source === "PT" ? "PT" :
+        source === "HH" ? "HH" :
+        "standard";
       currentPocketTorahTitle =
-        currentTextSource === "PT" ? String(pocketTorahTitle || "").trim() : "";
+        (currentTextSource === "PT" || currentTextSource === "HH")
+          ? String(pocketTorahTitle || "").trim()
+          : "";
+    }
+
+    function clearAudioSelectionState() {
+      window.PlayMode = null;
+      currentTextSource = "standard";
+      currentPocketTorahTitle = "";
+      currentLyricsJson = { title: "", lines: [] };
+      lastFetchedRef = "";
+      lastSefariaData = null;
+
+      const lineEditor = document.getElementById("lineEditor");
+      const jsonOutput = document.getElementById("jsonOutput");
+      const sourceAttribution = document.getElementById("sourceAttribution");
+      const status = document.getElementById("status");
+      if (lineEditor) lineEditor.innerHTML = "";
+      if (jsonOutput) jsonOutput.textContent = "{}";
+      if (sourceAttribution) sourceAttribution.textContent = "";
+      if (status) status.textContent = "";
     }
 
 
@@ -493,13 +520,16 @@ function getCurrentSelectorParsedRef() {
           : book + " " + startChapter + ":" + startVerse +
             "-" + endChapter + ":" + endVerse;
 
+      const sourceMode = request.sourceMode === "HH" ? "HH" : "PT";
+      const suffix = sourceMode === "HH" ? "-HH" : "-PT";
       const suppliedTitle = String(request.jsonTitle || "").trim();
-      const ptTitle = suppliedTitle
-        ? (/-PT$/i.test(suppliedTitle) ? suppliedTitle : suppliedTitle + "-PT")
-        : ((String(request.parshaName || "").trim() || ref) + "-PT");
+      const sourceTitle = suppliedTitle
+        ? (new RegExp(suffix + "$", "i").test(suppliedTitle) ? suppliedTitle : suppliedTitle + suffix)
+        : ((String(request.parshaName || "").trim() || ref) + suffix);
 
-      setLoadedTextSource("PT", ptTitle);
-      titleInput.value = ptTitle;
+      window.PlayMode = sourceMode;
+      setLoadedTextSource(sourceMode, sourceTitle);
+      titleInput.value = sourceTitle;
       generatedRefDisplay.textContent = ref;
 
       return await fetchSefariaText(ref);
@@ -508,7 +538,8 @@ function getCurrentSelectorParsedRef() {
     // Public bridge used by PT.js.  PT.js owns the Pocket Torah reading
     // selection/range; Sefaria.js owns retrieval, display, and JSON generation.
     window.SefariaPT = Object.assign(window.SefariaPT || {}, {
-      loadPocketTorahHebrew: loadPocketTorahHebrew
+      loadPocketTorahHebrew: loadPocketTorahHebrew,
+      clearAudioSelectionState: clearAudioSelectionState
     });
 
     async function fetchSelectedTorahText() {
