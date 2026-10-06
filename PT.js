@@ -1383,6 +1383,15 @@
     if (modal) modal.style.display = "none";
   }
 
+  function restoreHighHolidayParshaLabel() {
+    const parshaSelect = document.getElementById("ptParshaSelect");
+    if (!parshaSelect) return;
+    const hhOption = Array.from(parshaSelect.options).find(function(option) {
+      return option.value === "__HH__";
+    });
+    if (hhOption) hhOption.textContent = "High Holidays";
+  }
+
   async function selectHHReading(readingId) {
     const catalog = await ensureHHCatalogLoaded();
     selectedHHReading = catalog.readings.find(function(reading) {
@@ -1395,7 +1404,13 @@
     clearModalReference();
 
     const parshaSelect = document.getElementById("ptParshaSelect");
-    if (parshaSelect) parshaSelect.value = "__HH__";
+    if (parshaSelect) {
+      const hhOption = Array.from(parshaSelect.options).find(function(option) {
+        return option.value === "__HH__";
+      });
+      if (hhOption) hhOption.textContent = selectedHHReading.name || "High Holidays";
+      parshaSelect.value = "__HH__";
+    }
 
     closeHHReadingSelector();
   }
@@ -1722,6 +1737,9 @@
       const hhSourceBethShalom = document.getElementById("hhSourceBethShalom");
       if (hhSourceTempleSinai) {
         hhSourceTempleSinai.addEventListener("change", function() {
+          if (hhSourceTempleSinai.checked && hhSourceBethShalom) {
+            hhSourceBethShalom.checked = false;
+          }
           populateHHReadingTable().catch(function(error) {
             console.error("High Holiday source filter failed:", error);
           });
@@ -1729,6 +1747,9 @@
       }
       if (hhSourceBethShalom) {
         hhSourceBethShalom.addEventListener("change", function() {
+          if (hhSourceBethShalom.checked && hhSourceTempleSinai) {
+            hhSourceTempleSinai.checked = false;
+          }
           populateHHReadingTable().catch(function(error) {
             console.error("High Holiday source filter failed:", error);
           });
@@ -1738,6 +1759,7 @@
       if (hhClose) {
         hhClose.addEventListener("click", function() {
           closeHHReadingSelector();
+          restoreHighHolidayParshaLabel();
           parshaSelect.value = "";
           selectedHHReading = null;
           setPTModalMode(null);
@@ -1750,6 +1772,7 @@
       if (audioSelectionLink) {
         audioSelectionLink.addEventListener("click", function() {
           stopModalAudio();
+          restoreHighHolidayParshaLabel();
           selectedHHReading = null;
           setPTModalMode(null);
           restorePTAliyot();
