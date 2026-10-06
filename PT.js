@@ -911,8 +911,11 @@
   let modalCalculationSerial = 0;
   let preparedModalReading = null;
   let hhCatalog = null;
+  let cbsCatalog = null;
   let selectedHHReading = null;
+  let selectedHHSource = null; // "TS" or "CBS"
   const HH_CATALOG_PATH = "HH.json";
+  const CBS_CATALOG_PATH = "HH2.json";
 
   // Sefaria modal audio playback state.  Playback consumes the already
   // calculated aliyah-relative audioPath/startTime/endTime segments.
@@ -926,7 +929,9 @@
   function setAudioTogglePlaying(isPlaying) {
     const button = document.getElementById("ptAudioToggle");
     const icon = document.getElementById("ptAudioToggleIcon");
-    const sourceName = isHHMode() ? "High Holiday" : "Pocket Torah";
+    const sourceName = isHHMode()
+      ? (selectedHHSource === "CBS" ? "Congregation Beth Shalom High Holiday" : "Temple Sinai High Holiday")
+      : "Pocket Torah";
     if (button) {
       button.setAttribute("aria-pressed", isPlaying ? "true" : "false");
       button.setAttribute(
@@ -1036,14 +1041,38 @@
 
   function toggleModalAudioPlayback() {
     if (isHHMode()) {
+      const selection = getHHSelection();
+      if (!selection) {
+        console.warn("High Holiday audio is not ready. Select a reading and Aliyah first.");
+        return;
+      }
+
+      // Congregation Beth Shalom playback is source-specific: use the MP3 and
+      // reviewed start/end segments stored in HH2.json.
+      if (selectedHHSource === "CBS") {
+        if (modalAudio && !modalAudio.paused) {
+          stopModalAudio();
+          return;
+        }
+        if (!Array.isArray(selection.playbackSegments) || !selection.playbackSegments.length) {
+          console.warn("Congregation Beth Shalom playback segments are not available.");
+          return;
+        }
+        stopModalAudio();
+        modalPlaybackSegments = selection.playbackSegments.slice();
+        const token = ++modalPlaybackToken;
+        setAudioTogglePlaying(true);
+        playModalSegment(0, token);
+        return;
+      }
+
+      // Temple Sinai retains its existing direct-link playback path.
       if (hhAudioWindow && !hhAudioWindow.closed) {
         stopModalAudio();
         return;
       }
-
-      const selection = getHHSelection();
-      if (!selection || !selection.audioUrl) {
-        console.warn("High Holiday audio is not ready. Select a reading and Aliyah first.");
+      if (!selection.audioUrl) {
+        console.warn("Temple Sinai High Holiday audio URL is not available.");
         return;
       }
 
@@ -1172,6 +1201,7 @@
       line1.appendChild(templeLink);
 
       const line2 = document.createElement("div");
+      line2.id = "hhPlaybackDescription";
       line2.textContent = "Playback directly from the synagogue site.";
 
       hhSources.appendChild(line1);
@@ -1218,6 +1248,51 @@
     return hhCatalog;
   }
 
+  async function ensureCBSCatalogLoaded() {
+    if (cbsCatalog) return cbsCatalog;
+    const response = await fetch(CBS_CATALOG_PATH + "?v=" + Date.now(), { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("Could not load " + CBS_CATALOG_PATH + ". Status: " + response.status);
+    }
+    cbsCatalog = await response.json();
+    if (!cbsCatalog || typeof cbsCatalog !== "object") {
+      throw new Error(CBS_CATALOG_PATH + " does not contain a valid CBS catalog.");
+    }
+    return cbsCatalog;
+  }
+
+  function parseCBSReference(reference) {
+    const match = String(reference || "").trim().match(/^(.+?)\s+(\d+):(\d+)[–-](\d+)$/);
+    if (!match) return null;
+    return {
+      book: match[1],
+      startChapter: Number(match[2]),
+      startVerse: Number(match[3]),
+      endChapter: Number(match[2]),
+      endVerse: Number(match[4])
+    };
+  }
+
+  function getCBSReadings(catalog) {
+    return Object.keys(catalog || {}).map(function(id) {
+      const item = catalog[id];
+      const aliyot = Array.isArray(item && item.aliyot) ? item.aliyot : [];
+      const firstRef = aliyot.length ? parseCBSReference(aliyot[0].reference) : null;
+      const lastRef = aliyot.length ? parseCBSReference(aliyot[aliyot.length - 1].reference) : null;
+      return {
+        id: id,
+        source: "CBS",
+        name: item && item.name ? item.name : id,
+        book: firstRef ? firstRef.book : "",
+        aliyot: aliyot,
+        displayRange: firstRef && lastRef
+          ? firstRef.book + " " + firstRef.startChapter + ":" + firstRef.startVerse +
+            "–" + lastRef.endChapter + ":" + lastRef.endVerse
+          : ""
+      };
+    });
+  }
+
   function isHHMode() {
     return window.PlayMode === "HH";
   }
@@ -1227,7 +1302,9 @@
     window.PlayMode = hh ? "HH" : (mode === "PT" ? "PT" : null);
 
     const title = document.getElementById("pocketTorahModalTitle");
-    if (title) title.textContent = hh ? "High Holiday Trope Option" : "Pocket Torah Options";
+    if (title) title.textContent = hh
+      ? (selectedHHSource === "CBS" ? "Congregation Beth Shalom High Holiday Trope Option" : "High Holiday Trope Option")
+      : "Pocket Torah Options";
 
     const readingField = document.getElementById("ptReadingOptionsField");
     if (readingField) readingField.style.display = hh ? "none" : "";
@@ -1243,7 +1320,9 @@
       audioButton.disabled = false;
       audioButton.style.opacity = "";
       audioButton.title = hh
-        ? "Play the selected High Holiday recording directly from the synagogue site."
+        ? (selectedHHSource === "CBS"
+            ? "Play the selected Congregation Beth Shalom aliyah using its reviewed MP3 timing."
+            : "Play the selected High Holiday recording directly from the synagogue site.")
         : "";
     }
     setAudioTogglePlaying(false);
@@ -1281,6 +1360,25 @@
     });
     if (!aliyah) return null;
 
+    if (selectedHHSource === "CBS") {
+      const ref = parseCBSReference(aliyah.reference);
+      if (!ref) return null;
+      return {
+        book: ref.book,
+        startChapter: ref.startChapter,
+        startVerse: ref.startVerse,
+        endChapter: ref.endChapter,
+        endVerse: ref.endVerse,
+        playbackSegments: (Array.isArray(aliyah.segments) ? aliyah.segments : []).map(function(segment) {
+          return {
+            audioPath: aliyah.audioUrl,
+            startTime: segment.start,
+            endTime: segment.end
+          };
+        })
+      };
+    }
+
     const begin = parseChapterVerse(aliyah.begin);
     const end = parseChapterVerse(aliyah.end);
     if (!begin || !end) return null;
@@ -1304,6 +1402,7 @@
   }
 
   function getHHReadingRange(reading) {
+    if (reading && reading.displayRange) return reading.displayRange;
     const aliyot = reading && Array.isArray(reading.aliyot) ? reading.aliyot : [];
     if (!aliyot.length) return "";
     const first = aliyot[0];
@@ -1329,18 +1428,17 @@
 
     tr.addEventListener("mouseenter", function() { tr.style.background = "#eef4ff"; });
     tr.addEventListener("mouseleave", function() { tr.style.background = ""; });
-    tr.addEventListener("click", function() { selectHHReading(reading.id); });
+    tr.addEventListener("click", function() { selectHHReading(reading.id, reading.source || "TS"); });
     tr.addEventListener("keydown", function(event) {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        selectHHReading(reading.id);
+        selectHHReading(reading.id, reading.source || "TS");
       }
     });
     tbody.appendChild(tr);
   }
 
   async function populateHHReadingTable() {
-    const catalog = await ensureHHCatalogLoaded();
     const tbody = document.getElementById("hhReadingTableBody");
     const empty = document.getElementById("hhReadingEmpty");
     const templeSinai = document.getElementById("hhSourceTempleSinai");
@@ -1350,17 +1448,19 @@
     tbody.innerHTML = "";
     let count = 0;
 
-    if (!templeSinai || templeSinai.checked) {
+    if (!bethShalom || !bethShalom.checked) {
+      const catalog = await ensureHHCatalogLoaded();
       catalog.readings.forEach(function(reading) {
+        reading.source = "TS";
         addHHReadingRow(tbody, "Temple Sinai", reading);
         count += 1;
       });
-    }
-
-    // Congregation Beth Shalom is intentionally present in the selector now,
-    // but its catalog/playback definitions will be added in the next integration pass.
-    if (bethShalom && bethShalom.checked) {
-      // No CBS rows yet.
+    } else {
+      const catalog = await ensureCBSCatalogLoaded();
+      getCBSReadings(catalog).forEach(function(reading) {
+        addHHReadingRow(tbody, "Congregation Beth Shalom", reading);
+        count += 1;
+      });
     }
 
     if (empty) empty.style.display = count ? "none" : "block";
@@ -1392,43 +1492,42 @@
     if (hhOption) hhOption.textContent = "High Holidays";
   }
 
-  function setCommonReadingName(name, showField) {
-    const field = document.getElementById("ptReadingNameField");
-    const display = document.getElementById("ptReadingNameDisplay");
-    if (display) display.textContent = String(name || "").trim() || "\u00a0";
-    if (field) field.hidden = !showField;
-  }
+  async function selectHHReading(readingId, source) {
+    selectedHHSource = source === "CBS" ? "CBS" : "TS";
 
-  function syncCommonReadingNameFromParsha() {
-    const parshaSelect = document.getElementById("ptParshaSelect");
-    if (!parshaSelect) return;
-    if (parshaSelect.value === "__HH__") {
-      setCommonReadingName(
-        selectedHHReading ? selectedHHReading.name : "",
-        Boolean(selectedHHReading)
-      );
-      return;
+    if (selectedHHSource === "CBS") {
+      const catalog = await ensureCBSCatalogLoaded();
+      selectedHHReading = getCBSReadings(catalog).find(function(reading) {
+        return reading.id === readingId;
+      }) || null;
+    } else {
+      const catalog = await ensureHHCatalogLoaded();
+      selectedHHReading = catalog.readings.find(function(reading) {
+        return reading.id === readingId;
+      }) || null;
     }
-    setCommonReadingName(parshaSelect.value || "", false);
-  }
 
-  async function selectHHReading(readingId) {
-    const catalog = await ensureHHCatalogLoaded();
-    selectedHHReading = catalog.readings.find(function(reading) {
-      return reading.id === readingId;
-    }) || null;
     if (!selectedHHReading) return;
 
     setPTModalMode("HH");
     populateHHAliyot(selectedHHReading);
     clearModalReference();
 
+    const description = document.getElementById("hhPlaybackDescription");
+    if (description) {
+      description.textContent = selectedHHSource === "CBS"
+        ? "Playback uses the reviewed CBS MP3 start/end timing definitions."
+        : "Playback directly from the synagogue site.";
+    }
+
     const parshaSelect = document.getElementById("ptParshaSelect");
     if (parshaSelect) {
-      restoreHighHolidayParshaLabel();
+      const hhOption = Array.from(parshaSelect.options).find(function(option) {
+        return option.value === "__HH__";
+      });
+      if (hhOption) hhOption.textContent = selectedHHReading.name || "High Holidays";
       parshaSelect.value = "__HH__";
     }
-    setCommonReadingName(selectedHHReading.name || "", true);
 
     closeHHReadingSelector();
   }
@@ -1719,16 +1818,17 @@
       parshaSelect.addEventListener("change", function() {
         if (parshaSelect.value === "__HH__") {
           setPTModalMode("HH");
-          populateHHAliyot(selectedHHReading);
+          selectedHHReading = null;
+          selectedHHSource = null;
+          populateHHAliyot(null);
           clearModalReference();
-          syncCommonReadingNameFromParsha();
           openHHReadingSelector();
           return;
         }
 
         selectedHHReading = null;
+        selectedHHSource = null;
         setPTModalMode(parshaSelect.value ? "PT" : null);
-        setCommonReadingName(parshaSelect.value || "", false);
         restorePTAliyot();
         updateModalAltControl(true);
         resetAndRecalculateSefariaModal();
@@ -1750,7 +1850,6 @@
         });
       }
       populateModalAliyahSelect();
-      syncCommonReadingNameFromParsha();
       updateModalAltControl(true);
 
       const hhSourceTempleSinai = document.getElementById("hhSourceTempleSinai");
@@ -1782,6 +1881,7 @@
           restoreHighHolidayParshaLabel();
           parshaSelect.value = "";
           selectedHHReading = null;
+          selectedHHSource = null;
           setPTModalMode(null);
           restorePTAliyot();
           clearModalReference();
@@ -1794,7 +1894,7 @@
           stopModalAudio();
           restoreHighHolidayParshaLabel();
           selectedHHReading = null;
-          setCommonReadingName("", false);
+          selectedHHSource = null;
           setPTModalMode(null);
           restorePTAliyot();
           parshaSelect.value = "";
