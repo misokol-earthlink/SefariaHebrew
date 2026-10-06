@@ -914,6 +914,8 @@
   let cbsCatalog = null;
   let selectedHHReading = null;
   let selectedHHSource = null; // "TS" or "CBS"
+  let selectedPTParshaName = "";
+  let selectedReadingName = "";
   const HH_CATALOG_PATH = "HH.json";
   const CBS_CATALOG_PATH = "HH2.json";
 
@@ -925,6 +927,43 @@
   let modalPlaybackToken = 0;
   let modalTimeUpdateHandler = null;
   let hhAudioWindow = null;
+
+  function ensureReadingNameField() {
+    let field = document.getElementById("ptReadingNameField");
+    if (field) return field;
+
+    const parshaSelect = document.getElementById("ptParshaSelect");
+    const parshaField = parshaSelect ? parshaSelect.closest(".pt-modal-field") : null;
+    if (!parshaField || !parshaField.parentNode) return null;
+
+    field = document.createElement("div");
+    field.id = "ptReadingNameField";
+    field.className = "pt-modal-field";
+    field.style.display = "none";
+
+    const label = document.createElement("label");
+    label.htmlFor = "ptReadingNameDisplay";
+    label.textContent = "Reading Name";
+
+    const input = document.createElement("input");
+    input.id = "ptReadingNameDisplay";
+    input.type = "text";
+    input.readOnly = true;
+    input.style.minWidth = "220px";
+
+    field.appendChild(label);
+    field.appendChild(input);
+    parshaField.parentNode.insertBefore(field, parshaField.nextSibling);
+    return field;
+  }
+
+  function setReadingName(name, showField) {
+    selectedReadingName = String(name || "").trim();
+    const field = ensureReadingNameField();
+    const display = document.getElementById("ptReadingNameDisplay");
+    if (display) display.value = selectedReadingName;
+    if (field) field.style.display = showField ? "flex" : "none";
+  }
 
   function setAudioTogglePlaying(isPlaying) {
     const button = document.getElementById("ptAudioToggle");
@@ -1520,13 +1559,15 @@
         : "Playback directly from the synagogue site.";
     }
 
+    selectedPTParshaName = "";
+    setReadingName(selectedHHReading.name, true);
+
     const parshaSelect = document.getElementById("ptParshaSelect");
     if (parshaSelect) {
-      const hhOption = Array.from(parshaSelect.options).find(function(option) {
-        return option.value === "__HH__";
-      });
-      if (hhOption) hhOption.textContent = selectedHHReading.name || "High Holidays";
-      parshaSelect.value = "__HH__";
+      restoreHighHolidayParshaLabel();
+      // The selector is an action trigger, not retained state.  Programmatic
+      // reset to the placeholder does not fire its normal change listener.
+      parshaSelect.value = "";
     }
 
     closeHHReadingSelector();
@@ -1564,7 +1605,7 @@
     const readingType = getModalReadingType();
     const show =
       readingType !== "full" &&
-      parshaHasTriennialAlt(parshaSelect.value);
+      parshaHasTriennialAlt(selectedPTParshaName || parshaSelect.value);
 
     wrapper.hidden = !show;
     if (!show) checkbox.checked = false;
@@ -1609,7 +1650,7 @@
     const parshaSelect = document.getElementById("ptParshaSelect");
     if (!parshaSelect) return;
 
-    const parshaName = parshaSelect.value;
+    const parshaName = isHHMode() ? "" : (selectedPTParshaName || parshaSelect.value);
     stopModalAudio();
     preparedModalReading = null;
     clearModalReference();
@@ -1682,12 +1723,18 @@
 
   async function getSefariaHebrewForModalSelection() {
     const parshaSelect = document.getElementById("ptParshaSelect");
-    if (!parshaSelect || !parshaSelect.value) {
+    if (!parshaSelect) return;
+
+    const parshaName = selectedPTParshaName;
+    if (!isHHMode() && !parshaName) {
       alert("Select a Parsha first.");
       return;
     }
+    if (isHHMode() && !selectedHHReading) {
+      alert("Select a High Holiday reading first.");
+      return;
+    }
 
-    const parshaName = parshaSelect.value;
     const readingType = getModalReadingType();
     const aliyahNumber = getModalAliyahNumber();
 
@@ -1777,6 +1824,8 @@
 
     const parshaSelect = document.getElementById("ptParshaSelect");
     if (!parshaSelect) return;
+    ensureReadingNameField();
+    setReadingName("", false);
 
     try {
       await runWithSourceFallback(function() {
@@ -1815,23 +1864,34 @@
         }
       }
 
-      parshaSelect.addEventListener("change", function() {
-        if (parshaSelect.value === "__HH__") {
+      parshaSelect.addEventListener("change", async function() {
+        const selectedValue = parshaSelect.value;
+
+        if (selectedValue === "__HH__") {
+          selectedPTParshaName = "";
+          setReadingName("", false);
           setPTModalMode("HH");
           selectedHHReading = null;
           selectedHHSource = null;
           populateHHAliyot(null);
           clearModalReference();
-          openHHReadingSelector();
+          await openHHReadingSelector();
           return;
         }
 
         selectedHHReading = null;
         selectedHHSource = null;
-        setPTModalMode(parshaSelect.value ? "PT" : null);
+        selectedPTParshaName = selectedValue;
+        setReadingName(selectedPTParshaName, false);
+        setPTModalMode(selectedPTParshaName ? "PT" : null);
         restorePTAliyot();
         updateModalAltControl(true);
-        resetAndRecalculateSefariaModal();
+        if (selectedPTParshaName) {
+          await resetAndRecalculateSefariaModal();
+          // Preserve the chosen PT parsha in selectedPTParshaName/Reading Name,
+          // then silently return the command selector to its placeholder.
+          parshaSelect.value = "";
+        }
       });
       document.querySelectorAll('input[name="ptReading"]').forEach(function(input) {
         input.addEventListener("change", function() {
@@ -1882,6 +1942,8 @@
           parshaSelect.value = "";
           selectedHHReading = null;
           selectedHHSource = null;
+          selectedPTParshaName = "";
+          setReadingName("", false);
           setPTModalMode(null);
           restorePTAliyot();
           clearModalReference();
@@ -1895,6 +1957,8 @@
           restoreHighHolidayParshaLabel();
           selectedHHReading = null;
           selectedHHSource = null;
+          selectedPTParshaName = "";
+          setReadingName("", false);
           setPTModalMode(null);
           restorePTAliyot();
           parshaSelect.value = "";
