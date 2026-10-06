@@ -609,7 +609,7 @@
   <div class="section-title">Lyrics JSON</div>
   <pre id="jsonOutput">{}</pre>
   <div id="downloadDocument" style="display:none;"></div>
-  <script src="PT.js?v=20260923L"></script>
+  <script src="PT.js?v=20261006HH1"></script>
   <script src="Sefaria.js?v=20261001A"></script>
 </div>
 
@@ -725,19 +725,44 @@
   </div>
 
 
-  <!-- High Holiday reading selector. Shown only after "High Holidays" is chosen. -->
+  <!-- High Holiday source / reading selector. -->
   <div id="hhReadingModal" class="pt-modal" role="dialog" aria-modal="true"
        aria-labelledby="hhReadingModalTitle">
-    <div class="pt-modal-panel" style="width:min(460px,94vw);">
+    <div class="pt-modal-panel" style="width:min(780px,94vw);">
       <button type="button" id="hhReadingModalClose" class="pt-modal-close"
               aria-label="Close High Holiday Selection"
               style="border:0;background:transparent;padding:0;">&times;</button>
       <h2 id="hhReadingModalTitle" class="pt-modal-title">Select High Holiday Reading</h2>
-      <div class="pt-modal-field">
-        <label for="hhReadingSelect">High Holiday Reading</label>
-        <select id="hhReadingSelect" style="min-width:280px;padding:7px 9px;font-size:15px;">
-          <option value="" selected>Select Reading</option>
-        </select>
+
+      <div style="margin-bottom:16px;">
+        <div style="font-weight:bold;margin-bottom:7px;">Audio Sources</div>
+        <label style="display:inline-flex;align-items:center;gap:7px;margin-right:26px;font-weight:normal;">
+          <input id="hhSourceTempleSinai" type="checkbox" checked>
+          Temple Sinai (Sharon, MA)
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:7px;font-weight:normal;">
+          <input id="hhSourceBethShalom" type="checkbox">
+          Cong. Beth Shalom (Arlington, TX)
+        </label>
+      </div>
+
+      <div style="font-size:13px;color:#666;margin-bottom:8px;">
+        Select a reading by congregation, holiday, and Torah range.
+      </div>
+      <div style="overflow-x:auto;border:1px solid #bbb;border-radius:6px;">
+        <table style="width:100%;border-collapse:collapse;background:white;">
+          <thead>
+            <tr style="background:#f2f2f2;">
+              <th style="text-align:left;padding:8px;border-bottom:1px solid #bbb;">Source</th>
+              <th style="text-align:left;padding:8px;border-bottom:1px solid #bbb;">Reading</th>
+              <th style="text-align:left;padding:8px;border-bottom:1px solid #bbb;">Torah Reading</th>
+            </tr>
+          </thead>
+          <tbody id="hhReadingTableBody"></tbody>
+        </table>
+      </div>
+      <div id="hhReadingEmpty" style="display:none;padding:14px 4px;color:#666;">
+        No readings are currently available for the selected source(s).
       </div>
     </div>
   </div>

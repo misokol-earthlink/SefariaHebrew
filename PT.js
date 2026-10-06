@@ -1303,20 +1303,74 @@
     if (selection) displayModalReference(selection);
   }
 
+  function getHHReadingRange(reading) {
+    const aliyot = reading && Array.isArray(reading.aliyot) ? reading.aliyot : [];
+    if (!aliyot.length) return "";
+    const first = aliyot[0];
+    const last = aliyot[aliyot.length - 1];
+    if (!first || !last || !first.begin || !last.end) return "";
+    return String(reading.book || "") + " " + String(first.begin) + "–" + String(last.end);
+  }
+
+  function addHHReadingRow(tbody, sourceLabel, reading) {
+    const tr = document.createElement("tr");
+    tr.tabIndex = 0;
+    tr.setAttribute("role", "button");
+    tr.style.cursor = "pointer";
+    tr.style.borderBottom = "1px solid #ddd";
+
+    [sourceLabel, reading.name, getHHReadingRange(reading)].forEach(function(value) {
+      const td = document.createElement("td");
+      td.textContent = value || "";
+      td.style.padding = "9px 8px";
+      td.style.verticalAlign = "top";
+      tr.appendChild(td);
+    });
+
+    tr.addEventListener("mouseenter", function() { tr.style.background = "#eef4ff"; });
+    tr.addEventListener("mouseleave", function() { tr.style.background = ""; });
+    tr.addEventListener("click", function() { selectHHReading(reading.id); });
+    tr.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        selectHHReading(reading.id);
+      }
+    });
+    tbody.appendChild(tr);
+  }
+
+  async function populateHHReadingTable() {
+    const catalog = await ensureHHCatalogLoaded();
+    const tbody = document.getElementById("hhReadingTableBody");
+    const empty = document.getElementById("hhReadingEmpty");
+    const templeSinai = document.getElementById("hhSourceTempleSinai");
+    const bethShalom = document.getElementById("hhSourceBethShalom");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+    let count = 0;
+
+    if (!templeSinai || templeSinai.checked) {
+      catalog.readings.forEach(function(reading) {
+        addHHReadingRow(tbody, "Temple Sinai", reading);
+        count += 1;
+      });
+    }
+
+    // Congregation Beth Shalom is intentionally present in the selector now,
+    // but its catalog/playback definitions will be added in the next integration pass.
+    if (bethShalom && bethShalom.checked) {
+      // No CBS rows yet.
+    }
+
+    if (empty) empty.style.display = count ? "none" : "block";
+  }
+
   async function openHHReadingSelector() {
     try {
-      const catalog = await ensureHHCatalogLoaded();
-      const select = document.getElementById("hhReadingSelect");
       const modal = document.getElementById("hhReadingModal");
-      if (!select || !modal) return;
-
-      select.innerHTML = '<option value="" selected>Select Reading</option>';
-      catalog.readings.forEach(function(reading) {
-        const option = document.createElement("option");
-        option.value = reading.id;
-        option.textContent = reading.name;
-        select.appendChild(option);
-      });
+      if (!modal) return;
+      await populateHHReadingTable();
       modal.style.display = "flex";
     } catch (error) {
       console.error("High Holiday catalog could not be loaded:", error);
@@ -1664,10 +1718,20 @@
       populateModalAliyahSelect();
       updateModalAltControl(true);
 
-      const hhReadingSelect = document.getElementById("hhReadingSelect");
-      if (hhReadingSelect) {
-        hhReadingSelect.addEventListener("change", function() {
-          if (hhReadingSelect.value) selectHHReading(hhReadingSelect.value);
+      const hhSourceTempleSinai = document.getElementById("hhSourceTempleSinai");
+      const hhSourceBethShalom = document.getElementById("hhSourceBethShalom");
+      if (hhSourceTempleSinai) {
+        hhSourceTempleSinai.addEventListener("change", function() {
+          populateHHReadingTable().catch(function(error) {
+            console.error("High Holiday source filter failed:", error);
+          });
+        });
+      }
+      if (hhSourceBethShalom) {
+        hhSourceBethShalom.addEventListener("change", function() {
+          populateHHReadingTable().catch(function(error) {
+            console.error("High Holiday source filter failed:", error);
+          });
         });
       }
       const hhClose = document.getElementById("hhReadingModalClose");
