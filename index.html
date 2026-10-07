@@ -526,6 +526,42 @@
       text-decoration: underline;
     }
 
+    /* Audio Selection Details */
+    .audio-selection-details-hint {
+      display: inline-block;
+      margin-left: 14px;
+      font-size: 12px;
+      font-weight: bold;
+      color: maroon;
+      white-space: nowrap;
+    }
+
+    .audio-selection-details-popup {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 500001;
+      background: rgba(0,0,0,0.35);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .audio-selection-details-panel {
+      font-family: sans-serif;
+      line-height: 1.5;
+      color: #333;
+      width: 600px;
+      max-width: 85vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: white;
+      border: 3px solid maroon;
+      box-shadow: 0 0 18px gray;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
   </style>
 </head>
 <body>
@@ -588,6 +624,7 @@
   <div class="generated-ref">
     Sefaria ref to fetch: <span id="generatedRefDisplay"></span>
     <a class="pocket-torah-link" href="#pocketTorahModal">Get Audio Selection</a>
+    <span class="audio-selection-details-hint">&lt;----&nbsp;&nbsp;&nbsp;Right-click selection text for details</span>
   </div>
 
   <div class="controls">
@@ -794,6 +831,17 @@
     </p>
 
     <p style="margin-top:18px; margin-bottom:12px;">
+      <strong>Congregation Beth Shalom, Arlington, TX:</strong>
+      High Holiday trope audio selections are sourced from the synagogue's
+      publicly available High Holiday Torah cantillation recordings. Audio is
+      played through a filtered in-application audio player using defined timing
+      segments to omit spoken commentary and provide the Torah chanting portions
+      of the recordings.
+      <a href="https://www.bethshalom.org/high-holidays-torah-cantillation.html"
+         target="_blank" rel="noopener">Congregation Beth Shalom High Holiday Torah Cantillation</a>.
+    </p>
+
+    <p style="margin-top:18px; margin-bottom:12px;">
       <strong>PocketTorah:</strong>
       Portions of this application utilize Torah chanting audio recordings
       and associated timing and Torah-text metadata from the PocketTorah
@@ -812,6 +860,73 @@
   </div>
 </div>
 <!-- End License Information Popup -->
+
+<!-- Audio Selection Details Popup -->
+<div id="audioSelectionDetailsPopup" class="audio-selection-details-popup"
+     role="dialog" aria-modal="true" aria-labelledby="audioSelectionDetailsTitle">
+  <div class="audio-selection-details-panel">
+    <div style="text-align:center; margin-bottom:18px;">
+      <img src="ISokieLogo_Clear.png" alt="I_Sokie Enterprises"
+           style="display:block; width:180px; max-width:45%; height:auto; margin:0 auto;">
+    </div>
+
+    <h3 id="audioSelectionDetailsTitle"
+        style="margin-top:0; color:#111; border-bottom:1px solid #ccc; padding-bottom:8px;">
+      Audio Selection Details
+    </h3>
+
+    <p style="margin-top:12px; margin-bottom:12px;">
+      The standard Shabbat Parashot are established by Pocket Torah. The Parasha
+      names are those used by Pocket Torah, as are the verses assigned to each
+      aliyah and maftir.
+    </p>
+
+    <p style="margin-top:12px; margin-bottom:12px;">
+      Playback uses the public GitHub repository and its playback functions.
+    </p>
+
+    <p style="margin-top:18px; margin-bottom:12px;">
+      High Holiday Torah portions are not available for Pocket Torah playback
+      using High Holiday trope. To provide such playback, recorded Torah portions
+      are accessed from the public websites of Temple Sinai of Sharon, MA, and
+      Congregation Beth Shalom of Arlington, TX. Links to these synagogue websites
+      are available through the License Information link at the top of the main
+      web page.
+    </p>
+
+    <p style="margin-top:12px; margin-bottom:12px;">
+      Each synagogue uses its own labels to identify Torah portions for the various
+      holiday services, consistent with the labels and access links published on
+      its website. Each synagogue has also divided its readings into aliyot and
+      assigned verses to those aliyot.
+    </p>
+
+    <p style="margin-top:12px; margin-bottom:12px;">
+      This application preserves each synagogue's published reading names, aliyah
+      designations, and verse assignments when identifying and accessing those
+      recordings. As a result, the names and divisions used by one synagogue may
+      not correspond directly to an apparently equivalent portion on the other
+      synagogue's website. In addition, these divisions may differ from those
+      expected under traditional aliyah assignment conventions. These differences
+      reflect the organization of the source material and are intentionally
+      preserved by this application.
+    </p>
+
+    <p style="margin-top:12px; margin-bottom:12px;">
+      Note that the references to Rosh Hashanah 1 and Rosh Hashanah 2 on the Temple
+      Sinai site do not necessarily indicate the first and second days of Rosh
+      Hashanah. They refer to the two readings published in the URJ
+      <em>Mishkan T'filah</em>.
+    </p>
+
+    <div style="text-align:center; margin-top:20px;">
+      <button id="audioSelectionDetailsClose" type="button"
+              style="background:maroon; color:white; font-weight:bold; padding:7px 20px;
+                     border:2px solid black; cursor:pointer;">CLOSE</button>
+    </div>
+  </div>
+</div>
+<!-- End Audio Selection Details Popup -->
 
 <div id="splash-screen">
 
@@ -845,6 +960,32 @@
   });
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && popup.style.display === "flex") closeLicense();
+  });
+})();
+</script>
+
+<script>
+(function () {
+  const selectionLink = document.querySelector(".pocket-torah-link");
+  const popup = document.getElementById("audioSelectionDetailsPopup");
+  const close = document.getElementById("audioSelectionDetailsClose");
+
+  if (!selectionLink || !popup || !close) return;
+
+  function openDetails() { popup.style.display = "flex"; }
+  function closeDetails() { popup.style.display = "none"; }
+
+  selectionLink.addEventListener("contextmenu", function (event) {
+    event.preventDefault();
+    openDetails();
+  });
+
+  close.addEventListener("click", closeDetails);
+  popup.addEventListener("click", function (event) {
+    if (event.target === popup) closeDetails();
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && popup.style.display === "flex") closeDetails();
   });
 })();
 </script>
