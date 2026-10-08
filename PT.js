@@ -912,12 +912,14 @@
   let preparedModalReading = null;
   let hhCatalog = null;
   let cbsCatalog = null;
+  let swfsCatalog = null;
   let selectedHHReading = null;
   let selectedHHSource = null; // "TS" or "CBS"
   let selectedPTParshaName = "";
   let selectedReadingName = "";
   const HH_CATALOG_PATH = "HH.json";
   const CBS_CATALOG_PATH = "HH2.json";
+  const SWFS_CATALOG_PATH = "HH3.json";
 
   // Sefaria modal audio playback state.  Playback consumes the already
   // calculated aliyah-relative audioPath/startTime/endTime segments.
@@ -927,6 +929,102 @@
   let modalPlaybackToken = 0;
   let modalTimeUpdateHandler = null;
   let hhAudioWindow = null;
+  let swfsWidgets = [];
+  let swfsFrames = [];
+  let swfsReady = [];
+  let swfsActive = null;
+  let swfsToken = 0;
+  let swfsCurrent = 0;
+  let swfsLoading = false;
+  let swfsOffsetApplied = false;
+  let swfsInitialTrack = [];
+  let swfsScriptPromise = null;
+
+  function ensureSoundCloudScript() {
+    if (window.SC && window.SC.Widget) return Promise.resolve();
+    if (swfsScriptPromise) return swfsScriptPromise;
+    swfsScriptPromise = new Promise(function(resolve, reject) {
+      const script = document.createElement("script");
+      script.src = "https://w.soundcloud.com/player/api.js";
+      script.onload = resolve;
+      script.onerror = function() { swfsScriptPromise = null; reject(new Error("SoundCloud API unavailable")); };
+      document.head.appendChild(script);
+    });
+    return swfsScriptPromise;
+  }
+
+  function swfsTrackUrl(track) { return "https://api.soundcloud.com/tracks/" + track.id; }
+  function stopSWFS() {
+    swfsToken++;
+    swfsActive = null;
+    swfsWidgets.forEach(function(widget) { try { widget.pause(); } catch (_) {} });
+  }
+  function clearSWFSPlayers() {
+    stopSWFS();
+    swfsFrames.forEach(function(frame) { frame.remove(); });
+    swfsFrames = []; swfsWidgets = []; swfsReady = []; swfsInitialTrack = [];
+  }
+  async function prepareSWFSPlayers(reading) {
+    clearSWFSPlayers();
+    if (!reading || !Array.isArray(reading.aliyot)) return;
+    const token = swfsToken;
+    await ensureSoundCloudScript();
+    if (token !== swfsToken) return;
+    reading.aliyot.forEach(function(aliyah, index) {
+      if (!aliyah.tracks || !aliyah.tracks.length) return;
+      const frame = document.createElement("iframe");
+      frame.title = "SWFS SoundCloud aliyah " + aliyah.num;
+      frame.allow = "autoplay; encrypted-media";
+      frame.style.cssText = "position:absolute;left:-10000px;top:-10000px;width:1px;height:1px;border:0";
+      frame.src = "https://w.soundcloud.com/player/?url=" + encodeURIComponent(swfsTrackUrl(aliyah.tracks[0])) + "&auto_play=false";
+      document.body.appendChild(frame);
+      swfsFrames[index] = frame;
+      swfsInitialTrack[index] = true;
+      const widget = window.SC.Widget(frame);
+      swfsWidgets[index] = widget;
+      widget.bind(window.SC.Widget.Events.READY, function() { swfsReady[index] = true; });
+      widget.bind(window.SC.Widget.Events.PLAY, function() {
+        if (!swfsActive || swfsActive.index !== index) return;
+        swfsLoading = false;
+        if (!swfsOffsetApplied) {
+          swfsOffsetApplied = true;
+          widget.seekTo(Number(swfsCatalog.startOffsetMs) || 900);
+        }
+      });
+      widget.bind(window.SC.Widget.Events.FINISH, function() {
+        if (!swfsActive || swfsActive.index !== index || swfsLoading) return;
+        const next = swfsCurrent + 1;
+        if (next >= swfsActive.tracks.length) { stopSWFS(); setAudioTogglePlaying(false); return; }
+        swfsCurrent = next; swfsLoading = true; swfsOffsetApplied = false;
+        swfsInitialTrack[index] = false;
+        widget.load(swfsTrackUrl(swfsActive.tracks[next]), {auto_play:true});
+      });
+      widget.bind(window.SC.Widget.Events.ERROR, function() {
+        if (swfsActive && swfsActive.index === index) {
+          console.warn("SWFS SoundCloud playback error", swfsActive.tracks[swfsCurrent].ref);
+          stopSWFS(); setAudioTogglePlaying(false);
+        }
+      });
+    });
+  }
+  function toggleSWFSPlayback(selection) {
+    if (swfsActive) { stopModalAudio(); return; }
+    const index = selectedHHReading.aliyot.findIndex(function(a) { return String(a.num) === String(getModalAliyahNumber()); });
+    if (index < 0 || !swfsReady[index]) {
+      console.warn("SWFS SoundCloud player is not ready. Please try again shortly."); return;
+    }
+    stopModalAudio();
+    swfsCurrent = 0; swfsOffsetApplied = false;
+    swfsActive = {index:index, tracks:selection.tracks};
+    const widget = swfsWidgets[index];
+    if (swfsInitialTrack[index]) { widget.seekTo(0); widget.play(); }
+    else {
+      swfsLoading = true;
+      widget.load(swfsTrackUrl(selection.tracks[0]), {auto_play:true});
+    }
+    setAudioTogglePlaying(true);
+  }
+
 
   function ensureReadingNameField() {
     let field = document.getElementById("ptReadingNameField");
@@ -969,7 +1067,7 @@
     const button = document.getElementById("ptAudioToggle");
     const icon = document.getElementById("ptAudioToggleIcon");
     const sourceName = isHHMode()
-      ? (selectedHHSource === "CBS" ? "Congregation Beth Shalom High Holiday" : "Temple Sinai High Holiday")
+      ? (selectedHHSource === "SWFS" ? "Stephen Wise Free Synagogue High Holiday" : selectedHHSource === "CBS" ? "Congregation Beth Shalom High Holiday" : "Temple Sinai High Holiday")
       : "Pocket Torah";
     if (button) {
       button.setAttribute("aria-pressed", isPlaying ? "true" : "false");
@@ -985,6 +1083,7 @@
 
   function stopModalAudio() {
     modalPlaybackToken += 1;
+    stopSWFS();
 
     if (hhAudioWindow && !hhAudioWindow.closed) {
       hhAudioWindow.close();
@@ -1085,6 +1184,8 @@
         console.warn("High Holiday audio is not ready. Select a reading and Aliyah first.");
         return;
       }
+
+      if (selectedHHSource === "SWFS") { toggleSWFSPlayback(selection); return; }
 
       // Congregation Beth Shalom playback is source-specific: use the MP3 and
       // reviewed start/end segments stored in HH2.json.
@@ -1300,6 +1401,18 @@
     return cbsCatalog;
   }
 
+  async function ensureSWFSCatalogLoaded() {
+    if (swfsCatalog) return swfsCatalog;
+    const response = await fetch(SWFS_CATALOG_PATH + "?v=" + Date.now(), {cache:"no-store"});
+    if (!response.ok) throw new Error("Could not load HH3.json: " + response.status);
+    swfsCatalog = await response.json();
+    if (!Array.isArray(swfsCatalog.readings)) throw new Error("Invalid HH3.json readings");
+    return swfsCatalog;
+  }
+  function getSWFSReadings(catalog) {
+    return catalog.readings.map(function(reading) { return Object.assign({source:"SWFS"}, reading); });
+  }
+
   function parseCBSReference(reference) {
     const match = String(reference || "").trim().match(/^(.+?)\s+(\d+):(\d+)[–-](\d+)$/);
     if (!match) return null;
@@ -1342,7 +1455,7 @@
 
     const title = document.getElementById("pocketTorahModalTitle");
     if (title) title.textContent = hh
-      ? (selectedHHSource === "CBS" ? "Congregation Beth Shalom High Holiday Trope Option" : "High Holiday Trope Option")
+      ? (selectedHHSource === "SWFS" ? "Stephen Wise Free Synagogue High Holiday Trope Option" : selectedHHSource === "CBS" ? "Congregation Beth Shalom High Holiday Trope Option" : "High Holiday Trope Option")
       : "Pocket Torah Options";
 
     const readingField = document.getElementById("ptReadingOptionsField");
@@ -1359,7 +1472,9 @@
       audioButton.disabled = false;
       audioButton.style.opacity = "";
       audioButton.title = hh
-        ? (selectedHHSource === "CBS"
+        ? (selectedHHSource === "SWFS"
+            ? "Play the selected SWFS aliyah as sequential SoundCloud verse tracks."
+            : selectedHHSource === "CBS"
             ? "Play the selected Congregation Beth Shalom aliyah using its reviewed MP3 timing."
             : "Play the selected High Holiday recording directly from the synagogue site.")
         : "";
@@ -1399,6 +1514,15 @@
     });
     if (!aliyah) return null;
 
+    if (selectedHHSource === "SWFS") {
+      const first = aliyah.tracks && aliyah.tracks[0];
+      const last = aliyah.tracks && aliyah.tracks[aliyah.tracks.length - 1];
+      if (!first || !last) return null;
+      const start = first.ref.split(":").map(Number);
+      const end = last.ref.split(":").map(Number);
+      return {book:selectedHHReading.book, startChapter:start[1], startVerse:start[2],
+        endChapter:end[1], endVerse:end[2], tracks:aliyah.tracks};
+    }
     if (selectedHHSource === "CBS") {
       const ref = parseCBSReference(aliyah.reference);
       if (!ref) return null;
@@ -1482,12 +1606,16 @@
     const empty = document.getElementById("hhReadingEmpty");
     const templeSinai = document.getElementById("hhSourceTempleSinai");
     const bethShalom = document.getElementById("hhSourceBethShalom");
+    const swfs = document.getElementById("hhSourceSWFS");
     if (!tbody) return;
 
     tbody.innerHTML = "";
     let count = 0;
 
-    if (!bethShalom || !bethShalom.checked) {
+    if (swfs && swfs.checked) {
+      const catalog = await ensureSWFSCatalogLoaded();
+      getSWFSReadings(catalog).forEach(function(reading) { addHHReadingRow(tbody, "Stephen Wise Free Synagogue", reading); count++; });
+    } else if (!bethShalom || !bethShalom.checked) {
       const catalog = await ensureHHCatalogLoaded();
       catalog.readings.forEach(function(reading) {
         reading.source = "TS";
@@ -1532,9 +1660,14 @@
   }
 
   async function selectHHReading(readingId, source) {
-    selectedHHSource = source === "CBS" ? "CBS" : "TS";
+    stopModalAudio();
+    clearSWFSPlayers();
+    selectedHHSource = source === "SWFS" ? "SWFS" : source === "CBS" ? "CBS" : "TS";
 
-    if (selectedHHSource === "CBS") {
+    if (selectedHHSource === "SWFS") {
+      const catalog = await ensureSWFSCatalogLoaded();
+      selectedHHReading = getSWFSReadings(catalog).find(function(reading) { return reading.id === readingId; }) || null;
+    } else if (selectedHHSource === "CBS") {
       const catalog = await ensureCBSCatalogLoaded();
       selectedHHReading = getCBSReadings(catalog).find(function(reading) {
         return reading.id === readingId;
@@ -1547,6 +1680,9 @@
     }
 
     if (!selectedHHReading) return;
+    if (selectedHHSource === "SWFS") {
+      prepareSWFSPlayers(selectedHHReading).catch(function(error) { console.error("SWFS player setup failed:", error); });
+    }
 
     setPTModalMode("HH");
     populateHHAliyot(selectedHHReading);
@@ -1554,7 +1690,9 @@
 
     const description = document.getElementById("hhPlaybackDescription");
     if (description) {
-      description.textContent = selectedHHSource === "CBS"
+      description.textContent = selectedHHSource === "SWFS"
+        ? "SoundCloud plays each verse sequentially using the SWFS recordings."
+        : selectedHHSource === "CBS"
         ? "Playback uses the reviewed CBS MP3 start/end timing definitions."
         : "Playback directly from the synagogue site.";
     }
@@ -1873,6 +2011,7 @@
           setPTModalMode("HH");
           selectedHHReading = null;
           selectedHHSource = null;
+          clearSWFSPlayers();
           populateHHAliyot(null);
           clearModalReference();
           await openHHReadingSelector();
@@ -1914,10 +2053,12 @@
 
       const hhSourceTempleSinai = document.getElementById("hhSourceTempleSinai");
       const hhSourceBethShalom = document.getElementById("hhSourceBethShalom");
+      const hhSourceSWFS = document.getElementById("hhSourceSWFS");
       if (hhSourceTempleSinai) {
         hhSourceTempleSinai.addEventListener("change", function() {
-          if (hhSourceTempleSinai.checked && hhSourceBethShalom) {
-            hhSourceBethShalom.checked = false;
+          if (hhSourceTempleSinai.checked) {
+            if (hhSourceBethShalom) hhSourceBethShalom.checked = false;
+            if (hhSourceSWFS) hhSourceSWFS.checked = false;
           }
           populateHHReadingTable().catch(function(error) {
             console.error("High Holiday source filter failed:", error);
@@ -1926,14 +2067,22 @@
       }
       if (hhSourceBethShalom) {
         hhSourceBethShalom.addEventListener("change", function() {
-          if (hhSourceBethShalom.checked && hhSourceTempleSinai) {
-            hhSourceTempleSinai.checked = false;
+          if (hhSourceBethShalom.checked) {
+            if (hhSourceTempleSinai) hhSourceTempleSinai.checked = false;
+            if (hhSourceSWFS) hhSourceSWFS.checked = false;
           }
           populateHHReadingTable().catch(function(error) {
             console.error("High Holiday source filter failed:", error);
           });
         });
       }
+      if (hhSourceSWFS) hhSourceSWFS.addEventListener("change", function() {
+        if (hhSourceSWFS.checked) {
+          if (hhSourceTempleSinai) hhSourceTempleSinai.checked = false;
+          if (hhSourceBethShalom) hhSourceBethShalom.checked = false;
+        } else if (hhSourceTempleSinai) hhSourceTempleSinai.checked = true;
+        populateHHReadingTable().catch(function(error) { console.error("SWFS catalog failed", error); });
+      });
       const hhClose = document.getElementById("hhReadingModalClose");
       if (hhClose) {
         hhClose.addEventListener("click", function() {
@@ -1942,6 +2091,7 @@
           parshaSelect.value = "";
           selectedHHReading = null;
           selectedHHSource = null;
+          clearSWFSPlayers();
           selectedPTParshaName = "";
           setReadingName("", false);
           setPTModalMode(null);
@@ -1957,6 +2107,7 @@
           restoreHighHolidayParshaLabel();
           selectedHHReading = null;
           selectedHHSource = null;
+          clearSWFSPlayers();
           selectedPTParshaName = "";
           setReadingName("", false);
           setPTModalMode(null);

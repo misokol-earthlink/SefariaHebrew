@@ -1,0 +1,98 @@
+{
+  "source": "SWFS",
+  "sourceName": "Stephen Wise Free Synagogue",
+  "location": "New York, NY",
+  "playbackType": "soundcloud-sequential",
+  "startOffsetMs": 900,
+  "readings": [
+    {
+      "id": "ykMorning",
+      "name": "Yom Kippur Morning",
+      "book": "Deuteronomy",
+      "displayRange": "Deuteronomy 29:9–30:18",
+      "aliyot": [
+        {
+          "num": "1",
+          "reference": "Deuteronomy 29:9–14",
+          "tracks": [
+            {
+              "ref": "DE:29:09",
+              "id": "675993083"
+            },
+            {
+              "ref": "DE:29:10",
+              "id": "675993077"
+            },
+            {
+              "ref": "DE:29:11",
+              "id": "675993074"
+            },
+            {
+              "ref": "DE:29:12",
+              "id": "675993068"
+            },
+            {
+              "ref": "DE:29:13",
+              "id": "675993065"
+            },
+            {
+              "ref": "DE:29:14",
+              "id": "675993059",
+              "sa": true
+            }
+          ]
+        },
+        {
+          "num": "2",
+          "reference": "Deuteronomy 30:11–14",
+          "tracks": [
+            {
+              "ref": "DE:30:11",
+              "id": "675993056"
+            },
+            {
+              "ref": "DE:30:12",
+              "id": "675993053"
+            },
+            {
+              "ref": "DE:30:13",
+              "id": "675993047"
+            },
+            {
+              "ref": "DE:30:14",
+              "id": "675993044",
+              "sa": true
+            }
+          ]
+        },
+        {
+          "num": "3",
+          "reference": "Deuteronomy 30:14–18",
+          "tracks": [
+            {
+              "ref": "DE:30:14",
+              "id": "675993035"
+            },
+            {
+              "ref": "DE:30:15",
+              "id": "675993032"
+            },
+            {
+              "ref": "DE:30:16",
+              "id": "675993023"
+            },
+            {
+              "ref": "DE:30:17",
+              "id": "675993017"
+            },
+            {
+              "ref": "DE:30:18",
+              "id": "675993014",
+              "sa": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
