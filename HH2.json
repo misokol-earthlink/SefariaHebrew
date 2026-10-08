@@ -592,5 +592,365 @@
         ]
       }
     ]
+  },
+  "ykShabbat": {
+    "name": "Yom Kippur - Shabbat",
+    "aliyot": [
+      {
+        "num": "3",
+        "reference": "Leviticus 19:7–11",
+        "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:7",
+            "start": 24.3,
+            "end": 38
+          },
+          {
+            "verse": "Leviticus 19:8",
+            "start": 39.5,
+            "end": 58.5
+          },
+          {
+            "verse": "Leviticus 19:9",
+            "start": 59.8,
+            "end": 80
+          },
+          {
+            "verse": "Leviticus 19:10",
+            "start": 82,
+            "end": 110
+          },
+          {
+            "verse": "Leviticus 19:11",
+            "start": 111.5,
+            "end": 133.5
+          }
+        ]
+      },
+      {
+        "num": "4",
+        "reference": "Leviticus 19:12–17",
+        "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:12",
+            "start": 1,
+            "end": 41
+          },
+          {
+            "verse": "Leviticus 19:13",
+            "start": 42,
+            "end": 67
+          },
+          {
+            "verse": "Leviticus 19:14",
+            "start": 68,
+            "end": 96
+          },
+          {
+            "verse": "Leviticus 19:15",
+            "start": 100,
+            "end": 134.5
+          },
+          {
+            "verse": "Leviticus 19:16",
+            "start": 136.5,
+            "end": 167
+          },
+          {
+            "verse": "Leviticus 19:17",
+            "start": 168,
+            "end": 198.5
+          }
+        ]
+      },
+      {
+        "num": "5",
+        "reference": "Leviticus 19:18–24",
+        "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:18",
+            "start": 16,
+            "end": 42
+          },
+          {
+            "verse": "Leviticus 19:19",
+            "start": 45,
+            "end": 64.8
+          },
+          {
+            "verse": "Leviticus 19:20",
+            "start": 66,
+            "end": 82.5
+          },
+          {
+            "verse": "Leviticus 19:21",
+            "start": 83.8,
+            "end": 126.2
+          },
+          {
+            "verse": "Leviticus 19:22",
+            "start": 134,
+            "end": 149
+          },
+          {
+            "verse": "Leviticus 19:23",
+            "start": 156.5,
+            "end": 177
+          },
+          {
+            "verse": "Leviticus 19:24",
+            "start": 179.5,
+            "end": 207.5
+          }
+        ]
+      },
+      {
+        "num": "6",
+        "reference": "Leviticus 19:25–30",
+        "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:25",
+            "start": 14.5,
+            "end": 24.5
+          },
+          {
+            "verse": "Leviticus 19:26",
+            "start": 26,
+            "end": 44
+          },
+          {
+            "verse": "Leviticus 19:27",
+            "start": 45,
+            "end": 76
+          },
+          {
+            "verse": "Leviticus 19:28",
+            "start": 77.5,
+            "end": 96.5
+          },
+          {
+            "verse": "Leviticus 19:29",
+            "start": 100,
+            "end": 130
+          },
+          {
+            "verse": "Leviticus 19:30",
+            "start": 132,
+            "end": 150.5
+          }
+        ]
+      },
+      {
+        "num": "7",
+        "reference": "Leviticus 19:31–34",
+        "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:31",
+            "start": 15.5,
+            "end": 27
+          },
+          {
+            "verse": "Leviticus 19:32",
+            "start": 28.5,
+            "end": 54
+          },
+          {
+            "verse": "Leviticus 19:33",
+            "start": 55.6,
+            "end": 80
+          },
+          {
+            "verse": "Leviticus 19:34",
+            "start": 83,
+            "end": 114.5
+          }
+        ]
+      }
+    ]
+  },
+  "ykWeekday": {
+    "name": "Yom Kippur - Weekday",
+    "aliyot": [
+      {
+        "num": "2",
+        "reference": "Leviticus 19:7–11",
+        "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:7",
+            "start": 24.3,
+            "end": 38
+          },
+          {
+            "verse": "Leviticus 19:8",
+            "start": 39.5,
+            "end": 58.5
+          },
+          {
+            "verse": "Leviticus 19:9",
+            "start": 59.8,
+            "end": 80
+          },
+          {
+            "verse": "Leviticus 19:10",
+            "start": 82,
+            "end": 110
+          },
+          {
+            "verse": "Leviticus 19:11",
+            "start": 111.5,
+            "end": 133.5
+          }
+        ]
+      },
+      {
+        "num": "3",
+        "reference": "Leviticus 19:12–17",
+        "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:12",
+            "start": 1,
+            "end": 41
+          },
+          {
+            "verse": "Leviticus 19:13",
+            "start": 42,
+            "end": 67
+          },
+          {
+            "verse": "Leviticus 19:14",
+            "start": 68,
+            "end": 96
+          },
+          {
+            "verse": "Leviticus 19:15",
+            "start": 100,
+            "end": 134.5
+          },
+          {
+            "verse": "Leviticus 19:16",
+            "start": 136.5,
+            "end": 167
+          },
+          {
+            "verse": "Leviticus 19:17",
+            "start": 168,
+            "end": 198.5
+          }
+        ]
+      },
+      {
+        "num": "4",
+        "reference": "Leviticus 19:18–24",
+        "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:18",
+            "start": 16,
+            "end": 42
+          },
+          {
+            "verse": "Leviticus 19:19",
+            "start": 45,
+            "end": 64.8
+          },
+          {
+            "verse": "Leviticus 19:20",
+            "start": 66,
+            "end": 82.5
+          },
+          {
+            "verse": "Leviticus 19:21",
+            "start": 83.8,
+            "end": 126.2
+          },
+          {
+            "verse": "Leviticus 19:22",
+            "start": 134,
+            "end": 149
+          },
+          {
+            "verse": "Leviticus 19:23",
+            "start": 156.5,
+            "end": 177
+          },
+          {
+            "verse": "Leviticus 19:24",
+            "start": 179.5,
+            "end": 207.5
+          }
+        ]
+      },
+      {
+        "num": "5",
+        "reference": "Leviticus 19:25–30",
+        "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:25",
+            "start": 14.5,
+            "end": 24.5
+          },
+          {
+            "verse": "Leviticus 19:26",
+            "start": 26,
+            "end": 44
+          },
+          {
+            "verse": "Leviticus 19:27",
+            "start": 45,
+            "end": 76
+          },
+          {
+            "verse": "Leviticus 19:28",
+            "start": 77.5,
+            "end": 96.5
+          },
+          {
+            "verse": "Leviticus 19:29",
+            "start": 100,
+            "end": 130
+          },
+          {
+            "verse": "Leviticus 19:30",
+            "start": 132,
+            "end": 150.5
+          }
+        ]
+      },
+      {
+        "num": "6",
+        "reference": "Leviticus 19:31–34",
+        "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:31",
+            "start": 15.5,
+            "end": 27
+          },
+          {
+            "verse": "Leviticus 19:32",
+            "start": 28.5,
+            "end": 54
+          },
+          {
+            "verse": "Leviticus 19:33",
+            "start": 55.6,
+            "end": 80
+          },
+          {
+            "verse": "Leviticus 19:34",
+            "start": 83,
+            "end": 114.5
+          }
+        ]
+      }
+    ]
   }
 }
