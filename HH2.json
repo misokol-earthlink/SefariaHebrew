@@ -597,6 +597,50 @@
     "name": "Yom Kippur - Shabbat",
     "aliyot": [
       {
+        "num": "1",
+        "reference": "Leviticus 19:1–3",
+        "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:1",
+            "start": 23,
+            "end": 39
+          },
+          {
+            "verse": "Leviticus 19:2",
+            "start": 40.6,
+            "end": 78.8
+          },
+          {
+            "verse": "Leviticus 19:3",
+            "start": 98.5,
+            "end": 116
+          }
+        ]
+      },
+      {
+        "num": "2",
+        "reference": "Leviticus 19:4–6",
+        "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:4",
+            "start": 117,
+            "end": 150
+          },
+          {
+            "verse": "Leviticus 19:5",
+            "start": 152,
+            "end": 172.5
+          },
+          {
+            "verse": "Leviticus 19:6",
+            "start": 173.5,
+            "end": 191
+          }
+        ]
+      },
+      {
         "num": "3",
         "reference": "Leviticus 19:7–11",
         "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
@@ -776,6 +820,43 @@
   "ykWeekday": {
     "name": "Yom Kippur - Weekday",
     "aliyot": [
+      {
+        "num": "1",
+        "reference": "Leviticus 19:1–6",
+        "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+        "segments": [
+          {
+            "verse": "Leviticus 19:1",
+            "start": 23,
+            "end": 39
+          },
+          {
+            "verse": "Leviticus 19:2",
+            "start": 40.6,
+            "end": 78.8
+          },
+          {
+            "verse": "Leviticus 19:3",
+            "start": 79.5,
+            "end": 95
+          },
+          {
+            "verse": "Leviticus 19:4",
+            "start": 117,
+            "end": 150
+          },
+          {
+            "verse": "Leviticus 19:5",
+            "start": 152,
+            "end": 172.5
+          },
+          {
+            "verse": "Leviticus 19:6",
+            "start": 173.5,
+            "end": 191
+          }
+        ]
+      },
       {
         "num": "2",
         "reference": "Leviticus 19:7–11",
