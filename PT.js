@@ -1329,7 +1329,8 @@
       templeLink.href = "https://www.temple-sinai.com/worship-music/high-holy-days/high-holy-day-readings";
       templeLink.target = "_blank";
       templeLink.rel = "noopener noreferrer";
-      templeLink.textContent = "High Holiday Trope — Temple Sinai, Sharon, MA";
+      templeLink.id = "hhSourceAttribution";
+      templeLink.textContent = "High Holiday Trope — Temple Sinai, Sharon, MA — Cantor R. Khitrik";
       templeLink.style.color = "#3f3f3f";
       templeLink.style.textDecoration = "none";
       templeLink.addEventListener("mouseenter", function() {
@@ -1687,6 +1688,23 @@
     setPTModalMode("HH");
     populateHHAliyot(selectedHHReading);
     clearModalReference();
+
+    const attribution = document.getElementById("hhSourceAttribution");
+    if (attribution) {
+      const credits = {
+        TS: "High Holiday Trope — Temple Sinai, Sharon, MA — Cantor R. Khitrik",
+        CBS: "High Holiday Trope — Congregation Beth Shalom — Cantor E. Cohen",
+        SWFS: "High Holiday Trope — Stephen Wise Free Synagogue — Cantor D. Singer"
+      };
+      attribution.textContent = credits[selectedHHSource] || credits.TS;
+      // The existing hyperlink points specifically to Temple Sinai.
+      // Do not present that destination as a CBS or SWFS credit link.
+      if (selectedHHSource === "TS") {
+        attribution.href = "https://www.temple-sinai.com/worship-music/high-holy-days/high-holy-day-readings";
+      } else {
+        attribution.removeAttribute("href");
+      }
+    }
 
     const description = document.getElementById("hhPlaybackDescription");
     if (description) {
