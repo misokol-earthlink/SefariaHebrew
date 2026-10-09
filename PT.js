@@ -1266,6 +1266,170 @@
     playModalSegment(0, token);
   }
 
+  // Shared verse selector. Source adapters produce one independently playable verse.
+  let verseEntries = [];
+  let verseAudio = null;
+  let verseWidget = null;
+  let versePlaybackSerial = 0;
+  let verseEndHandler = null;
+  let verseFinishWidget = null;
+  let verseFinishCallback = null;
+
+  function verseStatus(message) {
+    const el = document.getElementById("ptVerseStatus");
+    if (el) el.textContent = message || "";
+  }
+  function stopVersePlayback() {
+    ++versePlaybackSerial;
+    if (verseAudio) {
+      if (verseEndHandler) verseAudio.removeEventListener("timeupdate", verseEndHandler);
+      verseAudio.pause(); verseAudio.removeAttribute("src"); verseAudio.load();
+    }
+    verseAudio = null; verseEndHandler = null;
+    if (verseFinishWidget && verseFinishCallback && window.SC && window.SC.Widget) {
+      try { verseFinishWidget.unbind(window.SC.Widget.Events.FINISH,verseFinishCallback); } catch (_) {}
+    }
+    verseFinishWidget=null;verseFinishCallback=null;
+    if (verseWidget) { try { verseWidget.pause(); } catch (_) {} }
+    verseWidget = null;
+  }
+  function finishVersePlayback(serial) {
+    if (serial !== versePlaybackSerial) return;
+    stopVersePlayback();
+    const select = document.getElementById("ptVerseSelect");
+    if (select) select.value = "";
+    verseStatus("Select a verse to play.");
+  }
+  function closeVerseSelector() {
+    stopVersePlayback();
+    const modal = document.getElementById("ptVerseModal");
+    if (modal) modal.style.display = "none";
+    const checkbox = document.getElementById("ptVerseMode");
+    if (checkbox) checkbox.checked = false;
+    const select = document.getElementById("ptVerseSelect");
+    if (select) select.value = "";
+    const parent = document.getElementById("pocketTorahModal");
+    if (parent) parent.style.display = "flex";
+  }
+  function verseRef(book, chapter, verse) {
+    return book + " " + chapter + ":" + verse;
+  }
+  function expandVerseRange(book, startChapter, startVerse, endChapter, endVerse) {
+    const result = [];
+    const chapters = {
+      Genesis:[31,25,24,26,32,22,24,22,29,32,32,20,18,24,21,16,27,33,38,18,34,24,20,67,34,35,46,22,35,43,55,32,20,31,29,43,36,30,23,23,57,38,34,34,28,34,31,22,33,26],
+      Exodus:[22,25,22,31,23,30,25,32,35,29,10,51,22,31,27,36,16,27,25,26,37,30,33,18,40,37,21,43,46,38,18,35,23,35,35,38,29,31,43,38],
+      Leviticus:[17,16,17,35,26,23,38,36,24,20,47,8,59,57,33,34,16,30,37,27,24,33,44,23,55,46,34],
+      Numbers:[54,34,51,49,31,27,89,26,23,36,35,16,33,45,41,50,13,32,22,29,35,41,30,25,18,65,23,31,39,17,54,42,56,29,34,13],
+      Deuteronomy:[46,37,29,49,33,25,26,20,29,22,32,31,19,29,23,22,20,22,21,20,23,30,25,22,19,19,26,69,28,20,30,52,29,12]
+    }[book];
+    if (!chapters) return result;
+    for (let c=startChapter;c<=endChapter;c++) {
+      const last = c===endChapter ? endVerse : chapters[c-1];
+      for (let v=c===startChapter?startVerse:1;v<=last;v++) result.push({chapter:c,verse:v,ref:verseRef(book,c,v)});
+    }
+    return result;
+  }
+  function buildHHVerseEntries() {
+    if (!selectedHHReading) return [];
+    const entries = [];
+    (selectedHHReading.aliyot || []).forEach(function(aliyah, ai) {
+      if (selectedHHSource === "CBS") {
+        (aliyah.segments || []).forEach(function(s) {
+          entries.push({ref:s.verse, audioPath:aliyah.audioUrl,startTime:s.start,endTime:s.end});
+        });
+      } else if (selectedHHSource === "SWFS") {
+        (aliyah.tracks || []).forEach(function(t) {
+          const parts = t.ref.split(":");
+          entries.push({ref:verseRef(selectedHHReading.book,Number(parts[1]),Number(parts[2])),track:t,widgetIndex:ai});
+        });
+      }
+    });
+    return entries;
+  }
+  async function buildPTVerseEntries() {
+    const selection = preparedModalReading && preparedModalReading.selection;
+    if (!selection) throw new Error("Choose an aliyah and wait for the Pocket Torah timing calculation.");
+    const positions = expandVerseRange(selection.book,selection.startChapter,selection.startVerse,selection.endChapter,selection.endVerse);
+    const entries=[];
+    const prepared = preparedModalReading;
+    for (const position of positions) {
+      // Reuse loaded label data; the original segment defines the aliyah audio file.
+      const segment = prepared.playbackSegments.find(function(s) {
+        return compareChapterVerse(position,{chapter:s.startChapter,verse:s.startVerse})>=0 &&
+          compareChapterVerse(position,{chapter:s.endChapter,verse:s.endVerse})<=0;
+      });
+      if (!segment) continue;
+      const aliyahStart = getReadingSelection(selectedPTParshaName,"full",String(segment.aliyah),false);
+      const resource = resolveResourceName(selectedPTParshaName);
+      const labels = labelData[resource.labels+"-"+segment.aliyah];
+      const wordIndex = countWordsBeforeVerse(selection.book,aliyahStart.startChapter,aliyahStart.startVerse,position.chapter,position.verse);
+      const verse = getVerse(selection.book,position.chapter,position.verse);
+      const start = labels && labels[wordIndex];
+      const end = labels && verse && (labels[wordIndex+verse.w.length] ?? audioDurationData[resource.audio+"-"+segment.aliyah]);
+      if (Number.isFinite(start) && Number.isFinite(end)) entries.push({ref:position.ref,audioPath:segment.audioPath,startTime:start,endTime:end});
+    }
+    return entries;
+  }
+  async function openVerseSelector() {
+    stopModalAudio();
+    stopVersePlayback();
+    verseStatus("Preparing verse list...");
+    const modal=document.getElementById("ptVerseModal");
+    const select=document.getElementById("ptVerseSelect");
+    if (!modal || !select) return;
+    modal.style.display="flex";
+    document.getElementById("ptVerseReference").textContent = isHHMode()
+      ? (selectedHHReading ? selectedHHReading.displayRange || selectedHHReading.name : "")
+      : (preparedModalReading && preparedModalReading.selection ?
+        verseRef(preparedModalReading.selection.book,preparedModalReading.selection.startChapter,preparedModalReading.selection.startVerse)+" – "+
+        preparedModalReading.selection.endChapter+":"+preparedModalReading.selection.endVerse : "");
+    select.innerHTML='<option value="">Select verse</option>';
+    try {
+      verseEntries = isHHMode() ? buildHHVerseEntries() : await buildPTVerseEntries();
+      verseEntries.forEach(function(entry,index) {
+        const option=document.createElement("option");option.value=String(index);option.textContent=entry.ref;select.appendChild(option);
+      });
+      verseStatus(verseEntries.length ? "Select a verse to play." : "Verse playback is unavailable for this recording.");
+    } catch(error) { console.error("Verse list failed:",error);verseStatus(error.message); }
+  }
+  function playSelectedVerse() {
+    const select=document.getElementById("ptVerseSelect");
+    if (!select || select.value==="") return;
+    const entry=verseEntries[Number(select.value)];
+    if (!entry) return;
+    stopVersePlayback();
+    const serial=versePlaybackSerial;
+    verseStatus("Playing " + entry.ref);
+    if (entry.track) {
+      const widget=swfsWidgets[entry.widgetIndex];
+      if (!widget || !swfsReady[entry.widgetIndex]) {verseStatus("SoundCloud player not ready; try again shortly.");return;}
+      verseWidget=widget;
+      widget.load(swfsTrackUrl(entry.track),{auto_play:true});
+      // FINISH is also used by normal aliyah playback. This one-shot handler
+      // only completes the selector when no aliyah sequence is active.
+      const finished=function() {
+        widget.unbind(window.SC.Widget.Events.FINISH,finished);
+        if (serial===versePlaybackSerial) finishVersePlayback(serial);
+      };
+      verseFinishWidget=widget;verseFinishCallback=finished;
+      widget.bind(window.SC.Widget.Events.FINISH,finished);
+      return;
+    }
+    const audio=new Audio();verseAudio=audio;audio.preload="auto";audio.src=entry.audioPath;
+    const end=Number(entry.endTime);
+    const done=function(){finishVersePlayback(serial);};
+    audio.addEventListener("loadedmetadata",function(){
+      if(serial!==versePlaybackSerial)return;
+      audio.currentTime=Math.max(0,Number(entry.startTime)||0);
+      verseEndHandler=function(){if(Number.isFinite(end)&&audio.currentTime>=end)done();};
+      audio.addEventListener("timeupdate",verseEndHandler);
+      audio.play().catch(function(error){if(serial===versePlaybackSerial)verseStatus("Audio could not start: "+error.message);});
+    },{once:true});
+    audio.addEventListener("ended",done,{once:true});
+    audio.addEventListener("error",function(){if(serial===versePlaybackSerial)verseStatus("Audio unavailable for this verse.");},{once:true});
+  }
+
   function ensurePocketTorahSourceCitations() {
     if (document.getElementById("ptSourceCitations")) return;
 
@@ -1451,6 +1615,10 @@
   }
 
   function setPTModalMode(mode) {
+    const verseCheckbox=document.getElementById("ptVerseMode");
+    if(verseCheckbox) verseCheckbox.checked=false;
+    const verseModal=document.getElementById("ptVerseModal");
+    if(verseModal && verseModal.style.display==="flex") closeVerseSelector();
     const hh = mode === "HH";
     window.PlayMode = hh ? "HH" : (mode === "PT" ? "PT" : null);
 
@@ -2137,6 +2305,22 @@
           }
         });
       }
+
+      const verseCheckbox = document.getElementById("ptVerseMode");
+      if (verseCheckbox) verseCheckbox.addEventListener("change", function() {
+        if (verseCheckbox.checked) {
+          if (isHHMode() && selectedHHSource === "TS") {
+            verseCheckbox.checked = false;
+            alert("Temple Sinai recordings do not have verse-level timing data.");
+            return;
+          }
+          openVerseSelector();
+        } else closeVerseSelector();
+      });
+      const verseSelect = document.getElementById("ptVerseSelect");
+      if (verseSelect) verseSelect.addEventListener("change",playSelectedVerse);
+      const verseClose = document.getElementById("ptVerseClose");
+      if (verseClose) verseClose.addEventListener("click",closeVerseSelector);
 
       const audioToggle = document.getElementById("ptAudioToggle");
       if (audioToggle) {
