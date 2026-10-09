@@ -2363,6 +2363,15 @@
     });
     document.addEventListener("click", function(event) {
       if (event.target.closest && event.target.closest(".pt-modal-close")) stopModalAudio();
+      // The verse selector explicitly displays its parent modal. Clear that
+      // inline override when the parent's own X is clicked, so the existing
+      // :target CSS can hide the parent when the fragment changes to #.
+      const parentClose = event.target.closest &&
+        event.target.closest('#pocketTorahModal > .pt-modal-panel > a.pt-modal-close');
+      if (parentClose) {
+        const parent = document.getElementById("pocketTorahModal");
+        if (parent) parent.style.removeProperty("display");
+      }
     });
   }
 
