@@ -914,12 +914,16 @@
   let cbsCatalog = null;
   let swfsCatalog = null;
   let selectedHHReading = null;
-  let selectedHHSource = null; // "TS" or "CBS"
+  let selectedHHSource = null; // "TS", "CBS", or "SWFS"
   let selectedPTParshaName = "";
   let selectedReadingName = "";
-  const HH_CATALOG_PATH = "HH.json";
-  const CBS_CATALOG_PATH = "HH_CBS.json";
-  const SWFS_CATALOG_PATH = "HH3.json";
+  // Catalog filenames follow the selected source identifier.
+  function hhCatalogPath(source) {
+    return "HH_" + source + ".json";
+  }
+  const HH_CATALOG_PATH = hhCatalogPath("TS");
+  const CBS_CATALOG_PATH = hhCatalogPath("CBS");
+  const SWFS_CATALOG_PATH = hhCatalogPath("SWFS");
 
   // Sefaria modal audio playback state.  Playback consumes the already
   // calculated aliyah-relative audioPath/startTime/endTime segments.
@@ -1198,6 +1202,23 @@
           console.warn("Congregation Beth Shalom playback segments are not available.");
           return;
         }
+        stopModalAudio();
+        modalPlaybackSegments = selection.playbackSegments.slice();
+        const token = ++modalPlaybackToken;
+        setAudioTogglePlaying(true);
+        playModalSegment(0, token);
+        return;
+      }
+
+      // Full TS reading consists of multiple complete aliyah recordings.
+      // Sequence them with the existing audio-segment player; individual
+      // aliyot continue to use the original direct-link window.
+      if (selectedHHSource === "TS" && String(getModalAliyahNumber()) === "Full") {
+        if (modalAudio && !modalAudio.paused) {
+          stopModalAudio();
+          return;
+        }
+        if (!selection.playbackSegments || !selection.playbackSegments.length) return;
         stopModalAudio();
         modalPlaybackSegments = selection.playbackSegments.slice();
         const token = ++modalPlaybackToken;
@@ -1584,9 +1605,9 @@
   async function ensureSWFSCatalogLoaded() {
     if (swfsCatalog) return swfsCatalog;
     const response = await fetch(SWFS_CATALOG_PATH + "?v=" + Date.now(), {cache:"no-store"});
-    if (!response.ok) throw new Error("Could not load HH3.json: " + response.status);
+    if (!response.ok) throw new Error("Could not load " + SWFS_CATALOG_PATH + ": " + response.status);
     swfsCatalog = await response.json();
-    if (!Array.isArray(swfsCatalog.readings)) throw new Error("Invalid HH3.json readings");
+    if (!Array.isArray(swfsCatalog.readings)) throw new Error("Invalid " + SWFS_CATALOG_PATH + " readings");
     return swfsCatalog;
   }
   function getSWFSReadings(catalog) {
@@ -1707,6 +1728,22 @@
         endVerse: last.endVerse,
         playbackSegments: tracks.map(function(track) {
           return {audioPath:track.audioUrl,startTime:track.start,endTime:track.end};
+        })
+      };
+    }
+
+    if (selectedHHSource === "TS" && String(aliyah.num) === "Full") {
+      const tracks = Array.isArray(aliyah.tracks) ? aliyah.tracks : [];
+      if (!tracks.length) return null;
+      const first = parseChapterVerse(aliyah.begin);
+      const last = parseChapterVerse(aliyah.end);
+      if (!first || !last) return null;
+      return {
+        book: selectedHHReading.book,
+        startChapter: first.chapter, startVerse: first.verse,
+        endChapter: last.chapter, endVerse: last.verse,
+        playbackSegments: tracks.map(function(track) {
+          return {audioPath:track.audioUrl,startTime:0,endTime:null};
         })
       };
     }
