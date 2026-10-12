@@ -31,28 +31,28 @@
         "segments": [
           {
             "verse": "Genesis 22:4",
-            "start": 13.6,
-            "end": 29.5
+            "start": 12.9,
+            "end": 28.5
           },
           {
             "verse": "Genesis 22:5",
-            "start": 31.0,
-            "end": 54.2
+            "start": 29.0,
+            "end": 52.0
           },
           {
             "verse": "Genesis 22:6",
-            "start": 55.3,
+            "start": 53.0,
             "end": 77.0
           },
           {
             "verse": "Genesis 22:7",
             "start": 78.1,
-            "end": 109.0
+            "end": 104.0
           },
           {
             "verse": "Genesis 22:8",
-            "start": 111.0,
-            "end": 131.0
+            "start": 105.0,
+            "end": 128.0
           }
         ]
       },
