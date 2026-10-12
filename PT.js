@@ -1331,25 +1331,28 @@
     return result;
   }
   function buildHHVerseEntries() {
-    if (!selectedHHReading) return [];
-    const entries = [];
-    (selectedHHReading.aliyot || []).forEach(function(aliyah, ai) {
-      if (selectedHHSource === "CBS") {
-        (aliyah.segments || []).forEach(function(s) {
-          entries.push({ref:s.verse, audioPath:aliyah.audioUrl,startTime:s.start,endTime:s.end});
-        });
-      } else if (selectedHHSource === "SWFS") {
-        (aliyah.tracks || []).forEach(function(t) {
-          const parts = t.ref.split(":");
-          entries.push({ref:verseRef(selectedHHReading.book,Number(parts[1]),Number(parts[2])),track:t,widgetIndex:ai});
-        });
-      }
+    if (!selectedHHReading || !getModalAliyahNumber()) return [];
+    const aliyah = (selectedHHReading.aliyot || []).find(function(item) {
+      return String(item.num) === String(getModalAliyahNumber());
     });
+    if (!aliyah) return [];
+    const entries = [];
+    if (selectedHHSource === "CBS") {
+      (aliyah.segments || []).forEach(function(segment) {
+        entries.push({ref:segment.verse,audioPath:aliyah.audioUrl,startTime:segment.start,endTime:segment.end});
+      });
+    } else if (selectedHHSource === "SWFS") {
+      const widgetIndex = selectedHHReading.aliyot.indexOf(aliyah);
+      (aliyah.tracks || []).forEach(function(track) {
+        const parts = track.ref.split(":");
+        entries.push({ref:verseRef(selectedHHReading.book,Number(parts[1]),Number(parts[2])),track:track,widgetIndex:widgetIndex});
+      });
+    }
     return entries;
   }
   async function buildPTVerseEntries() {
     const selection = preparedModalReading && preparedModalReading.selection;
-    if (!selection) throw new Error("Choose an aliyah and wait for the Pocket Torah timing calculation.");
+    if (!getModalAliyahNumber() || !selection) throw new Error("Choose an aliyah and wait for the Pocket Torah timing calculation.");
     const positions = expandVerseRange(selection.book,selection.startChapter,selection.startVerse,selection.endChapter,selection.endVerse);
     const entries=[];
     const prepared = preparedModalReading;
@@ -1372,6 +1375,18 @@
     return entries;
   }
   async function openVerseSelector() {
+    if (!getModalAliyahNumber()) {
+      const checkbox = document.getElementById("ptVerseMode");
+      if (checkbox) checkbox.checked = false;
+      alert("Select an aliyah before choosing verse-by-verse playback.");
+      return;
+    }
+    if (isHHMode() && selectedHHSource === "TS") {
+      const checkbox = document.getElementById("ptVerseMode");
+      if (checkbox) checkbox.checked = false;
+      alert("Temple Sinai recordings do not have verse-level timing data.");
+      return;
+    }
     stopModalAudio();
     stopVersePlayback();
     verseStatus("Preparing verse list...");
@@ -1380,7 +1395,7 @@
     if (!modal || !select) return;
     modal.style.display="flex";
     document.getElementById("ptVerseReference").textContent = isHHMode()
-      ? (selectedHHReading ? selectedHHReading.displayRange || selectedHHReading.name : "")
+      ? (getHHSelection() ? verseRef(getHHSelection().book,getHHSelection().startChapter,getHHSelection().startVerse)+" – "+getHHSelection().endChapter+":"+getHHSelection().endVerse : "")
       : (preparedModalReading && preparedModalReading.selection ?
         verseRef(preparedModalReading.selection.book,preparedModalReading.selection.startChapter,preparedModalReading.selection.startVerse)+" – "+
         preparedModalReading.selection.endChapter+":"+preparedModalReading.selection.endVerse : "");
@@ -1862,13 +1877,15 @@
       const credits = {
         TS: "High Holiday Trope — Temple Sinai, Sharon, MA — Cantor R. Khitrik",
         CBS: "High Holiday Trope — Congregation Beth Shalom — Cantor E. Cohen",
-        SWFS: "High Holiday Trope — Stephen Wise Free Synagogue — Cantor D. Singer"
+        SWFS: "High Holiday Trope — Stephen Wise Free Synagogue, New York, NY — Cantor D. Singer"
       };
       attribution.textContent = credits[selectedHHSource] || credits.TS;
       // The existing hyperlink points specifically to Temple Sinai.
       // Do not present that destination as a CBS or SWFS credit link.
       if (selectedHHSource === "TS") {
         attribution.href = "https://www.temple-sinai.com/worship-music/high-holy-days/high-holy-day-readings";
+      } else if (selectedHHSource === "SWFS") {
+        attribution.href = "https://soundcloud.com/swfsnyc/sets/yom-kippur-morning-mishkan-hanefesh-with-gor-skips-p-266";
       } else {
         attribution.removeAttribute("href");
       }
