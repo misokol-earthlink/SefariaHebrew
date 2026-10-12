@@ -918,7 +918,7 @@
   let selectedPTParshaName = "";
   let selectedReadingName = "";
   const HH_CATALOG_PATH = "HH.json";
-  const CBS_CATALOG_PATH = "HH2.json";
+  const CBS_CATALOG_PATH = "HH_CBS.json";
   const SWFS_CATALOG_PATH = "HH3.json";
 
   // Sefaria modal audio playback state.  Playback consumes the already
@@ -1123,7 +1123,7 @@
     audio.src = segment.audioPath;
 
     const startTime = Number(segment.startTime) || 0;
-    const endTime = Number(segment.endTime);
+    const endTime = segment.endTime == null ? NaN : Number(segment.endTime);
 
     function advance() {
       if (token !== modalPlaybackToken) return;
@@ -1188,7 +1188,7 @@
       if (selectedHHSource === "SWFS") { toggleSWFSPlayback(selection); return; }
 
       // Congregation Beth Shalom playback is source-specific: use the MP3 and
-      // reviewed start/end segments stored in HH2.json.
+      // reviewed verse tracks stored in HH_CBS.json.
       if (selectedHHSource === "CBS") {
         if (modalAudio && !modalAudio.paused) {
           stopModalAudio();
@@ -1338,8 +1338,8 @@
     if (!aliyah) return [];
     const entries = [];
     if (selectedHHSource === "CBS") {
-      (aliyah.segments || []).forEach(function(segment) {
-        entries.push({ref:segment.verse,audioPath:aliyah.audioUrl,startTime:segment.start,endTime:segment.end});
+      (aliyah.tracks || []).forEach(function(track) {
+        entries.push({ref:track.ref,audioPath:track.audioUrl,startTime:track.start,endTime:track.end});
       });
     } else if (selectedHHSource === "SWFS") {
       const widgetIndex = selectedHHReading.aliyot.indexOf(aliyah);
@@ -1432,7 +1432,7 @@
       return;
     }
     const audio=new Audio();verseAudio=audio;audio.preload="auto";audio.src=entry.audioPath;
-    const end=Number(entry.endTime);
+    const end=entry.endTime == null ? NaN : Number(entry.endTime);
     const done=function(){finishVersePlayback(serial);};
     audio.addEventListener("loadedmetadata",function(){
       if(serial!==versePlaybackSerial)return;
@@ -1575,7 +1575,7 @@
       throw new Error("Could not load " + CBS_CATALOG_PATH + ". Status: " + response.status);
     }
     cbsCatalog = await response.json();
-    if (!cbsCatalog || typeof cbsCatalog !== "object") {
+    if (!cbsCatalog || !Array.isArray(cbsCatalog.readings)) {
       throw new Error(CBS_CATALOG_PATH + " does not contain a valid CBS catalog.");
     }
     return cbsCatalog;
@@ -1594,34 +1594,20 @@
   }
 
   function parseCBSReference(reference) {
-    const match = String(reference || "").trim().match(/^(.+?)\s+(\d+):(\d+)[–-](\d+)$/);
+    const match = String(reference || "").trim().match(/^(.+?)\s+(\d+):(\d+)(?:[–-](?:(\d+):)?(\d+))?$/);
     if (!match) return null;
     return {
       book: match[1],
       startChapter: Number(match[2]),
       startVerse: Number(match[3]),
-      endChapter: Number(match[2]),
-      endVerse: Number(match[4])
+      endChapter: match[4] ? Number(match[4]) : Number(match[2]),
+      endVerse: match[5] ? Number(match[5]) : Number(match[3])
     };
   }
 
   function getCBSReadings(catalog) {
-    return Object.keys(catalog || {}).map(function(id) {
-      const item = catalog[id];
-      const aliyot = Array.isArray(item && item.aliyot) ? item.aliyot : [];
-      const firstRef = aliyot.length ? parseCBSReference(aliyot[0].reference) : null;
-      const lastRef = aliyot.length ? parseCBSReference(aliyot[aliyot.length - 1].reference) : null;
-      return {
-        id: id,
-        source: "CBS",
-        name: item && item.name ? item.name : id,
-        book: firstRef ? firstRef.book : "",
-        aliyot: aliyot,
-        displayRange: firstRef && lastRef
-          ? firstRef.book + " " + firstRef.startChapter + ":" + firstRef.startVerse +
-            "–" + lastRef.endChapter + ":" + lastRef.endVerse
-          : ""
-      };
+    return catalog.readings.map(function(reading) {
+      return Object.assign({source: "CBS"}, reading);
     });
   }
 
@@ -1708,20 +1694,19 @@
         endChapter:end[1], endVerse:end[2], tracks:aliyah.tracks};
     }
     if (selectedHHSource === "CBS") {
-      const ref = parseCBSReference(aliyah.reference);
-      if (!ref) return null;
+      const tracks = Array.isArray(aliyah.tracks) ? aliyah.tracks : [];
+      if (!tracks.length) return null;
+      const first = parseCBSReference(tracks[0].ref);
+      const last = parseCBSReference(tracks[tracks.length - 1].ref);
+      if (!first || !last || first.book !== last.book) return null;
       return {
-        book: ref.book,
-        startChapter: ref.startChapter,
-        startVerse: ref.startVerse,
-        endChapter: ref.endChapter,
-        endVerse: ref.endVerse,
-        playbackSegments: (Array.isArray(aliyah.segments) ? aliyah.segments : []).map(function(segment) {
-          return {
-            audioPath: aliyah.audioUrl,
-            startTime: segment.start,
-            endTime: segment.end
-          };
+        book: first.book,
+        startChapter: first.startChapter,
+        startVerse: first.startVerse,
+        endChapter: last.endChapter,
+        endVerse: last.endVerse,
+        playbackSegments: tracks.map(function(track) {
+          return {audioPath:track.audioUrl,startTime:track.start,endTime:track.end};
         })
       };
     }

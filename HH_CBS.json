@@ -1,0 +1,2817 @@
+{
+  "source": "CBS",
+  "sourceName": "Congregation Beth Shalom",
+  "playbackType": "mp3-sequential-segments",
+  "readings": [
+    {
+      "id": "rh2",
+      "name": "Rosh Hashanah Day 2",
+      "book": "Genesis",
+      "aliyot": [
+        {
+          "num": "1",
+          "reference": "Genesis 22:1–3",
+          "tracks": [
+            {
+              "ref": "Genesis 22:1",
+              "aliyah": "1",
+              "lineNumber": 1,
+              "audioUrl": "https://images.shulcloud.com/13447/299814.mp3",
+              "start": 12.45,
+              "end": 32.5
+            },
+            {
+              "ref": "Genesis 22:2",
+              "aliyah": "1",
+              "lineNumber": 2,
+              "audioUrl": "https://images.shulcloud.com/13447/299814.mp3",
+              "start": 32.6,
+              "end": 67.8
+            },
+            {
+              "ref": "Genesis 22:3",
+              "aliyah": "1",
+              "lineNumber": 3,
+              "audioUrl": "https://images.shulcloud.com/13447/299814.mp3",
+              "start": 70.2,
+              "end": null
+            }
+          ]
+        },
+        {
+          "num": "2",
+          "reference": "Genesis 22:4–8",
+          "tracks": [
+            {
+              "ref": "Genesis 22:4",
+              "aliyah": "2",
+              "lineNumber": 4,
+              "audioUrl": "https://images.shulcloud.com/13447/299812.mp3",
+              "start": 12.9,
+              "end": 28.5
+            },
+            {
+              "ref": "Genesis 22:5",
+              "aliyah": "2",
+              "lineNumber": 5,
+              "audioUrl": "https://images.shulcloud.com/13447/299812.mp3",
+              "start": 29.0,
+              "end": 52
+            },
+            {
+              "ref": "Genesis 22:6",
+              "aliyah": "2",
+              "lineNumber": 6,
+              "audioUrl": "https://images.shulcloud.com/13447/299812.mp3",
+              "start": 53,
+              "end": 77.0
+            },
+            {
+              "ref": "Genesis 22:7",
+              "aliyah": "2",
+              "lineNumber": 7,
+              "audioUrl": "https://images.shulcloud.com/13447/299812.mp3",
+              "start": 78.1,
+              "end": 104.0
+            },
+            {
+              "ref": "Genesis 22:8",
+              "aliyah": "2",
+              "lineNumber": 8,
+              "audioUrl": "https://images.shulcloud.com/13447/299812.mp3",
+              "start": 105.0,
+              "end": 128.0
+            }
+          ]
+        },
+        {
+          "num": "3",
+          "reference": "Genesis 22:9–14",
+          "tracks": [
+            {
+              "ref": "Genesis 22:9",
+              "aliyah": "3",
+              "lineNumber": 9,
+              "audioUrl": "https://images.shulcloud.com/13447/299813.mp3",
+              "start": 15.6,
+              "end": 26.8
+            },
+            {
+              "ref": "Genesis 22:10",
+              "aliyah": "3",
+              "lineNumber": 10,
+              "audioUrl": "https://images.shulcloud.com/13447/299813.mp3",
+              "start": 28.6,
+              "end": 53.4
+            },
+            {
+              "ref": "Genesis 22:11",
+              "aliyah": "3",
+              "lineNumber": 11,
+              "audioUrl": "https://images.shulcloud.com/13447/299813.mp3",
+              "start": 55.3,
+              "end": 71.0
+            },
+            {
+              "ref": "Genesis 22:12",
+              "aliyah": "3",
+              "lineNumber": 12,
+              "audioUrl": "https://images.shulcloud.com/13447/299813.mp3",
+              "start": 73.0,
+              "end": 100.8
+            },
+            {
+              "ref": "Genesis 22:13",
+              "aliyah": "3",
+              "lineNumber": 13,
+              "audioUrl": "https://images.shulcloud.com/13447/299813.mp3",
+              "start": 102.2,
+              "end": 122.0
+            },
+            {
+              "ref": "Genesis 22:14",
+              "aliyah": "3",
+              "lineNumber": 14,
+              "audioUrl": "https://images.shulcloud.com/13447/299813.mp3",
+              "start": 123.5,
+              "end": 140.0
+            }
+          ]
+        },
+        {
+          "num": "4",
+          "reference": "Genesis 22:15–19",
+          "tracks": [
+            {
+              "ref": "Genesis 22:15",
+              "aliyah": "4",
+              "lineNumber": 15,
+              "audioUrl": "https://images.shulcloud.com/13447/299809.mp3",
+              "start": 13.5,
+              "end": 28.5
+            },
+            {
+              "ref": "Genesis 22:16",
+              "aliyah": "4",
+              "lineNumber": 16,
+              "audioUrl": "https://images.shulcloud.com/13447/299809.mp3",
+              "start": 30.0,
+              "end": 54.0
+            },
+            {
+              "ref": "Genesis 22:17",
+              "aliyah": "4",
+              "lineNumber": 17,
+              "audioUrl": "https://images.shulcloud.com/13447/299809.mp3",
+              "start": 55.6,
+              "end": 80.5
+            },
+            {
+              "ref": "Genesis 22:18",
+              "aliyah": "4",
+              "lineNumber": 18,
+              "audioUrl": "https://images.shulcloud.com/13447/299809.mp3",
+              "start": 82.0,
+              "end": 102.0
+            },
+            {
+              "ref": "Genesis 22:19",
+              "aliyah": "4",
+              "lineNumber": 19,
+              "audioUrl": "https://images.shulcloud.com/13447/299809.mp3",
+              "start": 104.2,
+              "end": 129.2
+            }
+          ]
+        },
+        {
+          "num": "5",
+          "reference": "Genesis 22:20–24",
+          "tracks": [
+            {
+              "ref": "Genesis 22:20",
+              "aliyah": "5",
+              "lineNumber": 20,
+              "audioUrl": "https://images.shulcloud.com/13447/299811.mp3",
+              "start": 17.4,
+              "end": 34.0
+            },
+            {
+              "ref": "Genesis 22:21",
+              "aliyah": "5",
+              "lineNumber": 21,
+              "audioUrl": "https://images.shulcloud.com/13447/299811.mp3",
+              "start": 35.5,
+              "end": 77.5
+            },
+            {
+              "ref": "Genesis 22:22",
+              "aliyah": "5",
+              "lineNumber": 22,
+              "audioUrl": "https://images.shulcloud.com/13447/299811.mp3",
+              "start": 79.2,
+              "end": 94.0
+            },
+            {
+              "ref": "Genesis 22:23",
+              "aliyah": "5",
+              "lineNumber": 23,
+              "audioUrl": "https://images.shulcloud.com/13447/299811.mp3",
+              "start": 95.3,
+              "end": 121.0
+            },
+            {
+              "ref": "Genesis 22:24",
+              "aliyah": "5",
+              "lineNumber": 24,
+              "audioUrl": "https://images.shulcloud.com/13447/299811.mp3",
+              "start": 122.5,
+              "end": 145.0
+            }
+          ]
+        },
+        {
+          "num": "Full",
+          "reference": "Genesis 22:1–22:24",
+          "tracks": [
+            {
+              "ref": "Genesis 22:1",
+              "aliyah": "1",
+              "lineNumber": 1,
+              "audioUrl": "https://images.shulcloud.com/13447/299814.mp3",
+              "start": 12.45,
+              "end": 32.5
+            },
+            {
+              "ref": "Genesis 22:2",
+              "aliyah": "1",
+              "lineNumber": 2,
+              "audioUrl": "https://images.shulcloud.com/13447/299814.mp3",
+              "start": 32.6,
+              "end": 67.8
+            },
+            {
+              "ref": "Genesis 22:3",
+              "aliyah": "1",
+              "lineNumber": 3,
+              "audioUrl": "https://images.shulcloud.com/13447/299814.mp3",
+              "start": 70.2,
+              "end": null
+            },
+            {
+              "ref": "Genesis 22:4",
+              "aliyah": "2",
+              "lineNumber": 4,
+              "audioUrl": "https://images.shulcloud.com/13447/299812.mp3",
+              "start": 12.9,
+              "end": 28.5
+            },
+            {
+              "ref": "Genesis 22:5",
+              "aliyah": "2",
+              "lineNumber": 5,
+              "audioUrl": "https://images.shulcloud.com/13447/299812.mp3",
+              "start": 29.0,
+              "end": 52.0
+            },
+            {
+              "ref": "Genesis 22:6",
+              "aliyah": "2",
+              "lineNumber": 6,
+              "audioUrl": "https://images.shulcloud.com/13447/299812.mp3",
+              "start": 53.0,
+              "end": 77.0
+            },
+            {
+              "ref": "Genesis 22:7",
+              "aliyah": "2",
+              "lineNumber": 7,
+              "audioUrl": "https://images.shulcloud.com/13447/299812.mp3",
+              "start": 78.1,
+              "end": 104.0
+            },
+            {
+              "ref": "Genesis 22:8",
+              "aliyah": "2",
+              "lineNumber": 8,
+              "audioUrl": "https://images.shulcloud.com/13447/299812.mp3",
+              "start": 105.0,
+              "end": 128.0
+            },
+            {
+              "ref": "Genesis 22:9",
+              "aliyah": "3",
+              "lineNumber": 9,
+              "audioUrl": "https://images.shulcloud.com/13447/299813.mp3",
+              "start": 15.6,
+              "end": 26.8
+            },
+            {
+              "ref": "Genesis 22:10",
+              "aliyah": "3",
+              "lineNumber": 10,
+              "audioUrl": "https://images.shulcloud.com/13447/299813.mp3",
+              "start": 28.6,
+              "end": 53.4
+            },
+            {
+              "ref": "Genesis 22:11",
+              "aliyah": "3",
+              "lineNumber": 11,
+              "audioUrl": "https://images.shulcloud.com/13447/299813.mp3",
+              "start": 55.3,
+              "end": 71.0
+            },
+            {
+              "ref": "Genesis 22:12",
+              "aliyah": "3",
+              "lineNumber": 12,
+              "audioUrl": "https://images.shulcloud.com/13447/299813.mp3",
+              "start": 73.0,
+              "end": 100.8
+            },
+            {
+              "ref": "Genesis 22:13",
+              "aliyah": "3",
+              "lineNumber": 13,
+              "audioUrl": "https://images.shulcloud.com/13447/299813.mp3",
+              "start": 102.2,
+              "end": 122.0
+            },
+            {
+              "ref": "Genesis 22:14",
+              "aliyah": "3",
+              "lineNumber": 14,
+              "audioUrl": "https://images.shulcloud.com/13447/299813.mp3",
+              "start": 123.5,
+              "end": 140.0
+            },
+            {
+              "ref": "Genesis 22:15",
+              "aliyah": "4",
+              "lineNumber": 15,
+              "audioUrl": "https://images.shulcloud.com/13447/299809.mp3",
+              "start": 13.5,
+              "end": 28.5
+            },
+            {
+              "ref": "Genesis 22:16",
+              "aliyah": "4",
+              "lineNumber": 16,
+              "audioUrl": "https://images.shulcloud.com/13447/299809.mp3",
+              "start": 30.0,
+              "end": 54.0
+            },
+            {
+              "ref": "Genesis 22:17",
+              "aliyah": "4",
+              "lineNumber": 17,
+              "audioUrl": "https://images.shulcloud.com/13447/299809.mp3",
+              "start": 55.6,
+              "end": 80.5
+            },
+            {
+              "ref": "Genesis 22:18",
+              "aliyah": "4",
+              "lineNumber": 18,
+              "audioUrl": "https://images.shulcloud.com/13447/299809.mp3",
+              "start": 82.0,
+              "end": 102.0
+            },
+            {
+              "ref": "Genesis 22:19",
+              "aliyah": "4",
+              "lineNumber": 19,
+              "audioUrl": "https://images.shulcloud.com/13447/299809.mp3",
+              "start": 104.2,
+              "end": 129.2
+            },
+            {
+              "ref": "Genesis 22:20",
+              "aliyah": "5",
+              "lineNumber": 20,
+              "audioUrl": "https://images.shulcloud.com/13447/299811.mp3",
+              "start": 17.4,
+              "end": 34.0
+            },
+            {
+              "ref": "Genesis 22:21",
+              "aliyah": "5",
+              "lineNumber": 21,
+              "audioUrl": "https://images.shulcloud.com/13447/299811.mp3",
+              "start": 35.5,
+              "end": 77.5
+            },
+            {
+              "ref": "Genesis 22:22",
+              "aliyah": "5",
+              "lineNumber": 22,
+              "audioUrl": "https://images.shulcloud.com/13447/299811.mp3",
+              "start": 79.2,
+              "end": 94.0
+            },
+            {
+              "ref": "Genesis 22:23",
+              "aliyah": "5",
+              "lineNumber": 23,
+              "audioUrl": "https://images.shulcloud.com/13447/299811.mp3",
+              "start": 95.3,
+              "end": 121.0
+            },
+            {
+              "ref": "Genesis 22:24",
+              "aliyah": "5",
+              "lineNumber": 24,
+              "audioUrl": "https://images.shulcloud.com/13447/299811.mp3",
+              "start": 122.5,
+              "end": 145.0
+            }
+          ]
+        }
+      ],
+      "displayRange": "Genesis 22:1–22:24"
+    },
+    {
+      "id": "rh1Shabbat",
+      "name": "Rosh Hashanah Day 1 - Shabbat",
+      "book": "Genesis",
+      "aliyot": [
+        {
+          "num": "1",
+          "reference": "Genesis 21:1–4",
+          "tracks": [
+            {
+              "ref": "Genesis 21:1",
+              "aliyah": "1",
+              "lineNumber": 1,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 13.4,
+              "end": 29.0
+            },
+            {
+              "ref": "Genesis 21:2",
+              "aliyah": "1",
+              "lineNumber": 2,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 30.0,
+              "end": 49.4
+            },
+            {
+              "ref": "Genesis 21:3",
+              "aliyah": "1",
+              "lineNumber": 3,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 50.5,
+              "end": 65.0
+            },
+            {
+              "ref": "Genesis 21:4",
+              "aliyah": "1",
+              "lineNumber": 4,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 66.0,
+              "end": 84.5
+            }
+          ]
+        },
+        {
+          "num": "2",
+          "reference": "Genesis 21:5–8",
+          "tracks": [
+            {
+              "ref": "Genesis 21:5",
+              "aliyah": "2",
+              "lineNumber": 5,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 36.4,
+              "end": 46.0
+            },
+            {
+              "ref": "Genesis 21:6",
+              "aliyah": "2",
+              "lineNumber": 6,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 47.0,
+              "end": 61.8
+            },
+            {
+              "ref": "Genesis 21:7",
+              "aliyah": "2",
+              "lineNumber": 7,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 64.5,
+              "end": 81.0
+            },
+            {
+              "ref": "Genesis 21:8",
+              "aliyah": "2",
+              "lineNumber": 8,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 101.5,
+              "end": 116.0
+            }
+          ]
+        },
+        {
+          "num": "3",
+          "reference": "Genesis 21:9–12",
+          "tracks": [
+            {
+              "ref": "Genesis 21:9",
+              "aliyah": "3",
+              "lineNumber": 9,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 127.0,
+              "end": 142.0
+            },
+            {
+              "ref": "Genesis 21:10",
+              "aliyah": "3",
+              "lineNumber": 10,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 143.0,
+              "end": 163.0
+            },
+            {
+              "ref": "Genesis 21:11",
+              "aliyah": "3",
+              "lineNumber": 11,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 164.5,
+              "end": 178.0
+            },
+            {
+              "ref": "Genesis 21:12",
+              "aliyah": "3",
+              "lineNumber": 12,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 179.0,
+              "end": 214.0
+            }
+          ]
+        },
+        {
+          "num": "4",
+          "reference": "Genesis 21:13–17",
+          "tracks": [
+            {
+              "ref": "Genesis 21:13",
+              "aliyah": "4",
+              "lineNumber": 13,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 32.72,
+              "end": 42.0
+            },
+            {
+              "ref": "Genesis 21:14",
+              "aliyah": "4",
+              "lineNumber": 14,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 45.0,
+              "end": 80.0
+            },
+            {
+              "ref": "Genesis 21:15",
+              "aliyah": "4",
+              "lineNumber": 15,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 82.0,
+              "end": 96.0
+            },
+            {
+              "ref": "Genesis 21:16",
+              "aliyah": "4",
+              "lineNumber": 16,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 97.0,
+              "end": 125.0
+            },
+            {
+              "ref": "Genesis 21:17",
+              "aliyah": "4",
+              "lineNumber": 17,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 173.5,
+              "end": 208.5
+            }
+          ]
+        },
+        {
+          "num": "5",
+          "reference": "Genesis 21:18–21",
+          "tracks": [
+            {
+              "ref": "Genesis 21:18",
+              "aliyah": "5",
+              "lineNumber": 18,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 210.0,
+              "end": 225.0
+            },
+            {
+              "ref": "Genesis 21:19",
+              "aliyah": "5",
+              "lineNumber": 19,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 226.2,
+              "end": 249.0
+            },
+            {
+              "ref": "Genesis 21:20",
+              "aliyah": "5",
+              "lineNumber": 20,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 250.0,
+              "end": 267.0
+            },
+            {
+              "ref": "Genesis 21:21",
+              "aliyah": "5",
+              "lineNumber": 21,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 272.0,
+              "end": 288.0
+            }
+          ]
+        },
+        {
+          "num": "6",
+          "reference": "Genesis 21:22–27",
+          "tracks": [
+            {
+              "ref": "Genesis 21:22",
+              "aliyah": "6",
+              "lineNumber": 22,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 20.2,
+              "end": 43.5
+            },
+            {
+              "ref": "Genesis 21:23",
+              "aliyah": "6",
+              "lineNumber": 23,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 44.5,
+              "end": 73.4
+            },
+            {
+              "ref": "Genesis 21:24",
+              "aliyah": "6",
+              "lineNumber": 24,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 74.5,
+              "end": 82.0
+            },
+            {
+              "ref": "Genesis 21:25",
+              "aliyah": "6",
+              "lineNumber": 25,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 83.5,
+              "end": 98.5
+            },
+            {
+              "ref": "Genesis 21:26",
+              "aliyah": "6",
+              "lineNumber": 26,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 101.0,
+              "end": 127.5
+            },
+            {
+              "ref": "Genesis 21:27",
+              "aliyah": "6",
+              "lineNumber": 27,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 128.5,
+              "end": 144.0
+            }
+          ]
+        },
+        {
+          "num": "7",
+          "reference": "Genesis 21:28–34",
+          "tracks": [
+            {
+              "ref": "Genesis 21:28",
+              "aliyah": "7",
+              "lineNumber": 28,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 20.0,
+              "end": 30.5
+            },
+            {
+              "ref": "Genesis 21:29",
+              "aliyah": "7",
+              "lineNumber": 29,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 32.0,
+              "end": 50.0
+            },
+            {
+              "ref": "Genesis 21:30",
+              "aliyah": "7",
+              "lineNumber": 30,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 52.0,
+              "end": 72.5
+            },
+            {
+              "ref": "Genesis 21:31",
+              "aliyah": "7",
+              "lineNumber": 31,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 74.0,
+              "end": 90.0
+            },
+            {
+              "ref": "Genesis 21:32",
+              "aliyah": "7",
+              "lineNumber": 32,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 92.8,
+              "end": 110.0
+            },
+            {
+              "ref": "Genesis 21:33",
+              "aliyah": "7",
+              "lineNumber": 33,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 111.5,
+              "end": 125.0
+            },
+            {
+              "ref": "Genesis 21:34",
+              "aliyah": "7",
+              "lineNumber": 34,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 126.5,
+              "end": 142.0
+            }
+          ]
+        },
+        {
+          "num": "Full",
+          "reference": "Genesis 21:1–21:34",
+          "tracks": [
+            {
+              "ref": "Genesis 21:1",
+              "aliyah": "1",
+              "lineNumber": 1,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 13.4,
+              "end": 29.0
+            },
+            {
+              "ref": "Genesis 21:2",
+              "aliyah": "1",
+              "lineNumber": 2,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 30.0,
+              "end": 49.4
+            },
+            {
+              "ref": "Genesis 21:3",
+              "aliyah": "1",
+              "lineNumber": 3,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 50.5,
+              "end": 65.0
+            },
+            {
+              "ref": "Genesis 21:4",
+              "aliyah": "1",
+              "lineNumber": 4,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 66.0,
+              "end": 84.5
+            },
+            {
+              "ref": "Genesis 21:5",
+              "aliyah": "2",
+              "lineNumber": 5,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 36.4,
+              "end": 46.0
+            },
+            {
+              "ref": "Genesis 21:6",
+              "aliyah": "2",
+              "lineNumber": 6,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 47.0,
+              "end": 61.8
+            },
+            {
+              "ref": "Genesis 21:7",
+              "aliyah": "2",
+              "lineNumber": 7,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 64.5,
+              "end": 81.0
+            },
+            {
+              "ref": "Genesis 21:8",
+              "aliyah": "2",
+              "lineNumber": 8,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 101.5,
+              "end": 116.0
+            },
+            {
+              "ref": "Genesis 21:9",
+              "aliyah": "3",
+              "lineNumber": 9,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 127.0,
+              "end": 142.0
+            },
+            {
+              "ref": "Genesis 21:10",
+              "aliyah": "3",
+              "lineNumber": 10,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 143.0,
+              "end": 163.0
+            },
+            {
+              "ref": "Genesis 21:11",
+              "aliyah": "3",
+              "lineNumber": 11,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 164.5,
+              "end": 178.0
+            },
+            {
+              "ref": "Genesis 21:12",
+              "aliyah": "3",
+              "lineNumber": 12,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 179.0,
+              "end": 214.0
+            },
+            {
+              "ref": "Genesis 21:13",
+              "aliyah": "4",
+              "lineNumber": 13,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 32.72,
+              "end": 42.0
+            },
+            {
+              "ref": "Genesis 21:14",
+              "aliyah": "4",
+              "lineNumber": 14,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 45.0,
+              "end": 80.0
+            },
+            {
+              "ref": "Genesis 21:15",
+              "aliyah": "4",
+              "lineNumber": 15,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 82.0,
+              "end": 96.0
+            },
+            {
+              "ref": "Genesis 21:16",
+              "aliyah": "4",
+              "lineNumber": 16,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 97.0,
+              "end": 125.0
+            },
+            {
+              "ref": "Genesis 21:17",
+              "aliyah": "4",
+              "lineNumber": 17,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 173.5,
+              "end": 208.5
+            },
+            {
+              "ref": "Genesis 21:18",
+              "aliyah": "5",
+              "lineNumber": 18,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 210.0,
+              "end": 225.0
+            },
+            {
+              "ref": "Genesis 21:19",
+              "aliyah": "5",
+              "lineNumber": 19,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 226.2,
+              "end": 249.0
+            },
+            {
+              "ref": "Genesis 21:20",
+              "aliyah": "5",
+              "lineNumber": 20,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 250.0,
+              "end": 267.0
+            },
+            {
+              "ref": "Genesis 21:21",
+              "aliyah": "5",
+              "lineNumber": 21,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 272.0,
+              "end": 288.0
+            },
+            {
+              "ref": "Genesis 21:22",
+              "aliyah": "6",
+              "lineNumber": 22,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 20.2,
+              "end": 43.5
+            },
+            {
+              "ref": "Genesis 21:23",
+              "aliyah": "6",
+              "lineNumber": 23,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 44.5,
+              "end": 73.4
+            },
+            {
+              "ref": "Genesis 21:24",
+              "aliyah": "6",
+              "lineNumber": 24,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 74.5,
+              "end": 82.0
+            },
+            {
+              "ref": "Genesis 21:25",
+              "aliyah": "6",
+              "lineNumber": 25,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 83.5,
+              "end": 98.5
+            },
+            {
+              "ref": "Genesis 21:26",
+              "aliyah": "6",
+              "lineNumber": 26,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 101.0,
+              "end": 127.5
+            },
+            {
+              "ref": "Genesis 21:27",
+              "aliyah": "6",
+              "lineNumber": 27,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 128.5,
+              "end": 144.0
+            },
+            {
+              "ref": "Genesis 21:28",
+              "aliyah": "7",
+              "lineNumber": 28,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 20.0,
+              "end": 30.5
+            },
+            {
+              "ref": "Genesis 21:29",
+              "aliyah": "7",
+              "lineNumber": 29,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 32.0,
+              "end": 50.0
+            },
+            {
+              "ref": "Genesis 21:30",
+              "aliyah": "7",
+              "lineNumber": 30,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 52.0,
+              "end": 72.5
+            },
+            {
+              "ref": "Genesis 21:31",
+              "aliyah": "7",
+              "lineNumber": 31,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 74.0,
+              "end": 90.0
+            },
+            {
+              "ref": "Genesis 21:32",
+              "aliyah": "7",
+              "lineNumber": 32,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 92.8,
+              "end": 110.0
+            },
+            {
+              "ref": "Genesis 21:33",
+              "aliyah": "7",
+              "lineNumber": 33,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 111.5,
+              "end": 125.0
+            },
+            {
+              "ref": "Genesis 21:34",
+              "aliyah": "7",
+              "lineNumber": 34,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 126.5,
+              "end": 142.0
+            }
+          ]
+        }
+      ],
+      "displayRange": "Genesis 21:1–21:34"
+    },
+    {
+      "id": "rh1Weekday",
+      "name": "Rosh Hashanah Day 1 - Weekday",
+      "book": "Genesis",
+      "aliyot": [
+        {
+          "num": "1",
+          "reference": "Genesis 21:1–4",
+          "tracks": [
+            {
+              "ref": "Genesis 21:1",
+              "aliyah": "1",
+              "lineNumber": 1,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 13.4,
+              "end": 29.0
+            },
+            {
+              "ref": "Genesis 21:2",
+              "aliyah": "1",
+              "lineNumber": 2,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 30.0,
+              "end": 49.4
+            },
+            {
+              "ref": "Genesis 21:3",
+              "aliyah": "1",
+              "lineNumber": 3,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 50.5,
+              "end": 65.0
+            },
+            {
+              "ref": "Genesis 21:4",
+              "aliyah": "1",
+              "lineNumber": 4,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 66.0,
+              "end": 84.5
+            }
+          ]
+        },
+        {
+          "num": "2",
+          "reference": "Genesis 21:5–12",
+          "tracks": [
+            {
+              "ref": "Genesis 21:5",
+              "aliyah": "2",
+              "lineNumber": 5,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 36.4,
+              "end": 46.0
+            },
+            {
+              "ref": "Genesis 21:6",
+              "aliyah": "2",
+              "lineNumber": 6,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 47.0,
+              "end": 61.8
+            },
+            {
+              "ref": "Genesis 21:7",
+              "aliyah": "2",
+              "lineNumber": 7,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 64.5,
+              "end": 81.0
+            },
+            {
+              "ref": "Genesis 21:8",
+              "aliyah": "2",
+              "lineNumber": 8,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 84.0,
+              "end": 98.5
+            },
+            {
+              "ref": "Genesis 21:9",
+              "aliyah": "2",
+              "lineNumber": 9,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 127.0,
+              "end": 142.0
+            },
+            {
+              "ref": "Genesis 21:10",
+              "aliyah": "2",
+              "lineNumber": 10,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 143.0,
+              "end": 163.0
+            },
+            {
+              "ref": "Genesis 21:11",
+              "aliyah": "2",
+              "lineNumber": 11,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 164.5,
+              "end": 178.0
+            },
+            {
+              "ref": "Genesis 21:12",
+              "aliyah": "2",
+              "lineNumber": 12,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 179.0,
+              "end": 214.0
+            }
+          ]
+        },
+        {
+          "num": "3",
+          "reference": "Genesis 21:13–21",
+          "tracks": [
+            {
+              "ref": "Genesis 21:13",
+              "aliyah": "3",
+              "lineNumber": 13,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 32.72,
+              "end": 42.0
+            },
+            {
+              "ref": "Genesis 21:14",
+              "aliyah": "3",
+              "lineNumber": 14,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 45.0,
+              "end": 80.0
+            },
+            {
+              "ref": "Genesis 21:15",
+              "aliyah": "3",
+              "lineNumber": 15,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 82.0,
+              "end": 96.0
+            },
+            {
+              "ref": "Genesis 21:16",
+              "aliyah": "3",
+              "lineNumber": 16,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 97.0,
+              "end": 125.0
+            },
+            {
+              "ref": "Genesis 21:17",
+              "aliyah": "3",
+              "lineNumber": 17,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 135.0,
+              "end": 168.0
+            },
+            {
+              "ref": "Genesis 21:18",
+              "aliyah": "3",
+              "lineNumber": 18,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 210.0,
+              "end": 225.0
+            },
+            {
+              "ref": "Genesis 21:19",
+              "aliyah": "3",
+              "lineNumber": 19,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 226.2,
+              "end": 249.0
+            },
+            {
+              "ref": "Genesis 21:20",
+              "aliyah": "3",
+              "lineNumber": 20,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 250.0,
+              "end": 267.0
+            },
+            {
+              "ref": "Genesis 21:21",
+              "aliyah": "3",
+              "lineNumber": 21,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 272.0,
+              "end": 288.0
+            }
+          ]
+        },
+        {
+          "num": "4",
+          "reference": "Genesis 21:22–27",
+          "tracks": [
+            {
+              "ref": "Genesis 21:22",
+              "aliyah": "4",
+              "lineNumber": 22,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 20.2,
+              "end": 43.5
+            },
+            {
+              "ref": "Genesis 21:23",
+              "aliyah": "4",
+              "lineNumber": 23,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 44.5,
+              "end": 73.4
+            },
+            {
+              "ref": "Genesis 21:24",
+              "aliyah": "4",
+              "lineNumber": 24,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 74.5,
+              "end": 82.0
+            },
+            {
+              "ref": "Genesis 21:25",
+              "aliyah": "4",
+              "lineNumber": 25,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 83.5,
+              "end": 98.5
+            },
+            {
+              "ref": "Genesis 21:26",
+              "aliyah": "4",
+              "lineNumber": 26,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 101.0,
+              "end": 127.5
+            },
+            {
+              "ref": "Genesis 21:27",
+              "aliyah": "4",
+              "lineNumber": 27,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 128.5,
+              "end": 144.0
+            }
+          ]
+        },
+        {
+          "num": "5",
+          "reference": "Genesis 21:28–34",
+          "tracks": [
+            {
+              "ref": "Genesis 21:28",
+              "aliyah": "5",
+              "lineNumber": 28,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 20.0,
+              "end": 30.5
+            },
+            {
+              "ref": "Genesis 21:29",
+              "aliyah": "5",
+              "lineNumber": 29,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 32.0,
+              "end": 50.0
+            },
+            {
+              "ref": "Genesis 21:30",
+              "aliyah": "5",
+              "lineNumber": 30,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 52.0,
+              "end": 72.5
+            },
+            {
+              "ref": "Genesis 21:31",
+              "aliyah": "5",
+              "lineNumber": 31,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 74.0,
+              "end": 90.0
+            },
+            {
+              "ref": "Genesis 21:32",
+              "aliyah": "5",
+              "lineNumber": 32,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 92.8,
+              "end": 110.0
+            },
+            {
+              "ref": "Genesis 21:33",
+              "aliyah": "5",
+              "lineNumber": 33,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 111.5,
+              "end": 125.0
+            },
+            {
+              "ref": "Genesis 21:34",
+              "aliyah": "5",
+              "lineNumber": 34,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 126.5,
+              "end": 142.0
+            }
+          ]
+        },
+        {
+          "num": "Full",
+          "reference": "Genesis 21:1–21:34",
+          "tracks": [
+            {
+              "ref": "Genesis 21:1",
+              "aliyah": "1",
+              "lineNumber": 1,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 13.4,
+              "end": 29.0
+            },
+            {
+              "ref": "Genesis 21:2",
+              "aliyah": "1",
+              "lineNumber": 2,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 30.0,
+              "end": 49.4
+            },
+            {
+              "ref": "Genesis 21:3",
+              "aliyah": "1",
+              "lineNumber": 3,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 50.5,
+              "end": 65.0
+            },
+            {
+              "ref": "Genesis 21:4",
+              "aliyah": "1",
+              "lineNumber": 4,
+              "audioUrl": "https://images.shulcloud.com/13447/299803.mp3",
+              "start": 66.0,
+              "end": 84.5
+            },
+            {
+              "ref": "Genesis 21:5",
+              "aliyah": "2",
+              "lineNumber": 5,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 36.4,
+              "end": 46.0
+            },
+            {
+              "ref": "Genesis 21:6",
+              "aliyah": "2",
+              "lineNumber": 6,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 47.0,
+              "end": 61.8
+            },
+            {
+              "ref": "Genesis 21:7",
+              "aliyah": "2",
+              "lineNumber": 7,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 64.5,
+              "end": 81.0
+            },
+            {
+              "ref": "Genesis 21:8",
+              "aliyah": "2",
+              "lineNumber": 8,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 84.0,
+              "end": 98.5
+            },
+            {
+              "ref": "Genesis 21:9",
+              "aliyah": "2",
+              "lineNumber": 9,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 127.0,
+              "end": 142.0
+            },
+            {
+              "ref": "Genesis 21:10",
+              "aliyah": "2",
+              "lineNumber": 10,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 143.0,
+              "end": 163.0
+            },
+            {
+              "ref": "Genesis 21:11",
+              "aliyah": "2",
+              "lineNumber": 11,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 164.5,
+              "end": 178.0
+            },
+            {
+              "ref": "Genesis 21:12",
+              "aliyah": "2",
+              "lineNumber": 12,
+              "audioUrl": "https://images.shulcloud.com/13447/299808.mp3",
+              "start": 179.0,
+              "end": 214.0
+            },
+            {
+              "ref": "Genesis 21:13",
+              "aliyah": "3",
+              "lineNumber": 13,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 32.72,
+              "end": 42.0
+            },
+            {
+              "ref": "Genesis 21:14",
+              "aliyah": "3",
+              "lineNumber": 14,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 45.0,
+              "end": 80.0
+            },
+            {
+              "ref": "Genesis 21:15",
+              "aliyah": "3",
+              "lineNumber": 15,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 82.0,
+              "end": 96.0
+            },
+            {
+              "ref": "Genesis 21:16",
+              "aliyah": "3",
+              "lineNumber": 16,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 97.0,
+              "end": 125.0
+            },
+            {
+              "ref": "Genesis 21:17",
+              "aliyah": "3",
+              "lineNumber": 17,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 135.0,
+              "end": 168.0
+            },
+            {
+              "ref": "Genesis 21:18",
+              "aliyah": "3",
+              "lineNumber": 18,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 210.0,
+              "end": 225.0
+            },
+            {
+              "ref": "Genesis 21:19",
+              "aliyah": "3",
+              "lineNumber": 19,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 226.2,
+              "end": 249.0
+            },
+            {
+              "ref": "Genesis 21:20",
+              "aliyah": "3",
+              "lineNumber": 20,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 250.0,
+              "end": 267.0
+            },
+            {
+              "ref": "Genesis 21:21",
+              "aliyah": "3",
+              "lineNumber": 21,
+              "audioUrl": "https://images.shulcloud.com/13447/299807.mp3",
+              "start": 272.0,
+              "end": 288.0
+            },
+            {
+              "ref": "Genesis 21:22",
+              "aliyah": "4",
+              "lineNumber": 22,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 20.2,
+              "end": 43.5
+            },
+            {
+              "ref": "Genesis 21:23",
+              "aliyah": "4",
+              "lineNumber": 23,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 44.5,
+              "end": 73.4
+            },
+            {
+              "ref": "Genesis 21:24",
+              "aliyah": "4",
+              "lineNumber": 24,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 74.5,
+              "end": 82.0
+            },
+            {
+              "ref": "Genesis 21:25",
+              "aliyah": "4",
+              "lineNumber": 25,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 83.5,
+              "end": 98.5
+            },
+            {
+              "ref": "Genesis 21:26",
+              "aliyah": "4",
+              "lineNumber": 26,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 101.0,
+              "end": 127.5
+            },
+            {
+              "ref": "Genesis 21:27",
+              "aliyah": "4",
+              "lineNumber": 27,
+              "audioUrl": "https://images.shulcloud.com/13447/299805.mp3",
+              "start": 128.5,
+              "end": 144.0
+            },
+            {
+              "ref": "Genesis 21:28",
+              "aliyah": "5",
+              "lineNumber": 28,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 20.0,
+              "end": 30.5
+            },
+            {
+              "ref": "Genesis 21:29",
+              "aliyah": "5",
+              "lineNumber": 29,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 32.0,
+              "end": 50.0
+            },
+            {
+              "ref": "Genesis 21:30",
+              "aliyah": "5",
+              "lineNumber": 30,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 52.0,
+              "end": 72.5
+            },
+            {
+              "ref": "Genesis 21:31",
+              "aliyah": "5",
+              "lineNumber": 31,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 74.0,
+              "end": 90.0
+            },
+            {
+              "ref": "Genesis 21:32",
+              "aliyah": "5",
+              "lineNumber": 32,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 92.8,
+              "end": 110.0
+            },
+            {
+              "ref": "Genesis 21:33",
+              "aliyah": "5",
+              "lineNumber": 33,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 111.5,
+              "end": 125.0
+            },
+            {
+              "ref": "Genesis 21:34",
+              "aliyah": "5",
+              "lineNumber": 34,
+              "audioUrl": "https://images.shulcloud.com/13447/299804.mp3",
+              "start": 126.5,
+              "end": 142.0
+            }
+          ]
+        }
+      ],
+      "displayRange": "Genesis 21:1–21:34"
+    },
+    {
+      "id": "ykShabbat",
+      "name": "Yom Kippur - Shabbat",
+      "book": "Leviticus",
+      "aliyot": [
+        {
+          "num": "1",
+          "reference": "Leviticus 19:1–3",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:1",
+              "aliyah": "1",
+              "lineNumber": 1,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 23,
+              "end": 39
+            },
+            {
+              "ref": "Leviticus 19:2",
+              "aliyah": "1",
+              "lineNumber": 2,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 40.6,
+              "end": 78.8
+            },
+            {
+              "ref": "Leviticus 19:3",
+              "aliyah": "1",
+              "lineNumber": 3,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 98.5,
+              "end": 116
+            }
+          ]
+        },
+        {
+          "num": "2",
+          "reference": "Leviticus 19:4–6",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:4",
+              "aliyah": "2",
+              "lineNumber": 4,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 117,
+              "end": 150
+            },
+            {
+              "ref": "Leviticus 19:5",
+              "aliyah": "2",
+              "lineNumber": 5,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 152,
+              "end": 172.5
+            },
+            {
+              "ref": "Leviticus 19:6",
+              "aliyah": "2",
+              "lineNumber": 6,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 173.5,
+              "end": 191
+            }
+          ]
+        },
+        {
+          "num": "3",
+          "reference": "Leviticus 19:7–11",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:7",
+              "aliyah": "3",
+              "lineNumber": 7,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 24.3,
+              "end": 38
+            },
+            {
+              "ref": "Leviticus 19:8",
+              "aliyah": "3",
+              "lineNumber": 8,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 39.5,
+              "end": 58.5
+            },
+            {
+              "ref": "Leviticus 19:9",
+              "aliyah": "3",
+              "lineNumber": 9,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 59.8,
+              "end": 80
+            },
+            {
+              "ref": "Leviticus 19:10",
+              "aliyah": "3",
+              "lineNumber": 10,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 82,
+              "end": 110
+            },
+            {
+              "ref": "Leviticus 19:11",
+              "aliyah": "3",
+              "lineNumber": 11,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 111.5,
+              "end": 133.5
+            }
+          ]
+        },
+        {
+          "num": "4",
+          "reference": "Leviticus 19:12–17",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:12",
+              "aliyah": "4",
+              "lineNumber": 12,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 1,
+              "end": 41
+            },
+            {
+              "ref": "Leviticus 19:13",
+              "aliyah": "4",
+              "lineNumber": 13,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 42,
+              "end": 67
+            },
+            {
+              "ref": "Leviticus 19:14",
+              "aliyah": "4",
+              "lineNumber": 14,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 68,
+              "end": 96
+            },
+            {
+              "ref": "Leviticus 19:15",
+              "aliyah": "4",
+              "lineNumber": 15,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 100,
+              "end": 134.5
+            },
+            {
+              "ref": "Leviticus 19:16",
+              "aliyah": "4",
+              "lineNumber": 16,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 136.5,
+              "end": 167
+            },
+            {
+              "ref": "Leviticus 19:17",
+              "aliyah": "4",
+              "lineNumber": 17,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 168,
+              "end": 198.5
+            }
+          ]
+        },
+        {
+          "num": "5",
+          "reference": "Leviticus 19:18–24",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:18",
+              "aliyah": "5",
+              "lineNumber": 18,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 16,
+              "end": 42
+            },
+            {
+              "ref": "Leviticus 19:19",
+              "aliyah": "5",
+              "lineNumber": 19,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 45,
+              "end": 64.8
+            },
+            {
+              "ref": "Leviticus 19:20",
+              "aliyah": "5",
+              "lineNumber": 20,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 66,
+              "end": 82.5
+            },
+            {
+              "ref": "Leviticus 19:21",
+              "aliyah": "5",
+              "lineNumber": 21,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 83.8,
+              "end": 126.2
+            },
+            {
+              "ref": "Leviticus 19:22",
+              "aliyah": "5",
+              "lineNumber": 22,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 134,
+              "end": 149
+            },
+            {
+              "ref": "Leviticus 19:23",
+              "aliyah": "5",
+              "lineNumber": 23,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 156.5,
+              "end": 177
+            },
+            {
+              "ref": "Leviticus 19:24",
+              "aliyah": "5",
+              "lineNumber": 24,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 179.5,
+              "end": 207.5
+            }
+          ]
+        },
+        {
+          "num": "6",
+          "reference": "Leviticus 19:25–30",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:25",
+              "aliyah": "6",
+              "lineNumber": 25,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 14.5,
+              "end": 24.5
+            },
+            {
+              "ref": "Leviticus 19:26",
+              "aliyah": "6",
+              "lineNumber": 26,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 26,
+              "end": 44
+            },
+            {
+              "ref": "Leviticus 19:27",
+              "aliyah": "6",
+              "lineNumber": 27,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 45,
+              "end": 76
+            },
+            {
+              "ref": "Leviticus 19:28",
+              "aliyah": "6",
+              "lineNumber": 28,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 77.5,
+              "end": 96.5
+            },
+            {
+              "ref": "Leviticus 19:29",
+              "aliyah": "6",
+              "lineNumber": 29,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 100,
+              "end": 130
+            },
+            {
+              "ref": "Leviticus 19:30",
+              "aliyah": "6",
+              "lineNumber": 30,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 132,
+              "end": 150.5
+            }
+          ]
+        },
+        {
+          "num": "7",
+          "reference": "Leviticus 19:31–34",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:31",
+              "aliyah": "7",
+              "lineNumber": 31,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 15.5,
+              "end": 27
+            },
+            {
+              "ref": "Leviticus 19:32",
+              "aliyah": "7",
+              "lineNumber": 32,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 28.5,
+              "end": 54
+            },
+            {
+              "ref": "Leviticus 19:33",
+              "aliyah": "7",
+              "lineNumber": 33,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 55.6,
+              "end": 80
+            },
+            {
+              "ref": "Leviticus 19:34",
+              "aliyah": "7",
+              "lineNumber": 34,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 83,
+              "end": 114.5
+            }
+          ]
+        },
+        {
+          "num": "Full",
+          "reference": "Leviticus 19:1–19:34",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:1",
+              "aliyah": "1",
+              "lineNumber": 1,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 23,
+              "end": 39
+            },
+            {
+              "ref": "Leviticus 19:2",
+              "aliyah": "1",
+              "lineNumber": 2,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 40.6,
+              "end": 78.8
+            },
+            {
+              "ref": "Leviticus 19:3",
+              "aliyah": "1",
+              "lineNumber": 3,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 98.5,
+              "end": 116
+            },
+            {
+              "ref": "Leviticus 19:4",
+              "aliyah": "2",
+              "lineNumber": 4,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 117,
+              "end": 150
+            },
+            {
+              "ref": "Leviticus 19:5",
+              "aliyah": "2",
+              "lineNumber": 5,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 152,
+              "end": 172.5
+            },
+            {
+              "ref": "Leviticus 19:6",
+              "aliyah": "2",
+              "lineNumber": 6,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 173.5,
+              "end": 191
+            },
+            {
+              "ref": "Leviticus 19:7",
+              "aliyah": "3",
+              "lineNumber": 7,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 24.3,
+              "end": 38
+            },
+            {
+              "ref": "Leviticus 19:8",
+              "aliyah": "3",
+              "lineNumber": 8,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 39.5,
+              "end": 58.5
+            },
+            {
+              "ref": "Leviticus 19:9",
+              "aliyah": "3",
+              "lineNumber": 9,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 59.8,
+              "end": 80
+            },
+            {
+              "ref": "Leviticus 19:10",
+              "aliyah": "3",
+              "lineNumber": 10,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 82,
+              "end": 110
+            },
+            {
+              "ref": "Leviticus 19:11",
+              "aliyah": "3",
+              "lineNumber": 11,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 111.5,
+              "end": 133.5
+            },
+            {
+              "ref": "Leviticus 19:12",
+              "aliyah": "4",
+              "lineNumber": 12,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 1,
+              "end": 41
+            },
+            {
+              "ref": "Leviticus 19:13",
+              "aliyah": "4",
+              "lineNumber": 13,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 42,
+              "end": 67
+            },
+            {
+              "ref": "Leviticus 19:14",
+              "aliyah": "4",
+              "lineNumber": 14,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 68,
+              "end": 96
+            },
+            {
+              "ref": "Leviticus 19:15",
+              "aliyah": "4",
+              "lineNumber": 15,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 100,
+              "end": 134.5
+            },
+            {
+              "ref": "Leviticus 19:16",
+              "aliyah": "4",
+              "lineNumber": 16,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 136.5,
+              "end": 167
+            },
+            {
+              "ref": "Leviticus 19:17",
+              "aliyah": "4",
+              "lineNumber": 17,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 168,
+              "end": 198.5
+            },
+            {
+              "ref": "Leviticus 19:18",
+              "aliyah": "5",
+              "lineNumber": 18,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 16,
+              "end": 42
+            },
+            {
+              "ref": "Leviticus 19:19",
+              "aliyah": "5",
+              "lineNumber": 19,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 45,
+              "end": 64.8
+            },
+            {
+              "ref": "Leviticus 19:20",
+              "aliyah": "5",
+              "lineNumber": 20,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 66,
+              "end": 82.5
+            },
+            {
+              "ref": "Leviticus 19:21",
+              "aliyah": "5",
+              "lineNumber": 21,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 83.8,
+              "end": 126.2
+            },
+            {
+              "ref": "Leviticus 19:22",
+              "aliyah": "5",
+              "lineNumber": 22,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 134,
+              "end": 149
+            },
+            {
+              "ref": "Leviticus 19:23",
+              "aliyah": "5",
+              "lineNumber": 23,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 156.5,
+              "end": 177
+            },
+            {
+              "ref": "Leviticus 19:24",
+              "aliyah": "5",
+              "lineNumber": 24,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 179.5,
+              "end": 207.5
+            },
+            {
+              "ref": "Leviticus 19:25",
+              "aliyah": "6",
+              "lineNumber": 25,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 14.5,
+              "end": 24.5
+            },
+            {
+              "ref": "Leviticus 19:26",
+              "aliyah": "6",
+              "lineNumber": 26,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 26,
+              "end": 44
+            },
+            {
+              "ref": "Leviticus 19:27",
+              "aliyah": "6",
+              "lineNumber": 27,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 45,
+              "end": 76
+            },
+            {
+              "ref": "Leviticus 19:28",
+              "aliyah": "6",
+              "lineNumber": 28,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 77.5,
+              "end": 96.5
+            },
+            {
+              "ref": "Leviticus 19:29",
+              "aliyah": "6",
+              "lineNumber": 29,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 100,
+              "end": 130
+            },
+            {
+              "ref": "Leviticus 19:30",
+              "aliyah": "6",
+              "lineNumber": 30,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 132,
+              "end": 150.5
+            },
+            {
+              "ref": "Leviticus 19:31",
+              "aliyah": "7",
+              "lineNumber": 31,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 15.5,
+              "end": 27
+            },
+            {
+              "ref": "Leviticus 19:32",
+              "aliyah": "7",
+              "lineNumber": 32,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 28.5,
+              "end": 54
+            },
+            {
+              "ref": "Leviticus 19:33",
+              "aliyah": "7",
+              "lineNumber": 33,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 55.6,
+              "end": 80
+            },
+            {
+              "ref": "Leviticus 19:34",
+              "aliyah": "7",
+              "lineNumber": 34,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 83,
+              "end": 114.5
+            }
+          ]
+        }
+      ],
+      "displayRange": "Leviticus 19:1–19:34"
+    },
+    {
+      "id": "ykWeekday",
+      "name": "Yom Kippur - Weekday",
+      "book": "Leviticus",
+      "aliyot": [
+        {
+          "num": "1",
+          "reference": "Leviticus 19:1–6",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:1",
+              "aliyah": "1",
+              "lineNumber": 1,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 23,
+              "end": 39
+            },
+            {
+              "ref": "Leviticus 19:2",
+              "aliyah": "1",
+              "lineNumber": 2,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 40.6,
+              "end": 78.8
+            },
+            {
+              "ref": "Leviticus 19:3",
+              "aliyah": "1",
+              "lineNumber": 3,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 79.5,
+              "end": 95
+            },
+            {
+              "ref": "Leviticus 19:4",
+              "aliyah": "1",
+              "lineNumber": 4,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 117,
+              "end": 150
+            },
+            {
+              "ref": "Leviticus 19:5",
+              "aliyah": "1",
+              "lineNumber": 5,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 152,
+              "end": 172.5
+            },
+            {
+              "ref": "Leviticus 19:6",
+              "aliyah": "1",
+              "lineNumber": 6,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 173.5,
+              "end": 191
+            }
+          ]
+        },
+        {
+          "num": "2",
+          "reference": "Leviticus 19:7–11",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:7",
+              "aliyah": "2",
+              "lineNumber": 7,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 24.3,
+              "end": 38
+            },
+            {
+              "ref": "Leviticus 19:8",
+              "aliyah": "2",
+              "lineNumber": 8,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 39.5,
+              "end": 58.5
+            },
+            {
+              "ref": "Leviticus 19:9",
+              "aliyah": "2",
+              "lineNumber": 9,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 59.8,
+              "end": 80
+            },
+            {
+              "ref": "Leviticus 19:10",
+              "aliyah": "2",
+              "lineNumber": 10,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 82,
+              "end": 110
+            },
+            {
+              "ref": "Leviticus 19:11",
+              "aliyah": "2",
+              "lineNumber": 11,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 111.5,
+              "end": 133.5
+            }
+          ]
+        },
+        {
+          "num": "3",
+          "reference": "Leviticus 19:12–17",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:12",
+              "aliyah": "3",
+              "lineNumber": 12,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 1,
+              "end": 41
+            },
+            {
+              "ref": "Leviticus 19:13",
+              "aliyah": "3",
+              "lineNumber": 13,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 42,
+              "end": 67
+            },
+            {
+              "ref": "Leviticus 19:14",
+              "aliyah": "3",
+              "lineNumber": 14,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 68,
+              "end": 96
+            },
+            {
+              "ref": "Leviticus 19:15",
+              "aliyah": "3",
+              "lineNumber": 15,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 100,
+              "end": 134.5
+            },
+            {
+              "ref": "Leviticus 19:16",
+              "aliyah": "3",
+              "lineNumber": 16,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 136.5,
+              "end": 167
+            },
+            {
+              "ref": "Leviticus 19:17",
+              "aliyah": "3",
+              "lineNumber": 17,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 168,
+              "end": 198.5
+            }
+          ]
+        },
+        {
+          "num": "4",
+          "reference": "Leviticus 19:18–24",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:18",
+              "aliyah": "4",
+              "lineNumber": 18,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 16,
+              "end": 42
+            },
+            {
+              "ref": "Leviticus 19:19",
+              "aliyah": "4",
+              "lineNumber": 19,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 45,
+              "end": 64.8
+            },
+            {
+              "ref": "Leviticus 19:20",
+              "aliyah": "4",
+              "lineNumber": 20,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 66,
+              "end": 82.5
+            },
+            {
+              "ref": "Leviticus 19:21",
+              "aliyah": "4",
+              "lineNumber": 21,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 83.8,
+              "end": 126.2
+            },
+            {
+              "ref": "Leviticus 19:22",
+              "aliyah": "4",
+              "lineNumber": 22,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 134,
+              "end": 149
+            },
+            {
+              "ref": "Leviticus 19:23",
+              "aliyah": "4",
+              "lineNumber": 23,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 156.5,
+              "end": 177
+            },
+            {
+              "ref": "Leviticus 19:24",
+              "aliyah": "4",
+              "lineNumber": 24,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 179.5,
+              "end": 207.5
+            }
+          ]
+        },
+        {
+          "num": "5",
+          "reference": "Leviticus 19:25–30",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:25",
+              "aliyah": "5",
+              "lineNumber": 25,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 14.5,
+              "end": 24.5
+            },
+            {
+              "ref": "Leviticus 19:26",
+              "aliyah": "5",
+              "lineNumber": 26,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 26,
+              "end": 44
+            },
+            {
+              "ref": "Leviticus 19:27",
+              "aliyah": "5",
+              "lineNumber": 27,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 45,
+              "end": 76
+            },
+            {
+              "ref": "Leviticus 19:28",
+              "aliyah": "5",
+              "lineNumber": 28,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 77.5,
+              "end": 96.5
+            },
+            {
+              "ref": "Leviticus 19:29",
+              "aliyah": "5",
+              "lineNumber": 29,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 100,
+              "end": 130
+            },
+            {
+              "ref": "Leviticus 19:30",
+              "aliyah": "5",
+              "lineNumber": 30,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 132,
+              "end": 150.5
+            }
+          ]
+        },
+        {
+          "num": "6",
+          "reference": "Leviticus 19:31–34",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:31",
+              "aliyah": "6",
+              "lineNumber": 31,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 15.5,
+              "end": 27
+            },
+            {
+              "ref": "Leviticus 19:32",
+              "aliyah": "6",
+              "lineNumber": 32,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 28.5,
+              "end": 54
+            },
+            {
+              "ref": "Leviticus 19:33",
+              "aliyah": "6",
+              "lineNumber": 33,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 55.6,
+              "end": 80
+            },
+            {
+              "ref": "Leviticus 19:34",
+              "aliyah": "6",
+              "lineNumber": 34,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 83,
+              "end": 114.5
+            }
+          ]
+        },
+        {
+          "num": "Full",
+          "reference": "Leviticus 19:1–19:34",
+          "tracks": [
+            {
+              "ref": "Leviticus 19:1",
+              "aliyah": "1",
+              "lineNumber": 1,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 23,
+              "end": 39
+            },
+            {
+              "ref": "Leviticus 19:2",
+              "aliyah": "1",
+              "lineNumber": 2,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 40.6,
+              "end": 78.8
+            },
+            {
+              "ref": "Leviticus 19:3",
+              "aliyah": "1",
+              "lineNumber": 3,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 79.5,
+              "end": 95
+            },
+            {
+              "ref": "Leviticus 19:4",
+              "aliyah": "1",
+              "lineNumber": 4,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 117,
+              "end": 150
+            },
+            {
+              "ref": "Leviticus 19:5",
+              "aliyah": "1",
+              "lineNumber": 5,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 152,
+              "end": 172.5
+            },
+            {
+              "ref": "Leviticus 19:6",
+              "aliyah": "1",
+              "lineNumber": 6,
+              "audioUrl": "https://images.shulcloud.com/13447/299817.mp3",
+              "start": 173.5,
+              "end": 191
+            },
+            {
+              "ref": "Leviticus 19:7",
+              "aliyah": "2",
+              "lineNumber": 7,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 24.3,
+              "end": 38
+            },
+            {
+              "ref": "Leviticus 19:8",
+              "aliyah": "2",
+              "lineNumber": 8,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 39.5,
+              "end": 58.5
+            },
+            {
+              "ref": "Leviticus 19:9",
+              "aliyah": "2",
+              "lineNumber": 9,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 59.8,
+              "end": 80
+            },
+            {
+              "ref": "Leviticus 19:10",
+              "aliyah": "2",
+              "lineNumber": 10,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 82,
+              "end": 110
+            },
+            {
+              "ref": "Leviticus 19:11",
+              "aliyah": "2",
+              "lineNumber": 11,
+              "audioUrl": "https://images.shulcloud.com/13447/299815.mp3",
+              "start": 111.5,
+              "end": 133.5
+            },
+            {
+              "ref": "Leviticus 19:12",
+              "aliyah": "3",
+              "lineNumber": 12,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 1,
+              "end": 41
+            },
+            {
+              "ref": "Leviticus 19:13",
+              "aliyah": "3",
+              "lineNumber": 13,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 42,
+              "end": 67
+            },
+            {
+              "ref": "Leviticus 19:14",
+              "aliyah": "3",
+              "lineNumber": 14,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 68,
+              "end": 96
+            },
+            {
+              "ref": "Leviticus 19:15",
+              "aliyah": "3",
+              "lineNumber": 15,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 100,
+              "end": 134.5
+            },
+            {
+              "ref": "Leviticus 19:16",
+              "aliyah": "3",
+              "lineNumber": 16,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 136.5,
+              "end": 167
+            },
+            {
+              "ref": "Leviticus 19:17",
+              "aliyah": "3",
+              "lineNumber": 17,
+              "audioUrl": "https://images.shulcloud.com/13447/299820.mp3",
+              "start": 168,
+              "end": 198.5
+            },
+            {
+              "ref": "Leviticus 19:18",
+              "aliyah": "4",
+              "lineNumber": 18,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 16,
+              "end": 42
+            },
+            {
+              "ref": "Leviticus 19:19",
+              "aliyah": "4",
+              "lineNumber": 19,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 45,
+              "end": 64.8
+            },
+            {
+              "ref": "Leviticus 19:20",
+              "aliyah": "4",
+              "lineNumber": 20,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 66,
+              "end": 82.5
+            },
+            {
+              "ref": "Leviticus 19:21",
+              "aliyah": "4",
+              "lineNumber": 21,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 83.8,
+              "end": 126.2
+            },
+            {
+              "ref": "Leviticus 19:22",
+              "aliyah": "4",
+              "lineNumber": 22,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 134,
+              "end": 149
+            },
+            {
+              "ref": "Leviticus 19:23",
+              "aliyah": "4",
+              "lineNumber": 23,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 156.5,
+              "end": 177
+            },
+            {
+              "ref": "Leviticus 19:24",
+              "aliyah": "4",
+              "lineNumber": 24,
+              "audioUrl": "https://images.shulcloud.com/13447/299821.mp3",
+              "start": 179.5,
+              "end": 207.5
+            },
+            {
+              "ref": "Leviticus 19:25",
+              "aliyah": "5",
+              "lineNumber": 25,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 14.5,
+              "end": 24.5
+            },
+            {
+              "ref": "Leviticus 19:26",
+              "aliyah": "5",
+              "lineNumber": 26,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 26,
+              "end": 44
+            },
+            {
+              "ref": "Leviticus 19:27",
+              "aliyah": "5",
+              "lineNumber": 27,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 45,
+              "end": 76
+            },
+            {
+              "ref": "Leviticus 19:28",
+              "aliyah": "5",
+              "lineNumber": 28,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 77.5,
+              "end": 96.5
+            },
+            {
+              "ref": "Leviticus 19:29",
+              "aliyah": "5",
+              "lineNumber": 29,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 100,
+              "end": 130
+            },
+            {
+              "ref": "Leviticus 19:30",
+              "aliyah": "5",
+              "lineNumber": 30,
+              "audioUrl": "https://images.shulcloud.com/13447/299818.mp3",
+              "start": 132,
+              "end": 150.5
+            },
+            {
+              "ref": "Leviticus 19:31",
+              "aliyah": "6",
+              "lineNumber": 31,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 15.5,
+              "end": 27
+            },
+            {
+              "ref": "Leviticus 19:32",
+              "aliyah": "6",
+              "lineNumber": 32,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 28.5,
+              "end": 54
+            },
+            {
+              "ref": "Leviticus 19:33",
+              "aliyah": "6",
+              "lineNumber": 33,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 55.6,
+              "end": 80
+            },
+            {
+              "ref": "Leviticus 19:34",
+              "aliyah": "6",
+              "lineNumber": 34,
+              "audioUrl": "https://images.shulcloud.com/13447/299816.mp3",
+              "start": 83,
+              "end": 114.5
+            }
+          ]
+        }
+      ],
+      "displayRange": "Leviticus 19:1–19:34"
+    }
+  ]
+}
