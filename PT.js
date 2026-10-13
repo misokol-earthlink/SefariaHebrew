@@ -2252,9 +2252,13 @@
         updateModalAltControl(true);
         if (selectedPTParshaName) {
           await resetAndRecalculateSefariaModal();
+console.log("Parsha after recalculation:", {
+  displayed: parshaSelect.value,
+  stored: selectedPTParshaName
+});
           // Preserve the chosen PT parsha in selectedPTParshaName/Reading Name,
           // then silently return the command selector to its placeholder.
-          parshaSelect.value = "";
+         // parshaSelect.value = "";
         }
       });
       document.querySelectorAll('input[name="ptReading"]').forEach(function(input) {
