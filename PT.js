@@ -1930,7 +1930,7 @@
       restoreHighHolidayParshaLabel();
       // The selector is an action trigger, not retained state.  Programmatic
       // reset to the placeholder does not fire its normal change listener.
-      //parshaSelect.value = "";
+      parshaSelect.value = "";
     }
 
     closeHHReadingSelector();
