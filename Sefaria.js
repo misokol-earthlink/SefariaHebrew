@@ -1446,21 +1446,14 @@ function flattenSefariaText(rawText) {
     function analyzeTropeWord(wordText, wordIndex) {
       const events = collectLiteralTropeEventsForWord(wordText, wordIndex);
       const hasPaseq = String(wordText || "").includes("\u05C0");
+      const paseqPosition = Array.from(String(wordText || "").normalize("NFD")).indexOf("\u05C0");
+      events.forEach(function(event) {
+        event.hasFollowingPaseq = paseqPosition >= 0 && event.charIndex < paseqPosition;
+      });
 
-      // Paseq is part of this analysis word by construction.  It can therefore
-      // qualify only a Munach in THIS word as Munach-L'garmeih; there is no
-      // forward/backward search across neighboring words.
-      if (hasPaseq) {
-        for (let i = events.length - 1; i >= 0; i--) {
-          if (events[i].mark === "\u05A3") {
-            events[i] = Object.assign({}, events[i], {
-              name: "Munach-L'garmeih",
-              isLgarmeih: true
-            });
-            break;
-          }
-        }
-      }
+      // Preserve the literal Munach event here.  The L'garmeih designation
+      // requires following context and is resolved during playback combination.
+      // Paseq remains in the Hebrew word regardless of that designation.
 
       return {
         wordIndex: wordIndex,
@@ -1497,9 +1490,19 @@ function flattenSefariaText(rawText) {
         const current = events[i];
         const next = events[i + 1] || null;
 
-        // Word-local paseq resolution has already made this atomic.
-        if (current.name === "Munach-L'garmeih") {
+        // L'garmeih requires exactly the local trope progression
+        // Munach + paseq + Munach + Rvi'i.  The paseq must occur after
+        // the first Munach in its source word; the following two marks
+        // must be on subsequent words.  Otherwise leave the Munach literal.
+        const following = events[i + 2] || null;
+        if (current.mark === "\u05A3" && current.hasFollowingPaseq === true &&
+            next && next.mark === "\u05A3" &&
+            following && following.mark === "\u0597" &&
+            next.wordIndex > current.wordIndex &&
+            following.wordIndex > next.wordIndex) {
           result.push("Munach-L'garmeih");
+          // Leave the following Munach + Rvi'i to the established
+          // Munach-Rvi'i combination on the next iteration.
           continue;
         }
 
