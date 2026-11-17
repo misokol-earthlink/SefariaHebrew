@@ -1881,12 +1881,13 @@ function initializeOutputDocumentsModal() {
   const choices = [
     document.getElementById("outputLineByLineDocx"),
     document.getElementById("outputFullParagraphDocx"),
-    document.getElementById("outputLineByLineText")
+    document.getElementById("outputLineByLineText"),
+    document.getElementById("outputBlockTextDocx")
   ].filter(Boolean);
   const closeButton = document.getElementById("outputDocumentsClose");
   const downloadButton = document.getElementById("downloadSelectionsBtn");
 
-  if (!modal || !none || choices.length !== 3 || !downloadButton) return;
+  if (!modal || !none || choices.length !== 4 || !downloadButton) return;
 
   function resetSelections() {
     none.checked = true;
@@ -1926,7 +1927,8 @@ function initializeOutputDocumentsModal() {
       await downloadSelectedDocuments({
         lineDocx: document.getElementById("outputLineByLineDocx").checked,
         fullDocx: document.getElementById("outputFullParagraphDocx").checked,
-        lineText: document.getElementById("outputLineByLineText").checked
+        lineText: document.getElementById("outputLineByLineText").checked,
+        blockDocx: document.getElementById("outputBlockTextDocx").checked
       });
       modal.classList.remove("open");
       resetSelections();
@@ -2039,25 +2041,36 @@ async function createLineByLineDocxBlob(d, data) {
   return d.Packer.toBlob(documentFile);
 }
 
-async function createFullParagraphDocxBlob(d, data) {
+async function createFullParagraphDocxBlob(d, data, blockText = false) {
   const runs = [];
-  data.verses.forEach(function(verse, index) {
-    if (index > 0) {
-      runs.push(new d.TextRun({ text: "   ", rightToLeft: true, font: "Times New Roman", size: 40 }));
-    }
-    // Same mixed-direction run pattern as the tested line-by-line document,
-    // but all verses remain in one RTL paragraph and wrap naturally.
-    runs.push(new d.TextRun({
-      text: ":" + verse.number,
-      bold: true, font: "Arial", size: 28,
-      rightToLeft: false, color: "000000"
-    }));
-    runs.push(new d.TextRun({
-      text: " " + verse.hebrew,
-      rightToLeft: true, font: "Times New Roman", size: 40,
-      color: "4169E1"
-    }));
-  });
+  if (blockText) {
+    data.verses.forEach(function(verse, index) {
+      runs.push(new d.TextRun({
+        text: verse.hebrew,
+        break: index > 0 ? 1 : undefined,
+        rightToLeft: true, font: "Times New Roman", size: 40,
+        color: "4169E1"
+      }));
+    });
+  } else {
+    data.verses.forEach(function(verse, index) {
+      if (index > 0) {
+        runs.push(new d.TextRun({ text: "   ", rightToLeft: true, font: "Times New Roman", size: 40 }));
+      }
+      // Same mixed-direction run pattern as the tested line-by-line document,
+      // but all verses remain in one RTL paragraph and wrap naturally.
+      runs.push(new d.TextRun({
+        text: ":" + verse.number,
+        bold: true, font: "Arial", size: 28,
+        rightToLeft: false, color: "000000"
+      }));
+      runs.push(new d.TextRun({
+        text: " " + verse.hebrew,
+        rightToLeft: true, font: "Times New Roman", size: 40,
+        color: "4169E1"
+      }));
+    });
+  }
 
   const page = getCommonDocxPage();
   const fullParagraph = new d.Paragraph({
@@ -2183,7 +2196,7 @@ async function downloadSelectedDocuments(selection) {
     const entries = [];
     let d = null;
 
-    if (selection.lineDocx || selection.fullDocx) {
+    if (selection.lineDocx || selection.fullDocx || selection.blockDocx) {
       d = await loadDocxLibrary();
     }
 
@@ -2198,6 +2211,13 @@ async function downloadSelectedDocuments(selection) {
       entries.push({
         name: data.safeName + "_Full.docx",
         blob: await createFullParagraphDocxBlob(d, data)
+      });
+    }
+
+    if (selection.blockDocx) {
+      entries.push({
+        name: data.safeName + "_Block.docx",
+        blob: await createFullParagraphDocxBlob(d, data, true)
       });
     }
 
