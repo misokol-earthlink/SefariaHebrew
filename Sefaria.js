@@ -945,6 +945,81 @@ function flattenSefariaText(rawText) {
       }) || data.versions[0] || null;
     }
 
+    // Site-wide Hebrew letter representation for Sefaria-derived text.
+    // Keep only the four approved atomic presentation forms; decompose all
+    // other Hebrew presentation forms without changing ordinary vowels,
+    // Meteg/Silluq, cantillation, or punctuation.
+    const ALLOWED_HEBREW_PRESENTATION_FORMS = new Set([
+      "\uFB2A", // Shin with shin dot
+      "\uFB2B", // Sin with sin dot
+      "\uFB4B", // Vav with holam (holam male)
+      "\uFB35"  // Vav with dagesh (shuruk)
+    ]);
+
+    function normalizeSefariaHebrewLetters(value) {
+      // Normalize the imported source ONCE, before it is used by the editor,
+      // Lyrics JSON, Trope processing, screen display, or document exports.
+      // Never use whole-string NFC/NFKC here: they would undo our four
+      // approved atomic Hebrew presentation forms.
+      const expanded = Array.from(String(value || "")).map(function (ch) {
+        const cp = ch.codePointAt(0);
+        return cp >= 0xFB1D && cp <= 0xFB4F &&
+          !ALLOWED_HEBREW_PRESENTATION_FORMS.has(ch)
+          ? ch.normalize("NFKD") : ch;
+      }).join("");
+
+      // A cluster consists of one base consonant (ordinary or approved
+      // presentation form) and all its following Hebrew combining marks.
+      // Reorder those marks canonically without changing their ownership.
+      // Preserve any unexpected leading marks without inventing a base.
+      const isBase = ch => /[\u05D0-\u05EA\uFB2A\uFB2B\uFB35\uFB4B]/u.test(ch);
+      const isMark = ch => /[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]/u.test(ch);
+      const output = [];
+      let base = "", marks = "";
+      function flush() {
+        if (!base && !marks) return;
+        // NFD on marks alone performs canonical mark reordering while
+        // retaining our chosen atomic base letter.
+        marks = marks.normalize("NFD");
+        if (base === "\u05E9") {
+          if (marks.includes("\u05C1")) {
+            base = "\uFB2A";
+            marks = marks.replace("\u05C1", "");
+          } else if (marks.includes("\u05C2")) {
+            base = "\uFB2B";
+            marks = marks.replace("\u05C2", "");
+          }
+        } else if (base === "\u05D5") {
+          // Holam haser for consonantal vav (U+05BA) is NOT holam male.
+          // A source U+05B9 on vav denotes the holam-male encoding;
+          // source U+05BC on vav denotes the shuruk encoding.
+          if (marks.includes("\u05B9")) {
+            base = "\uFB4B";
+            marks = marks.replace("\u05B9", "");
+          } else if (marks.includes("\u05BC")) {
+            base = "\uFB35";
+            marks = marks.replace("\u05BC", "");
+          }
+        }
+        output.push(base + marks.normalize("NFD"));
+        base = "";
+        marks = "";
+      }
+      for (const ch of expanded) {
+        if (isBase(ch)) {
+          flush();
+          base = ch;
+        } else if (isMark(ch)) {
+          marks += ch;
+        } else {
+          flush();
+          output.push(ch);
+        }
+      }
+      flush();
+      return output.join("");
+    }
+
     function cleanSefariaHebrewText(rawValue) {
       let text = stripHtml(rawValue || "");
 
@@ -982,7 +1057,7 @@ function flattenSefariaText(rawText) {
       */
       text = text.replace(/\s+/g, " ").trim();
 
-      return text;
+      return normalizeSefariaHebrewLetters(text);
     }
 
     function extractHebrewWordTokens(cleanHebrew) {
@@ -990,10 +1065,10 @@ function flattenSefariaText(rawText) {
         We do NOT split merely on every non-letter mark because vowels and trope marks
         are combining marks that belong with the base Hebrew letters.
 
-        A true token must contain at least one Hebrew letter U+05D0-U+05EA.
+        A true token must contain a Hebrew base letter or an approved presentation form.
 
         We preserve:
-          - Hebrew letters
+          - Hebrew letters and the four approved presentation forms
           - niqqud and trope marks U+0591-U+05C7
           - maqaf U+05BE between Hebrew words
 
@@ -1003,9 +1078,9 @@ function flattenSefariaText(rawText) {
           - ordinary punctuation
       */
 
-   const allowedInsideToken = /[\u0591-\u05C7\u05D0-\u05EA\u05BE]/;
-  const hasHebrewLetter = /[\u05D0-\u05EA]/;
-  const isPasikOnly = /^[\u05C0|׀]+$/;
+   const allowedInsideToken = /[\u0591-\u05C7\u05D0-\u05EA\uFB2A\uFB2B\uFB35\uFB4B]/;
+  const hasHebrewLetter = /[\u05D0-\u05EA\uFB2A\uFB2B\uFB35\uFB4B]/;
+  const isPasikOnly = /^\u05C0+$/;
 
   const roughParts = cleanHebrew.split(/\s+/).filter(Boolean);
   const tokens = [];
@@ -1062,7 +1137,7 @@ function flattenSefariaText(rawText) {
     }
 
     function isHebrewTokenChar(char) {
-      return /[\u0591-\u05C7\u05D0-\u05EA\u05BE]/.test(char);
+      return /[\u0591-\u05C7\u05D0-\u05EA\uFB2A\uFB2B\uFB35\uFB4B]/.test(char);
     }
 
     function renderEditorLines(lines) {
@@ -1189,7 +1264,7 @@ function flattenSefariaText(rawText) {
         The real AI-generated or manually corrected value can replace it later.
       */
 
-      const normalized = hebrew.normalize("NFC");
+      const normalized = hebrew.normalize("NFKD");
 
       // Special handling for forms of the Divine Name.
       if (containsTetragrammaton(normalized)) {
