@@ -2075,7 +2075,7 @@ async function createFullParagraphDocxBlob(d, data, blockText = false) {
   const page = getCommonDocxPage();
   const fullParagraph = new d.Paragraph({
     bidirectional: true,
-    alignment: d.AlignmentType.RIGHT,
+    alignment: blockText ? "start" : d.AlignmentType.RIGHT,
     children: runs
   });
 
@@ -2229,6 +2229,13 @@ async function downloadSelectedDocuments(selection) {
     }
 
     if (!entries.length) return;
+
+    if (selection.blockDocx && entries.length === 1) {
+      const blockDocument = entries[0];
+      downloadBlob(blockDocument.blob, blockDocument.name);
+      if (status) status.textContent = "Saved " + blockDocument.name + ".";
+      return;
+    }
 
     const zipName = data.safeName + "_Documents.zip";
     const zipBlob = await makeStoredZipFromEntries(entries);
